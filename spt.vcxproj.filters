@@ -331,6 +331,9 @@
     <ClCompile Include="thirdparty\x86.c">
       <Filter>thirdparty</Filter>
     </ClCompile>
+    <ClCompile Include="spt\features\vlua\vlua.cpp">
+      <Filter>spt\features\vlua</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -693,6 +696,21 @@
     <ClInclude Include="spt\features\cvar.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
+    <ClInclude Include="spt\features\vlua\vlua.hpp">
+      <Filter>spt\features\vlua</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\LuaJIT\include\lauxlib.h">
+      <Filter>thirdparty\LuaJIT\include</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\LuaJIT\include\lua.h">
+      <Filter>thirdparty\LuaJIT\include</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\LuaJIT\include\luaconf.h">
+      <Filter>thirdparty\LuaJIT\include</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\LuaJIT\include\lualib.h">
+      <Filter>thirdparty\LuaJIT\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\mathlib.lib">
@@ -765,6 +783,15 @@
     </Filter>
     <Filter Include="spt\features\visualizations\renderer\internal">
       <UniqueIdentifier>{09923d45-41e4-45c5-ad0e-cbfdea8b9be3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spt\features\vlua">
+      <UniqueIdentifier>{e3b587c7-9c95-4ba2-b04d-0541dcf8fbba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty\LuaJIT">
+      <UniqueIdentifier>{0f76ddf7-9daa-478f-abfc-44dbc4930829}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty\LuaJIT\include">
+      <UniqueIdentifier>{86bf8070-d80d-430a-9c8f-4f868c027236}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
