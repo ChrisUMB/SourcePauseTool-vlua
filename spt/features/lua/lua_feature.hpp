@@ -7,10 +7,9 @@
 
 class LuaLibrary {
 
-protected:
+public:
     const std::string name;
 
-public:
     explicit LuaLibrary(std::string name);
 
     virtual void Load(lua_State *L) = 0;
@@ -27,11 +26,13 @@ public:
 
     void ResetLuaState();
 
+    void InitLuaState(lua_State* L);
+
     void RegisterLibrary(LuaLibrary *library);
 
-    void LoadLibraries(lua_State *state);
+    void LoadLibraries(lua_State *L);
 
-    void UnloadLibraries(lua_State *state);
+    void UnloadLibraries(lua_State *L);
 
     void Execute(const std::string &code);
 
@@ -47,13 +48,11 @@ protected:
     void UnloadFeature() override;
 
 private:
-    lua_State *L = nullptr;
+    lua_State *global_state = nullptr;
 
     std::vector<LuaLibrary *> libraries;
 
     static void InitDirectory();
-
-    void OnTick();
 };
 
 extern LuaFeature spt_lua;

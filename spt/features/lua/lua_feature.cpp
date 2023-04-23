@@ -7,6 +7,11 @@
 #include "lua_util.hpp"
 #include "lua_commands.hpp"
 #include "libs/lua_lib_console.hpp"
+#include "libs/lua_lib_syscall.hpp"
+#include "libs/lua_lib_events.hpp"
+#include "libs/lua_lib_input.hpp"
+#include "libs/lua_lib_game.hpp"
+#include "signals.hpp"
 
 LuaFeature spt_lua;
 
@@ -15,21 +20,52 @@ bool LuaFeature::ShouldLoadFeature() {
 }
 
 void LuaFeature::LoadFeature() {
-    InitConcommandBase(lua_run_command);
+    InitConcommandBase(spt_lua_run_command);
 
     InitDirectory();
 
     RegisterLibrary(&lua_console_library);
-//    TickSignal.Connect(this, &LuaFeature::OnTick);
+    RegisterLibrary(&lua_syscall_library);
+    RegisterLibrary(&lua_events_library);
+    RegisterLibrary(&lua_input_library);
+    RegisterLibrary(&lua_game_library);
+
+    void (*tick)() = []() {
+        static unsigned int ticks = 0;
+
+        lua_events_library.InvokeEvent("tick", [](lua_State *L) {
+            lua_newtable(L);
+            lua_pushinteger(L, ticks);
+            lua_setfield(L, -2, "tick");
+        });
+
+        ticks++;
+    };
+
+    TickSignal.Connect(*tick);
+
+    void (*level_init)(const char *) = [](char const *map) {
+        lua_events_library.InvokeEvent("level_init", [&](lua_State *L) {
+            lua_newtable(L);
+            lua_pushstring(L, map);
+            lua_setfield(L, -2, "map");
+        });
+    };
+
+    LevelInitSignal.Connect(*level_init);
+
+    void (*client_active)(edict_t* entity) = [](edict_t* entity) {
+        lua_events_library.InvokeEvent("client_active", [](lua_State *L) {
+            lua_newtable(L);
+        });
+    };
+
+    ClientActiveSignal.Connect(*client_active);
 }
 
 void LuaFeature::UnloadFeature() {}
 
 void LuaFeature::InitHooks() {
-}
-
-void LuaFeature::OnTick() {
-
 }
 
 void LuaFeature::InitDirectory() {
@@ -69,23 +105,60 @@ void LuaFeature::InitDirectory() {
 }
 
 lua_State *LuaFeature::GetLuaState() {
-    if (L == nullptr) {
-        L = luaL_newstate();
-        luaL_openlibs(L);
-        LoadLibraries(L);
+    if (global_state == nullptr) {
+        global_state = luaL_newstate();
+        luaL_openlibs(global_state);
+        InitLuaState(global_state);
     }
 
-    return L;
+    return global_state;
 }
 
 void LuaFeature::ResetLuaState() {
-    if (L == nullptr) {
+    if (global_state == nullptr) {
         return;
     }
 
-    UnloadLibraries(L);
-    lua_close(L);
-    L = nullptr;
+    UnloadLibraries(global_state);
+    lua_close(global_state);
+    global_state = nullptr;
+}
+
+void LuaFeature::InitLuaState(lua_State *L) {
+    if (!L) {
+        return;
+    }
+
+    lua_pushstring(L, "portal/lua/libraries/");
+    lua_setglobal(L, "LIB_DIR");
+
+    LoadLibraries(L);
+    lua_getglobal(L, "package");
+    lua_getfield(L, -1, "cpath");
+    std::string current_cpath = lua_tostring(L, -1);
+    auto new_cpath = current_cpath + ";" + "./portal/lua/libraries/?.dll";
+    lua_pop(L, 1);
+    lua_pushstring(L, new_cpath.c_str());
+    lua_setfield(L, -2, "cpath");
+    lua_pop(L, 1);
+
+    lua_getglobal(L, "package");
+    lua_getfield(L, -1, "path");
+    std::string current_path = lua_tostring(L, -1);
+    auto new_path = current_path + ";" + "./portal/lua/libraries/?.lua;./portal/lua/libraries/?.luac;";
+
+    for (const auto &entry: std::filesystem::directory_iterator("./portal/lua/libraries")) {
+        if (entry.is_directory()) {
+            auto path = entry.path().string();
+            auto file_name = entry.path().filename().string();
+            new_path += path + "/" + file_name + ".lua;" + path + "/" + file_name + ".luac;";
+        }
+    }
+
+    lua_pop(L, 1);
+    lua_pushstring(L, new_path.c_str());
+    lua_setfield(L, -2, "path");
+    lua_pop(L, 1);
 }
 
 void LuaFeature::RegisterLibrary(LuaLibrary *library) {
@@ -93,15 +166,27 @@ void LuaFeature::RegisterLibrary(LuaLibrary *library) {
     ResetLuaState(); // We do this so if a feature asks for the lua state before other libraries are loaded, those other libraries will be loaded into that lua state.
 }
 
-void LuaFeature::LoadLibraries(lua_State *state) {
+void LuaFeature::LoadLibraries(lua_State *L) {
     for (const auto &item: this->libraries) {
-        item->Load(state);
+        const std::string &source = item->GetLuaSource();
+        if (!source.empty()) {
+            luaL_loadstring(L, source.c_str());
+            if (!lua_pcall(L, 0, 0, 0)) {
+                const char *error = lua_tostring(L, -1);
+                if (error != nullptr) {
+                    Warning("Lua error loading library \"%s\": %s", item->name.c_str(), error);
+                    continue;
+                }
+            }
+        }
+
+        item->Load(L);
     }
 }
 
-void LuaFeature::UnloadLibraries(lua_State *state) {
+void LuaFeature::UnloadLibraries(lua_State *L) {
     for (const auto &item: this->libraries) {
-        item->Unload(state);
+        item->Unload(L);
     }
 }
 

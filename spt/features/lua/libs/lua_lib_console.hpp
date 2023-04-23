@@ -1,7 +1,3 @@
-//
-// Created by Chris on 4/22/2023.
-//
-
 #pragma once
 
 #include "../lua_feature.hpp"

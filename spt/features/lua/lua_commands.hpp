@@ -1,3 +1,3 @@
 #pragma once
 
-extern ConCommand lua_run_command;
+extern ConCommand spt_lua_run_command;

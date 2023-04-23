@@ -13,6 +13,16 @@ void lua_string_format(lua_State *L) {
     lua_call(L, arg_count, 1);
 }
 
+void DebugLuaStack(lua_State *L) {
+    int top = lua_gettop(L);
+
+    Msg("-- Lua Stack --\n");
+    for (int i = 0; i < top; ++i) {
+        Msg("%i : %s\n", i + 1, lua_typename(L, lua_type(L, i + 1)));
+    }
+    Msg("----------\n");
+}
+
 void GetFilePath(file_path_t &file_path, const std::string &partial, const char *default_path) {
     file_path.path = partial;
     file_path.prefix = partial;

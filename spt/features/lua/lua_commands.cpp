@@ -14,7 +14,7 @@ static int LuaRunCommandAutoComplete(char const *partial_cstr,
         partial = partial.substr(1);
     }
 
-    partial = partial.substr(8);
+    partial = partial.substr(12);
     file_path_t file_path;
     GetFilePath(file_path, partial, R"(\lua\scripts\)");
 
@@ -25,7 +25,7 @@ static int LuaRunCommandAutoComplete(char const *partial_cstr,
     }
 
     for (int i = 0; i < suggestions.size(); ++i) {
-        std::string string = "lua_run " + suggestions[i];
+        std::string string = "spt_lua_run " + suggestions[i];
         strcpy(commands[i], string.c_str());
     }
 
@@ -98,4 +98,4 @@ static void LuaRunCommand(const CCommand &args) {
     }
 }
 
-ConCommand lua_run_command = ConCommand("lua_run", LuaRunCommand, "Loads and executes a lua file.", 0, LuaRunCommandAutoComplete);
+ConCommand spt_lua_run_command = ConCommand("spt_lua_run", LuaRunCommand, "Loads and executes a lua file.", 0, LuaRunCommandAutoComplete);
