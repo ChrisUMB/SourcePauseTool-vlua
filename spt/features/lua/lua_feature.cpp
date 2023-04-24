@@ -11,6 +11,8 @@
 #include "libs/lua_lib_events.hpp"
 #include "libs/lua_lib_input.hpp"
 #include "libs/lua_lib_game.hpp"
+#include "libs/lua_lib_math.hpp"
+#include "libs/lua_lib_player.hpp"
 #include "signals.hpp"
 
 LuaFeature spt_lua;
@@ -21,6 +23,7 @@ bool LuaFeature::ShouldLoadFeature() {
 
 void LuaFeature::LoadFeature() {
     InitConcommandBase(spt_lua_run_command);
+    InitConcommandBase(spt_lua_reset_command);
 
     InitDirectory();
 
@@ -29,17 +32,17 @@ void LuaFeature::LoadFeature() {
     RegisterLibrary(&lua_events_library);
     RegisterLibrary(&lua_input_library);
     RegisterLibrary(&lua_game_library);
+    RegisterLibrary(&lua_math_library);
+    RegisterLibrary(&lua_player_library);
 
     void (*tick)() = []() {
-        static unsigned int ticks = 0;
+        static int ticks = 0;
 
         lua_events_library.InvokeEvent("tick", [](lua_State *L) {
             lua_newtable(L);
-            lua_pushinteger(L, ticks);
+            lua_pushinteger(L, ++ticks);
             lua_setfield(L, -2, "tick");
         });
-
-        ticks++;
     };
 
     TickSignal.Connect(*tick);
@@ -191,6 +194,8 @@ void LuaFeature::UnloadLibraries(lua_State *L) {
 }
 
 LuaLibrary::LuaLibrary(std::string name) : name(std::move(name)) {}
+
+void LuaLibrary::Load(lua_State *L) {}
 
 void LuaLibrary::Unload(lua_State *L) {
     lua_pushnil(L);

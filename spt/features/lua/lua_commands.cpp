@@ -99,3 +99,7 @@ static void LuaRunCommand(const CCommand &args) {
 }
 
 ConCommand spt_lua_run_command = ConCommand("spt_lua_run", LuaRunCommand, "Loads and executes a lua file.", 0, LuaRunCommandAutoComplete);
+
+ConCommand spt_lua_reset_command = ConCommand("spt_lua_reset", [](const CCommand &args) {
+    spt_lua.ResetLuaState();
+}, "Resets the lua state.", 0);

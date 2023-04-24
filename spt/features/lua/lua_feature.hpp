@@ -12,7 +12,7 @@ public:
 
     explicit LuaLibrary(std::string name);
 
-    virtual void Load(lua_State *L) = 0;
+    virtual void Load(lua_State *L);
 
     virtual void Unload(lua_State *L);
 
