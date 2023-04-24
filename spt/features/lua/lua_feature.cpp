@@ -14,6 +14,7 @@
 #include "libs/lua_lib_math.hpp"
 #include "libs/lua_lib_player.hpp"
 #include "signals.hpp"
+#include "../visualizations/renderer/mesh_renderer.hpp"
 
 LuaFeature spt_lua;
 
@@ -57,13 +58,26 @@ void LuaFeature::LoadFeature() {
 
     LevelInitSignal.Connect(*level_init);
 
-    void (*client_active)(edict_t* entity) = [](edict_t* entity) {
+    void (*client_active)(edict_t *entity) = [](edict_t *entity) {
         lua_events_library.InvokeEvent("client_active", [](lua_State *L) {
             lua_newtable(L);
         });
     };
 
     ClientActiveSignal.Connect(*client_active);
+
+
+    void (*rendering)(MeshRendererDelegate &mr) = [](MeshRendererDelegate &mr) {
+        mr.DrawMesh(spt_meshBuilder.CreateDynamicMesh([](MeshBuilderDelegate &mb) {
+            mb.AddBox({0, 0, 0}, {0, 0, 0}, {64, 64, 64}, {0, 0, 0}, {C_OUTLINE(0, 85, 255, 100)});
+        }), [](const CallbackInfoIn &infoIn, CallbackInfoOut &infoOut) {
+            if(infoIn.cvs.origin.z > 0) {
+                infoOut.colorModulate = {0, 15, 255, 255};
+            }
+        });
+    };
+
+    spt_meshRenderer.signal.Connect(*rendering);
 }
 
 void LuaFeature::UnloadFeature() {}

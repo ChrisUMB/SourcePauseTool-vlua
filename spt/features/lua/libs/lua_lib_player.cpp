@@ -107,11 +107,11 @@ static int PlayerIsGrounded(lua_State *L) {
 
 static const struct luaL_Reg player_class[] = {
         {"get_pos",     PlayerGetPos},
-        {"set_pos",    PlayerSetPos},
+        {"set_pos",     PlayerSetPos},
         {"get_ang",     PlayerGetAng},
-        {"set_ang",    PlayerSetAng},
+        {"_set_ang",    PlayerSetAng},
         {"get_vel",     PlayerGetVel},
-        {"set_vel",    PlayerSetVel},
+        {"set_vel",     PlayerSetVel},
 
 //        {"get_eye_pos",          lua_player_get_eye_pos},
 //        {"get_local_ang",        lua_player_get_local_ang},
@@ -149,28 +149,11 @@ function player.get_ang()
 end
 
 ---@param ang vec3|vec2 Angle vector, `vec2` will use the current `z` value
-function player.set_ang(...)
-    local args = {...}
-    local t = getmetatable(args[1])
-    if t == vec3 then
-        player._set_ang(args[1])
-    elseif t == vec2 then
-        player._set_ang(vec3(args[1].x, args[1].y, 0))
+function player.set_ang(ang)
+    if getmetatable(ang) == vec2 then
+        player._set_ang(vec3(ang.x, ang.y, player.get_ang().z))
     else
-        local r = player.get_ang()
-
-        if #args == 1 then
-            r.x = args[1]
-        elseif #args == 2 then
-            r.x = args[1]
-            r.y = args[2]
-        elseif #args == 3 then
-            r.x = args[1]
-            r.y = args[2]
-            r.z = args[3]
-        end
-
-        player._set_ang(r)
+        player._set_ang(ang)
     end
 end
 

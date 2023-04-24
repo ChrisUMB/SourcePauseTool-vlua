@@ -228,10 +228,10 @@ function table.shallow_copy(t)
     return t2
 end
 
-function table.all_keys_present(self, ...)
+function table.all_keys_present(t, ...)
     local keys = { ... }
     for i = 1, #keys do
-        if rawget(self, keys[i]) == nil then
+        if rawget(t, keys[i]) == nil then
             return false
         end
     end
@@ -261,17 +261,17 @@ function vec2.new(x, y)
     if xType == "table" then
         if getmetatable(x) == vec2 then
             result = table.shallow_copy(x)
-        elseif x:all_keys_present("x", "y") then
+        elseif table.all_keys_present(x, "x", "y") then
             result = {
                 x = x.x,
                 y = x.y
             }
-        elseif x:all_keys_present(1, 2) then
+        elseif table.all_keys_present(x, 1, 2) then
             result = {
                 x = x[1],
                 y = x[2]
             }
-        elseif x:all_keys_present("1", "2") then
+        elseif table.all_keys_present(x, "1", "2") then
             result = {
                 x = x["1"],
                 y = x["2"]
@@ -486,19 +486,19 @@ function vec3.new(x, y, z)
     if xType == "table" then
         if getmetatable(x) == vec3 then
             result = table.shallow_copy(x)
-        elseif x:all_keys_present("x", "y", "z") then
+        elseif table.all_keys_present(x, "x", "y", "z") then
             result = {
                 x = x.x,
                 y = x.y,
                 z = x.z
             }
-        elseif x:all_keys_present(1, 2, 3) then
+        elseif table.all_keys_present(x, 1, 2, 3) then
             result = {
                 x = x[1],
                 y = x[2],
                 z = x[3]
             }
-        elseif x:all_keys_present("1", "2", "3") then
+        elseif table.all_keys_present(x, "1", "2", "3") then
             result = {
                 x = x["1"],
                 y = x["2"],
@@ -720,21 +720,21 @@ function vec4.new(x, y, z, w)
             result = table.shallow_copy(x)
         elseif getmetatable(x) == vec3 then
             result = vec4(x.x, x.y, x.z, y or 0)
-        elseif x:all_keys_present("x", "y", "z", "w") then
+        elseif table.all_keys_present(x, "x", "y", "z", "w") then
             result = {
                 x = x.x,
                 y = x.y,
                 z = x.z,
                 w = x.w
             }
-        elseif x:all_keys_present(1, 2, 3, 4) then
+        elseif table.all_keys_present(x, 1, 2, 3, 4) then
             result = {
                 x = x[1],
                 y = x[2],
                 z = x[3],
                 w = x[4]
             }
-        elseif x:all_keys_present("1", "2", "3", "4") then
+        elseif table.all_keys_present(x, "1", "2", "3", "4") then
             result = {
                 x = x["1"],
                 y = x["2"],
@@ -936,9 +936,7 @@ function vec4:__tostring()
 end
 
 setmetatable(vec4, vec4)
-
 )" R"(
-
 ---@class axis
 ---@field positive_y vec3
 ---@field negative_y vec3
@@ -1019,21 +1017,21 @@ function quat.new(x, y, z, w)
     if xType == "table" then
         if meta == quat then
             result = table.shallow_copy(x)
-        elseif all_keys_present(x, "x", "y", "z", "w") then
+        elseif table.all_keys_present(x, "x", "y", "z", "w") then
             result = {
                 x = x.x,
                 y = x.y,
                 z = x.z,
                 w = x.w
             }
-        elseif all_keys_present(x, 1, 2, 3, 4) then
+        elseif table.all_keys_present(x, 1, 2, 3, 4) then
             result = {
                 x = x[1],
                 y = x[2],
                 z = x[3],
                 w = x[4]
             }
-        elseif all_keys_present(x, "1", "2", "3", "4") then
+        elseif table.all_keys_present(x, "1", "2", "3", "4") then
             result = {
                 x = x["1"],
                 y = x["2"],
@@ -1400,9 +1398,7 @@ function quat:__tostring()
 end
 
 setmetatable(quat, quat)
-
 )" R"(
-
 ---@class mat4
 ---@field m00 number
 ---@field m01 number
