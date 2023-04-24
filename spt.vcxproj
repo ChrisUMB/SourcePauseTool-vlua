@@ -295,7 +295,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\sdk2013\common;SDK\sdk2013\public;SDK\sdk2013\public\tier0;SDK\sdk2013\public\tier1;SDK\sdk2013\game\server;SDK\sdk2013\game\client;SDK\sdk2013\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>spt\utils;thirdparty\LuaJIT\include;thirdparty\curl\include;.;SDK\sdk2013\common;SDK\sdk2013\public;SDK\sdk2013\public\tier0;SDK\sdk2013\public\tier1;SDK\sdk2013\game\server;SDK\sdk2013\game\client;SDK\sdk2013\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SSDK2013;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -329,11 +329,11 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\sdk2013\lib\common;SDK\sdk2013\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\sdk2013\lib\common;SDK\sdk2013\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -370,7 +370,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\bms\common;SDK\bms\public;SDK\bms\public\tier0;SDK\bms\public\tier1;SDK\bms\game\server;SDK\bms\game\client;SDK\bms\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>spt\utils;thirdparty\LuaJIT\include;thirdparty\curl\include;.;SDK\bms\common;SDK\bms\public;SDK\bms\public\tier0;SDK\bms\public\tier1;SDK\bms\game\server;SDK\bms\game\client;SDK\bms\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BMS;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;SPT_HUD_TEXTONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -404,11 +404,11 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\bms\lib\common;SDK\bms\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\bms\lib\common;SDK\bms\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -445,7 +445,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\episode1\common;SDK\episode1\public;SDK\episode1\public\tier0;SDK\episode1\public\tier1;SDK\episode1\game\server;SDK\episode1\game\client;SDK\episode1\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>spt\utils;thirdparty\LuaJIT\include;thirdparty\curl\include;.;SDK\episode1\common;SDK\episode1\public;SDK\episode1\public\tier0;SDK\episode1\public\tier1;SDK\episode1\game\server;SDK\episode1\game\client;SDK\episode1\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OE;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -479,11 +479,11 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\episode1\lib\common;SDK\episode1\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\episode1\lib\common;SDK\episode1\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -522,7 +522,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\orangebox\common;SDK\orangebox\public;SDK\orangebox\public\tier0;SDK\orangebox\public\tier1;SDK\orangebox\game\server;SDK\orangebox\game\client;SDK\orangebox\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>spt\utils;thirdparty\LuaJIT\include;thirdparty\curl\include;.;SDK\orangebox\common;SDK\orangebox\public;SDK\orangebox\public\tier0;SDK\orangebox\public\tier1;SDK\orangebox\game\server;SDK\orangebox\game\client;SDK\orangebox\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SSDK2007;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -557,11 +557,11 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\orangebox\lib\common;SDK\orangebox\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\orangebox\lib\common;SDK\orangebox\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmtd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -603,7 +603,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\sdk2013\common;SDK\sdk2013\public;SDK\sdk2013\public\tier0;SDK\sdk2013\public\tier1;SDK\sdk2013\game\server;SDK\sdk2013\game\client;SDK\sdk2013\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>spt\utils;thirdparty\LuaJIT\include;thirdparty\curl\include;.;SDK\sdk2013\common;SDK\sdk2013\public;SDK\sdk2013\public\tier0;SDK\sdk2013\public\tier1;SDK\sdk2013\game\server;SDK\sdk2013\game\client;SDK\sdk2013\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SSDK2013;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -639,11 +639,11 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\sdk2013\lib\common;SDK\sdk2013\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\sdk2013\lib\common;SDK\sdk2013\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmtd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -686,7 +686,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\bms\common;SDK\bms\public;SDK\bms\public\tier0;SDK\bms\public\tier1;SDK\bms\game\server;SDK\bms\game\client;SDK\bms\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>spt\utils;thirdparty\LuaJIT\include;thirdparty\curl\include;.;SDK\bms\common;SDK\bms\public;SDK\bms\public\tier0;SDK\bms\public\tier1;SDK\bms\game\server;SDK\bms\game\client;SDK\bms\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BMS;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;SPT_HUD_TEXTONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -722,11 +722,11 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\bms\lib\common;SDK\bms\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\bms\lib\common;SDK\bms\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmtd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -848,7 +848,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\episode1\common;SDK\episode1\public;SDK\episode1\public\tier0;SDK\episode1\public\tier1;SDK\episode1\game\server;SDK\episode1\game\client;SDK\episode1\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>spt\utils;thirdparty\LuaJIT\include;thirdparty\curl\include;.;SDK\episode1\common;SDK\episode1\public;SDK\episode1\public\tier0;SDK\episode1\public\tier1;SDK\episode1\game\server;SDK\episode1\game\client;SDK\episode1\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OE;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -884,11 +884,11 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\episode1\lib\common;SDK\episode1\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\episode1\lib\common;SDK\episode1\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmtd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -1196,6 +1196,16 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClCompile Include="spt\features\ipc-spt.cpp" />
     <ClCompile Include="spt\features\isg.cpp" />
     <ClCompile Include="spt\features\leafvis.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_console.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_events.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_game.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_input.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_math.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_player.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_syscall.cpp" />
+    <ClCompile Include="spt\features\lua\lua_commands.cpp" />
+    <ClCompile Include="spt\features\lua\lua_feature.cpp" />
+    <ClCompile Include="spt\features\lua\lua_util.cpp" />
     <ClCompile Include="spt\features\multi_instance.cpp" />
     <ClCompile Include="spt\features\noclip_nofix.cpp" />
     <ClCompile Include="spt\features\nosleep.cpp" />
@@ -1233,7 +1243,6 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClCompile Include="spt\features\visualizations\sg-collide-vis.cpp" />
     <ClCompile Include="spt\features\visualizations\vag_trace.cpp" />
     <ClCompile Include="spt\features\visual_fixes.cpp" />
-    <ClCompile Include="spt\features\vlua\vlua.cpp" />
     <ClCompile Include="spt\ipc\ipc.cpp" />
     <ClCompile Include="sptlib\sptlib.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">sptlib-stdafx.hpp</PrecompiledHeaderFile>
@@ -1410,6 +1419,16 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClInclude Include="spt\features\ent_props.hpp" />
     <ClInclude Include="spt\features\generic.hpp" />
     <ClInclude Include="spt\features\hud.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_console.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_events.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_game.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_input.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_math.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_player.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_syscall.hpp" />
+    <ClInclude Include="spt\features\lua\lua_commands.hpp" />
+    <ClInclude Include="spt\features\lua\lua_feature.hpp" />
+    <ClInclude Include="spt\features\lua\lua_util.hpp" />
     <ClInclude Include="spt\features\overlay.hpp" />
     <ClInclude Include="spt\features\playerio.hpp" />
     <ClInclude Include="spt\features\property_getter.hpp" />
@@ -1429,7 +1448,6 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClInclude Include="spt\features\visualizations\renderer\mesh_builder.hpp" />
     <ClInclude Include="spt\features\visualizations\renderer\mesh_defs.hpp" />
     <ClInclude Include="spt\features\visualizations\renderer\mesh_renderer.hpp" />
-    <ClInclude Include="spt\features\vlua\vlua.hpp" />
     <ClInclude Include="spt\ipc\ipc.hpp" />
     <ClInclude Include="spt\scripts2\condition2.hpp" />
     <ClInclude Include="spt\scripts2\framebulk_handler2.hpp" />

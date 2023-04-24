@@ -331,8 +331,35 @@
     <ClCompile Include="thirdparty\x86.c">
       <Filter>thirdparty</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\vlua\vlua.cpp">
-      <Filter>spt\features\vlua</Filter>
+    <ClCompile Include="spt\features\lua\lua_commands.cpp">
+      <Filter>spt\features\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\lua_feature.cpp">
+      <Filter>spt\features\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\lua_util.cpp">
+      <Filter>spt\features\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_console.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_events.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_game.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_input.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_math.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_player.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_syscall.cpp">
+      <Filter>spt\features\lua\libs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -696,9 +723,6 @@
     <ClInclude Include="spt\features\cvar.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
-    <ClInclude Include="spt\features\vlua\vlua.hpp">
-      <Filter>spt\features\vlua</Filter>
-    </ClInclude>
     <ClInclude Include="thirdparty\LuaJIT\include\lauxlib.h">
       <Filter>thirdparty\LuaJIT\include</Filter>
     </ClInclude>
@@ -710,6 +734,36 @@
     </ClInclude>
     <ClInclude Include="thirdparty\LuaJIT\include\lualib.h">
       <Filter>thirdparty\LuaJIT\include</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\lua_commands.hpp">
+      <Filter>spt\features\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\lua_feature.hpp">
+      <Filter>spt\features\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\lua_util.hpp">
+      <Filter>spt\features\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_console.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_events.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_game.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_input.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_math.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_player.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_syscall.hpp">
+      <Filter>spt\features\lua\libs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -784,14 +838,17 @@
     <Filter Include="spt\features\visualizations\renderer\internal">
       <UniqueIdentifier>{09923d45-41e4-45c5-ad0e-cbfdea8b9be3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="spt\features\vlua">
-      <UniqueIdentifier>{e3b587c7-9c95-4ba2-b04d-0541dcf8fbba}</UniqueIdentifier>
-    </Filter>
     <Filter Include="thirdparty\LuaJIT">
       <UniqueIdentifier>{0f76ddf7-9daa-478f-abfc-44dbc4930829}</UniqueIdentifier>
     </Filter>
     <Filter Include="thirdparty\LuaJIT\include">
       <UniqueIdentifier>{86bf8070-d80d-430a-9c8f-4f868c027236}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spt\features\lua">
+      <UniqueIdentifier>{125142fb-0af6-49f3-b250-8c3ba265e3f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spt\features\lua\libs">
+      <UniqueIdentifier>{144e3123-b107-4c73-8185-0b153e389bc4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

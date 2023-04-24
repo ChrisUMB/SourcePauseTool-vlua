@@ -28,7 +28,7 @@ static int GetGameDirectory(lua_State *L) {
     return 1;
 }
 
-static const struct luaL_Reg lua_game_class[] = {
+static const struct luaL_Reg game_class[] = {
 //        {"is_paused", IsGamePaused},
         {"get_client_tick", GetClientTick},
         {"get_server_tick", GetServerTick},
@@ -39,7 +39,8 @@ static const struct luaL_Reg lua_game_class[] = {
 LuaGameLibrary::LuaGameLibrary() : LuaLibrary("game") {}
 
 void LuaGameLibrary::Load(lua_State *L) {
-
+    luaL_register(L, "game", game_class);
+    lua_pop(L, 1);
 }
 
 const std::string &LuaGameLibrary::GetLuaSource() {
