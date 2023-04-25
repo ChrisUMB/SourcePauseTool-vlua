@@ -12,7 +12,13 @@ struct file_path_t {
 
 void lua_string_format(lua_State *L);
 
+void lua_new_class(lua_State *L, const char *name, const luaL_Reg *functions);
+
 void DebugLuaStack(lua_State *L);
+
+bool LuaIsClass(lua_State *L, int index, const char *class_name);
+
+bool LuaCheckClass(lua_State *L, int index, const char *class_name);
 
 void GetFilePath(file_path_t &file_path, const std::string &partial, const char *default_path);
 

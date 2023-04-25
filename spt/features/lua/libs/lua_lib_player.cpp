@@ -3,6 +3,7 @@
 #include "lua_lib_math.hpp"
 #include "../../playerio.hpp"
 #include "spt/sptlib-wrapper.hpp"
+#include "spt/features/lua/lua_util.hpp"
 
 LuaPlayerLibrary lua_player_library;
 
@@ -16,13 +17,13 @@ static void PlayerTeleport(const Vector *pos, const QAngle *ang, const Vector *v
 }
 
 static int PlayerGetPos(lua_State *L) {
-    lua_math_library.LuaPushVector3D(L, spt_playerio.m_vecAbsOrigin.GetValue());
+    LuaMathLibrary::LuaPushVector3D(L, spt_playerio.m_vecAbsOrigin.GetValue());
     return 1;
 }
 
 static int PlayerSetPos(lua_State *L) {
-    if (lua_math_library.LuaIsVector3D(L, 1)) {
-        const Vector &pos = lua_math_library.LuaGetVector3D(L, 1);
+    if (LuaMathLibrary::LuaIsVector3D(L, 1)) {
+        const Vector &pos = LuaMathLibrary::LuaGetVector3D(L, 1);
         PlayerTeleport(&pos, nullptr, nullptr);
     } else {
         luaL_error(L, "player.set_pos: argument is not a vector");
@@ -34,13 +35,13 @@ static int PlayerSetPos(lua_State *L) {
 static int PlayerGetAng(lua_State *L) {
     QAngle ang;
     EngineGetViewAngles(reinterpret_cast<float *>(&ang));
-    lua_math_library.LuaPushAngle(L, ang);
+    LuaMathLibrary::LuaPushAngle(L, ang);
     return 1;
 }
 
 static int PlayerSetAng(lua_State *L) {
-    if (lua_math_library.LuaIsAngle(L, 1)) {
-        QAngle ang = lua_math_library.LuaGetAngle(L, 1);
+    if (LuaMathLibrary::LuaIsAngle(L, 1)) {
+        QAngle ang = LuaMathLibrary::LuaGetAngle(L, 1);
         EngineSetViewAngles(reinterpret_cast<float *>(&ang));
     } else {
         luaL_error(L, "player.set_ang: argument is not a vector");
@@ -50,13 +51,13 @@ static int PlayerSetAng(lua_State *L) {
 }
 
 static int PlayerGetVel(lua_State *L) {
-    lua_math_library.LuaPushVector3D(L, spt_playerio.m_vecAbsVelocity.GetValue());
+    LuaMathLibrary::LuaPushVector3D(L, spt_playerio.m_vecAbsVelocity.GetValue());
     return 1;
 }
 
 static int PlayerSetVel(lua_State *L) {
-    if (lua_math_library.LuaIsVector3D(L, 1)) {
-        const Vector &vel = lua_math_library.LuaGetVector3D(L, 1);
+    if (LuaMathLibrary::LuaIsVector3D(L, 1)) {
+        const Vector &vel = LuaMathLibrary::LuaGetVector3D(L, 1);
         PlayerTeleport(nullptr, nullptr, &vel);
     } else {
         luaL_error(L, "player.set_vel: argument is not a vector");
@@ -72,27 +73,26 @@ static int PlayerTeleport(lua_State *L) {
     QAngle *p_ang = &ang;
     Vector vel;
     Vector *p_vel = &vel;
-    if (lua_math_library.LuaIsVector3D(L, 1)) {
-        pos = lua_math_library.LuaGetVector3D(L, 1);
+
+    if (LuaMathLibrary::LuaIsVector3D(L, 1)) {
+        pos = LuaMathLibrary::LuaGetVector3D(L, 1);
     } else {
         p_pos = nullptr;
     }
 
-
-    if (lua_math_library.LuaIsVector3D(L, 2)) {
-        ang = lua_math_library.LuaGetAngle(L, 2);
+    if (LuaMathLibrary::LuaIsAngle(L, 2)) {
+        ang = LuaMathLibrary::LuaGetAngle(L, 2);
     } else {
         p_ang = nullptr;
-    };
+    }
 
-    if (lua_math_library.LuaIsVector3D(L, 3)) {
-        vel = lua_math_library.LuaGetVector3D(L, 3);
+    if (LuaMathLibrary::LuaIsVector3D(L, 3)) {
+        vel = LuaMathLibrary::LuaGetVector3D(L, 3);
     } else {
         p_vel = nullptr;
     }
 
     PlayerTeleport(p_pos, p_ang, p_vel);
-
     return 0;
 }
 
@@ -162,9 +162,8 @@ function player.get_vel()
     return nil
 end
 
----@vararg vec3|number|table Position vector
-function player.set_vel(...)
-    player._set_vel(vec3(...))
+---@vararg vec3 Velocity vector
+function player.set_vel(vel)
 end
 
 ---@param pos vec3 player position

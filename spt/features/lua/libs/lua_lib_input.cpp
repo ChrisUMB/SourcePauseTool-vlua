@@ -29,7 +29,7 @@ function input_key:tap()
     self:hold()
 
     coroutine.resume(coroutine.create(function()
-        events.client_tick:wait()
+        events.tick:wait()
         self:release()
     end))
 end

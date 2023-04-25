@@ -1,5 +1,6 @@
 #include "stdafx.hpp"
 #include "lua_lib_math.hpp"
+#include "spt/features/lua/lua_util.hpp"
 
 LuaMathLibrary lua_math_library;
 
@@ -10,7 +11,10 @@ void LuaMathLibrary::Load(lua_State *L) {
 }
 
 static bool LuaIsClass(lua_State *L, int index, const char *class_name) {
-    lua_getmetatable(L, index);
+    if(!lua_getmetatable(L, index)) {
+        return false;
+    }
+
     lua_getglobal(L, class_name);
     bool is_class = lua_rawequal(L, -1, -2);
     lua_pop(L, 2);
