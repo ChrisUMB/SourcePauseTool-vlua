@@ -3,6 +3,7 @@
 #include "lua_lib_math.hpp"
 #include "../../playerio.hpp"
 #include "spt/sptlib-wrapper.hpp"
+#include "spt/features/lua/lua_util.hpp"
 
 LuaPlayerLibrary lua_player_library;
 
@@ -78,12 +79,11 @@ static int PlayerTeleport(lua_State *L) {
         p_pos = nullptr;
     }
 
-
-    if (LuaMathLibrary::LuaIsVector3D(L, 2)) {
+    if (LuaMathLibrary::LuaIsAngle(L, 2)) {
         ang = LuaMathLibrary::LuaGetAngle(L, 2);
     } else {
         p_ang = nullptr;
-    };
+    }
 
     if (LuaMathLibrary::LuaIsVector3D(L, 3)) {
         vel = LuaMathLibrary::LuaGetVector3D(L, 3);
@@ -92,7 +92,6 @@ static int PlayerTeleport(lua_State *L) {
     }
 
     PlayerTeleport(p_pos, p_ang, p_vel);
-
     return 0;
 }
 
@@ -162,9 +161,8 @@ function player.get_vel()
     return nil
 end
 
----@vararg vec3|number|table Position vector
-function player.set_vel(...)
-    player._set_vel(vec3(...))
+---@vararg vec3 Velocity vector
+function player.set_vel(vel)
 end
 
 ---@param pos vec3 player position

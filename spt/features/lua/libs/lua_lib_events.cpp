@@ -5,7 +5,7 @@ LuaEventsLibrary lua_events_library;
 
 LuaEventsLibrary::LuaEventsLibrary() : LuaLibrary("events") {}
 
-void LuaEventsLibrary::InvokeEvent(const std::string &event_name, const std::function<void(lua_State*)> &lambda) {
+void LuaEventsLibrary::InvokeEvent(const std::string &event_name, const std::function<void(lua_State *)> &lambda) {
     for (const auto &L: states) {
         lambda(L);
         lua_getglobal(L, "events");
@@ -88,6 +88,30 @@ events = {
     ---@class player_grounded_event : event
     ---@type event_type<player_grounded_event>
     player_grounded = new_event_type(),
+
+    ---@class entity_teleport_event : event
+    ---@field hammer_id number The entity hammer ID
+    ---@field old_pos vec3 The position of the entity prior to the teleport
+    ---@field new_pos vec3 The position of the entity after the teleport
+    ---@field old_rot vec3 The rotation of the entity prior to the teleport
+    ---@field new_rot vec3 The rotation of the entity after the teleport
+    ---@field old_ang vec3 The angles of the entity prior to the teleport
+    ---@field new_ang vec3 The angles of the entity after the teleport
+    ---@type event_type<entity_teleport_event>
+    entity_teleport = new_event_type(),
+
+    ---@class player_teleport_event : entity_teleport_event
+    ---@type event_type<player_teleport_event>
+    player_teleport = new_event_type(),
+
+    ---@class player_grounded_event : event
+    ---@type event_type<player_grounded_event>
+    player_grounded = new_event_type(),
+
+    ---@class player_ungrounded_event : event
+    ---@type event_type<player_ungrounded_event>
+    player_ungrounded = new_event_type(),
+
 }
 
 local listeners = {}

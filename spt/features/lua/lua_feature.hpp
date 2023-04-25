@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../feature.hpp"
+#include "spt/features/lua/lua_util.hpp"
 #include <string>
 #include <vector>
 #include "lua.hpp"
@@ -53,6 +54,14 @@ private:
     std::vector<LuaLibrary *> libraries;
 
     static void InitDirectory();
+
+    using _TeleportTouchingEntity = void (__thiscall *)(void *thisptr, void *);
+    _TeleportTouchingEntity ORIG_TeleportTouchingEntity = nullptr;
+    static void __fastcall HOOKED_TeleportTouchingEntity(void *thisptr, int _edx, void *other);
+
+    using _GetPortalCallQueue = bool (*)();
+    _GetPortalCallQueue ORIG_GetPortalCallQueue = nullptr;
+
 };
 
 extern LuaFeature spt_lua;

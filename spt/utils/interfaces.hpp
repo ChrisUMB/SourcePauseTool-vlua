@@ -15,6 +15,7 @@
 #include "engine\ivmodelinfo.h"
 #include "engine\IEngineTrace.h"
 #include "vphysics_interface.h"
+#include "toolframework/itoolentity.h"
 
 namespace interfaces
 {
@@ -38,4 +39,5 @@ namespace interfaces
 	extern IEngineTrace* engineTraceServer;
 	extern IServerPluginHelpers* pluginHelpers;
 	extern IPhysicsCollision* physicsCollision;
+    extern IServerTools* server_tools;
 } // namespace interfaces
