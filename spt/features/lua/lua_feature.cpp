@@ -13,6 +13,7 @@
 #include "libs/lua_lib_game.hpp"
 #include "libs/lua_lib_math.hpp"
 #include "libs/lua_lib_player.hpp"
+#include "libs/lua_lib_render.hpp"
 #include "signals.hpp"
 #include "../visualizations/renderer/mesh_renderer.hpp"
 
@@ -35,6 +36,7 @@ void LuaFeature::LoadFeature() {
     RegisterLibrary(&lua_game_library);
     RegisterLibrary(&lua_math_library);
     RegisterLibrary(&lua_player_library);
+    RegisterLibrary(&lua_render_library);
 
     void (*tick)() = []() {
         static int ticks = 0;
@@ -66,18 +68,28 @@ void LuaFeature::LoadFeature() {
 
     ClientActiveSignal.Connect(*client_active);
 
-
-    void (*rendering)(MeshRendererDelegate &mr) = [](MeshRendererDelegate &mr) {
-        mr.DrawMesh(spt_meshBuilder.CreateDynamicMesh([](MeshBuilderDelegate &mb) {
-            mb.AddBox({0, 0, 0}, {0, 0, 0}, {64, 64, 64}, {0, 0, 0}, {C_OUTLINE(0, 85, 255, 100)});
-        }), [](const CallbackInfoIn &infoIn, CallbackInfoOut &infoOut) {
-            if(infoIn.cvs.origin.z > 0) {
-                infoOut.colorModulate = {0, 15, 255, 255};
-            }
-        });
-    };
-
-    spt_meshRenderer.signal.Connect(*rendering);
+//    static const StaticMesh &mesh = spt_meshBuilder.CreateStaticMesh([](MeshBuilderDelegate &mb) {
+//        mb.AddBox({0, 0, 0}, {0, 0, 0}, {64, 64, 64}, {0, 0, 0}, {C_OUTLINE(0, 85, 255, 100)});
+//    });
+//
+//    void (*rendering)(MeshRendererDelegate &mr) = [](MeshRendererDelegate &mr) {
+////        const DynamicMesh &mesh = spt_meshBuilder.CreateDynamicMesh([](MeshBuilderDelegate &mb) {
+////            mb.AddBox({0, 0, 0}, {0, 0, 0}, {64, 64, 64}, {0, 0, 0}, {C_OUTLINE(0, 85, 255, 100)});
+////        });
+//
+////        if(infoIn.cvs.origin.z > 0) {
+////            infoOut.colorModulate = {0, 15, 255, 255};
+////        }
+//
+//        for (int i = 0; i < 10; ++i) {
+//            const int offset = i;
+//            mr.DrawMesh(mesh, [offset](const CallbackInfoIn &infoIn, CallbackInfoOut &infoOut) {
+//                PositionMatrix(Vector(0, 0, (float) offset * 96), infoOut.mat);
+//            });
+//        }
+//    };
+//
+//    spt_meshRenderer.signal.Connect(*rendering);
 }
 
 void LuaFeature::UnloadFeature() {}

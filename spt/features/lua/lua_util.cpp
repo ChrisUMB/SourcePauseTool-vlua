@@ -91,3 +91,19 @@ std::vector<std::string> GetFileSuggestions(file_path_t &file_path, const std::s
 
     return suggestions;
 }
+
+bool LuaCheckClass(lua_State *L, int index, const char *class_name) {
+    if (!LuaIsClass(L, index, class_name)) {
+        luaL_error(L, "Expected %s", class_name);
+        return false;
+    }
+    return true;
+}
+
+bool LuaIsClass(lua_State *L, int index, const char *class_name) {
+    lua_getmetatable(L, index);
+    lua_getglobal(L, class_name);
+    bool is_class = lua_rawequal(L, -1, -2);
+    lua_pop(L, 2);
+    return is_class;
+}
