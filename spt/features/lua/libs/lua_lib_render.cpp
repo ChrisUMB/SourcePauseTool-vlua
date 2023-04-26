@@ -64,8 +64,11 @@ static void MeshRender(MeshRendererDelegate &mr) {
 
         for (auto &meshEntry: data.offlineStaticMeshes) {
             OfflineStaticMesh *offlineMesh = meshEntry.second;
+            if(offlineMesh->appendFunctions.empty()) {
+                continue;
+            }
 
-            if (offlineMesh->needsRebuild && !offlineMesh->mesh.Valid()) {
+            if (offlineMesh->needsRebuild) {
                 if (offlineMesh->mesh.Valid()) {
                     offlineMesh->mesh.Destroy();
                 }
@@ -79,6 +82,11 @@ static void MeshRender(MeshRendererDelegate &mr) {
                     }
                 });
                 offlineMesh->valid = true;
+                offlineMesh->needsRebuild = false;
+            }
+
+            if(!offlineMesh->valid || !offlineMesh->mesh.Valid()) {
+                continue;
             }
 
             mr.DrawMesh(offlineMesh->mesh); // TODO: Transform callback stuff
@@ -272,9 +280,87 @@ static int VerifyMesh(lua_State *L, Mesh** result) {
     return 0;
 }
 
-static int AddBox(lua_State *L) {
-    // mesh:table, pos:vec3, min:vec3, max:vec3, face_color:vec4?, edge_color:vec4?
+static int ParseShapeColor(lua_State *L, int index, ShapeColor& result) {
+    if(lua_gettop(L) < index) {
+        return 0;
+    }
 
+    if(!lua_isnil(L, index)) {
+        if(!LuaMathLibrary::LuaIsVector4D(L, index)) {
+            return luaL_error(L, "Expected vec4 as argument %d (face_color)", index);
+        }
+
+        result.faceColor = ToColor32(LuaMathLibrary::LuaGetVector4D(L, index));
+    }
+
+    if(lua_gettop(L) < index + 1) {
+        return 0;
+    }
+
+    if(!lua_isnil(L, index + 1)) {
+        if(!LuaMathLibrary::LuaIsVector4D(L, index + 1)) {
+            return luaL_error(L, "Expected vec4 as argument %d (line_color)", index + 1);
+        }
+
+        result.lineColor = ToColor32(LuaMathLibrary::LuaGetVector4D(L, index + 1));
+    }
+
+    if(lua_gettop(L) < index + 2) {
+        return 0;
+    }
+
+    if(!lua_isnil(L, index + 2)) {
+        if(!lua_isboolean(L, index + 2)) {
+            return luaL_error(L, "Expected boolean as argument %d (depth_test_face)", index + 2);
+        }
+
+        result.zTestFaces = lua_toboolean(L, index + 2);
+    }
+
+    if(lua_gettop(L) < index + 3) {
+        return 0;
+    }
+
+    if(!lua_isnil(L, index + 3)) {
+        if(!lua_isboolean(L, index + 3)) {
+            return luaL_error(L, "Expected boolean as argument %d (depth_test_line)", index + 3);
+        }
+
+        result.zTestLines = lua_toboolean(L, index + 3);
+    }
+
+    return 0;
+}
+
+static int ParseLineColor(lua_State *L, int index, LineColor& result) {
+    if(lua_gettop(L) < index) {
+        return 0;
+    }
+
+    if(!lua_isnil(L, index)) {
+        if(!LuaMathLibrary::LuaIsVector4D(L, index)) {
+            return luaL_error(L, "Expected vec4 as argument %d (line_color)", index);
+        }
+
+        result = ToColor32(LuaMathLibrary::LuaGetVector4D(L, index));
+    }
+
+    if(lua_gettop(L) < index + 1) {
+        return 0;
+    }
+
+    if(!lua_isnil(L, index + 1)) {
+        if(!lua_isboolean(L, index + 1)) {
+            return luaL_error(L, "Expected boolean as argument %d (depth_test_line)", index + 1);
+        }
+
+        result.zTestLines = lua_toboolean(L, index + 1);
+    }
+
+    return 0;
+}
+
+static int AddBox(lua_State *L) {
     if(lua_gettop(L) < 4) {
         return luaL_error(L, "Expected at least 4 arguments, got %d", lua_gettop(L));
     }
@@ -301,36 +387,17 @@ static int AddBox(lua_State *L) {
     Vector min = LuaMathLibrary::LuaGetVector3D(L, 3);
     Vector max = LuaMathLibrary::LuaGetVector3D(L, 4);
 
-    Vector4D face_color = Vector4D(1, 1, 1, 0.5);
-    Vector4D edge_color = Vector4D(1, 1, 1, 1);
+    ShapeColor shapeColor(
+            color32(255, 255, 255, 128),
+            color32(255, 255, 255, 255),
+            true,
+            true
+    );
 
-    if(lua_gettop(L) >= 5) {
-        if(!LuaMathLibrary::LuaIsVector4D(L, 5)) {
-            return luaL_error(L, "Expected vec4 as fifth argument (face_color)");
-        }
+    ParseShapeColor(L, 5, shapeColor);
 
-        face_color = LuaMathLibrary::LuaGetVector4D(L, 5);
-
-        if(lua_gettop(L) >= 6) {
-            if(!LuaMathLibrary::LuaIsVector4D(L, 6)) {
-                return luaL_error(L, "Expected vec4 as sixth argument (edge_color)");
-            }
-
-            edge_color = LuaMathLibrary::LuaGetVector4D(L, 6);
-        }
-    }
-
-//    Msg("Queuing box to mesh\n");
-
-    mesh->appendFunctions.push_back([pos, min, max, face_color, edge_color](MeshBuilderDelegate &builder) {
-//        Msg("Adding box to mesh\n");
-        builder.AddBox(pos, min, max, { 0.0f, 0.0f, 0.0f }, ShapeColor(
-                ToColor32(face_color),
-                ToColor32(edge_color),
-                true, // todo
-                true, // todo
-                WD_CW // todo
-        ));
+    mesh->appendFunctions.emplace_back([pos, min, max, shapeColor](MeshBuilderDelegate &builder) {
+        builder.AddBox(pos, min, max, { 0.0f, 0.0f, 0.0f }, shapeColor);
     });
 
     if(mesh->is_static) {
@@ -340,13 +407,320 @@ static int AddBox(lua_State *L) {
     return 0;
 }
 
+static int AddSphere(lua_State *L) {
+    if(lua_gettop(L) < 4) {
+        return luaL_error(L, "Expected at least 4 arguments, got %d", lua_gettop(L));
+    }
+
+    Mesh *mesh;
+    int result = VerifyMesh(L, &mesh);
+    if(result != 0) {
+        return result;
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 2)) {
+        return luaL_error(L, "Expected vec3 as second argument (pos)");
+    }
+
+    if(!lua_isnumber(L, 3)) {
+        return luaL_error(L, "Expected number as third argument (radius)");
+    }
+
+    if(!lua_isnumber(L, 4)) {
+        return luaL_error(L, "Expected number as fourth argument (segments)");
+    }
+
+    Vector pos = LuaMathLibrary::LuaGetVector3D(L, 2);
+    float radius = (float) lua_tonumber(L, 3);
+    int segments = lua_tointeger(L, 4);
+
+    ShapeColor shapeColor(
+            color32(255, 255, 255, 128),
+            color32(255, 255, 255, 255),
+            true,
+            true
+    );
+
+    ParseShapeColor(L, 5, shapeColor);
+
+    mesh->appendFunctions.emplace_back([pos, radius, segments, shapeColor](MeshBuilderDelegate &builder) {
+        builder.AddSphere(pos, radius, segments, shapeColor);
+    });
+
+    if(mesh->is_static) {
+        ((OfflineStaticMesh *) mesh)->needsRebuild = true;
+    }
+
+    return 0;
+}
+
+static int AddLine(lua_State *L) {
+    if(lua_gettop(L) < 3) {
+        return luaL_error(L, "Expected at least 3 arguments, got %d", lua_gettop(L));
+    }
+
+    Mesh *mesh;
+    int result = VerifyMesh(L, &mesh);
+    if(result != 0) {
+        return result;
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 2)) {
+        return luaL_error(L, "Expected vec3 as second argument (start)");
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 3)) {
+        return luaL_error(L, "Expected vec3 as third argument (end)");
+    }
+
+    Vector start = LuaMathLibrary::LuaGetVector3D(L, 2);
+    Vector end = LuaMathLibrary::LuaGetVector3D(L, 3);
+
+    LineColor lineColor(
+            color32(255, 255, 255, 255),
+            true
+    );
+
+    ParseLineColor(L, 4, lineColor);
+
+    mesh->appendFunctions.emplace_back([start, end, lineColor](MeshBuilderDelegate &builder) {
+        builder.AddLine(start, end, lineColor);
+    });
+
+    if(mesh->is_static) {
+        ((OfflineStaticMesh *) mesh)->needsRebuild = true;
+    }
+
+    return 0;
+}
+
+static int AddTriangle(lua_State *L) {
+    if(lua_gettop(L) < 4) {
+        return luaL_error(L, "Expected at least 4 arguments, got %d", lua_gettop(L));
+    }
+
+    Mesh *mesh;
+    int result = VerifyMesh(L, &mesh);
+    if(result != 0) {
+        return result;
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 2)) {
+        return luaL_error(L, "Expected vec3 as second argument (a)");
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 3)) {
+        return luaL_error(L, "Expected vec3 as third argument (b)");
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 4)) {
+        return luaL_error(L, "Expected vec3 as fourth argument (c)");
+    }
+
+    Vector a = LuaMathLibrary::LuaGetVector3D(L, 2);
+    Vector b = LuaMathLibrary::LuaGetVector3D(L, 3);
+    Vector c = LuaMathLibrary::LuaGetVector3D(L, 4);
+
+    ShapeColor shapeColor(
+            color32(255, 255, 255, 128),
+            color32(255, 255, 255, 255),
+            true,
+            true
+    );
+
+    ParseShapeColor(L, 5, shapeColor);
+
+    mesh->appendFunctions.emplace_back([a, b, c, shapeColor](MeshBuilderDelegate &builder) {
+        builder.AddTri(a, b, c, shapeColor);
+    });
+
+    if(mesh->is_static) {
+        ((OfflineStaticMesh *) mesh)->needsRebuild = true;
+    }
+
+    return 0;
+}
+
+static int AddQuad(lua_State *L) {
+    if(lua_gettop(L) < 5) {
+        return luaL_error(L, "Expected at least 5 arguments, got %d", lua_gettop(L));
+    }
+
+    Mesh *mesh;
+    int result = VerifyMesh(L, &mesh);
+    if(result != 0) {
+        return result;
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 2)) {
+        return luaL_error(L, "Expected vec3 as second argument (a)");
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 3)) {
+        return luaL_error(L, "Expected vec3 as third argument (b)");
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 4)) {
+        return luaL_error(L, "Expected vec3 as fourth argument (c)");
+    }
+
+    if(!LuaMathLibrary::LuaIsVector3D(L, 5)) {
+        return luaL_error(L, "Expected vec3 as fifth argument (d)");
+    }
+
+    Vector a = LuaMathLibrary::LuaGetVector3D(L, 2);
+    Vector b = LuaMathLibrary::LuaGetVector3D(L, 3);
+    Vector c = LuaMathLibrary::LuaGetVector3D(L, 4);
+    Vector d = LuaMathLibrary::LuaGetVector3D(L, 5);
+
+    ShapeColor shapeColor(
+            color32(255, 255, 255, 128),
+            color32(255, 255, 255, 255),
+            true,
+            true
+    );
+
+    ParseShapeColor(L, 6, shapeColor);
+
+    mesh->appendFunctions.emplace_back([a, b, c, d, shapeColor](MeshBuilderDelegate &builder) {
+        builder.AddQuad(a, b, c, d, shapeColor);
+    });
+
+    if(mesh->is_static) {
+        ((OfflineStaticMesh *) mesh)->needsRebuild = true;
+    }
+
+    return 0;
+}
+
+static int AddLineStrip(lua_State *L) {
+    // vec3[] points, boolean loop, vec4 lineColor, boolean depthTest
+    if(lua_gettop(L) < 2) {
+        return luaL_error(L, "Expected at least 2 arguments, got %d", lua_gettop(L));
+    }
+
+    Mesh *mesh;
+    int result = VerifyMesh(L, &mesh);
+    if(result != 0) {
+        return result;
+    }
+
+    if(!lua_istable(L, 2)) {
+        return luaL_error(L, "Expected table as second argument (points)");
+    }
+
+    LineColor lineColor(
+            color32(255, 255, 255, 255),
+            true
+    );
+
+    bool loop = false;
+    if(lua_gettop(L) >= 3) {
+        if(!lua_isboolean(L, 3)) {
+            return luaL_error(L, "Expected boolean as third argument (loop)");
+        }
+        loop = lua_toboolean(L, 3);
+
+        ParseLineColor(L, 4, lineColor);
+    }
+
+    std::vector<Vector> points;
+    //lua_rawlen not available in Lua 5.1
+    int numPoints = (int) lua_objlen(L, 2);
+
+    for(int i = 1; i <= numPoints; i++) {
+        lua_rawgeti(L, 2, i);
+        if(!LuaMathLibrary::LuaIsVector3D(L, -1)) {
+            return luaL_error(L, "Expected vec3 as element %d of second argument (points)", i);
+        }
+        points.push_back(LuaMathLibrary::LuaGetVector3D(L, -1));
+        lua_pop(L, 1);
+    }
+
+    mesh->appendFunctions.emplace_back([points, numPoints, loop, lineColor](MeshBuilderDelegate &builder) {
+        builder.AddLineStrip(points.data(), numPoints, loop, lineColor);
+    });
+
+    if(mesh->is_static) {
+        ((OfflineStaticMesh *) mesh)->needsRebuild = true;
+    }
+
+    return 0;
+}
+
+static Vector HSBtoRGB(Vector hsb) {
+    float hue = hsb.x;
+    float saturation = hsb.y;
+    float brightness = hsb.z;
+
+    if(saturation == 0) {
+        return {brightness, brightness, brightness};
+    } else {
+        float hueSector = hue * 6.0f;
+        int sectorNumber = (int) floor(hueSector);
+        float fractionalSector = hueSector - (float) sectorNumber;
+        float p = brightness * (1 - saturation);
+        float q = brightness * (1 - saturation * fractionalSector);
+        float t = brightness * (1 - saturation * (1 - fractionalSector));
+
+        switch(sectorNumber) {
+            case 0:
+                return { brightness, t, p};
+            case 1:
+                return {q, brightness, p};
+            case 2:
+                return {p, brightness, t};
+            case 3:
+                return {p, q, brightness};
+            case 4:
+                return {t, p, brightness};
+            case 5:
+                return {brightness, p, q};
+            default:
+                return {0, 0, 0};
+        }
+    }
+}
+
+static int HSB(lua_State *L) {
+    if(lua_gettop(L) == 1) {
+        // expect vec3
+        if(!LuaMathLibrary::LuaIsVector3D(L, 1)) {
+            return luaL_error(L, "Expected vec3 as first argument");
+        }
+
+        Vector hsb = LuaMathLibrary::LuaGetVector3D(L, 1);
+        Vector rgb = HSBtoRGB(hsb);
+        LuaMathLibrary::LuaPushVector3D(L, rgb);
+        return 1;
+    } else if(lua_gettop(L) == 3) {
+        // expect 3 floats, return vec3
+        Vector hsb = {
+                (float) luaL_checknumber(L, 1),
+                (float) luaL_checknumber(L, 2),
+                (float) luaL_checknumber(L, 3)
+        };
+        Vector rgb = HSBtoRGB(hsb);
+        LuaMathLibrary::LuaPushVector3D(L, rgb);
+        return 1;
+    } else {
+        return luaL_error(L, "Expected 1 (vec3) or 3 (number) arguments, got %d", lua_gettop(L));
+    }
+}
+
 static const struct luaL_Reg render_class[] = {
-        {"_static",    CreateStaticMesh},
-        {"_dynamic",   CreateDynamicMesh},
-        {"_add_box",   AddBox},
-        {"delete",     DeleteStaticMesh},
-        {"delete_all", DeleteAll},
-        {nullptr,      nullptr}
+        {"_static",     CreateStaticMesh},
+        {"_dynamic",    CreateDynamicMesh},
+        {"_add_box",    AddBox},
+        {"_add_sphere", AddSphere},
+        {"_add_line",   AddLine},
+        {"_add_triangle", AddTriangle},
+        {"_add_quad",   AddQuad},
+        {"_add_line_strip", AddLineStrip},
+        {"hsb",         HSB},
+        {"delete",      DeleteStaticMesh},
+        {"delete_all",  DeleteAll},
+        {nullptr,       nullptr}
 };
 
 LuaRenderLibrary::LuaRenderLibrary() : LuaLibrary("render") {
@@ -393,14 +767,72 @@ const std::string &LuaRenderLibrary::GetLuaSource() {
         ---@class mesh
         ---@field auto_render boolean
         ---@field frame_callback fun():void
-        ---@field box fun(pos:vec3, min:vec3, max:vec3, face_color:vec4, edge_color:vec4):mesh
-        ---@field sphere fun(pos:vec3, radius:number, face_color:vec4, edge_color:vec4):mesh
-        ---@field line fun(pos1:vec3, pos2:vec3, color:vec4):mesh
-        ---@field triangle fun(pos1:vec3, pos2:vec3, pos3:vec3, color:vec4):mesh
-        ---@field quad fun(pos1:vec3, pos2:vec3, pos3:vec3, pos4:vec3, color:vec4):mesh
         local mesh = {}
-        function mesh:box(pos, min, max, face_color, edge_color)
-            render._add_box(self, pos, min, max, face_color, edge_color)
+
+        ---@param pos vec3
+        ---@param min vec3
+        ---@param max vec3
+        ---@param face_color vec4|nil
+        ---@param edge_color vec4|nil
+        ---@param depth_test_face boolean|nil
+        ---@param depth_test_edge boolean|nil
+        function mesh:box(pos, min, max, face_color, edge_color, depth_test_face, depth_test_edge)
+            render._add_box(self, pos, min, max, face_color, edge_color, depth_test_face, depth_test_edge)
+            return self
+        end
+
+        ---@param pos vec3
+        ---@param radius number
+        ---@param segments number
+        ---@param face_color vec4|nil
+        ---@param edge_color vec4|nil
+        ---@param depth_test_face boolean|nil
+        ---@param depth_test_edge boolean|nil
+        function mesh:sphere(pos, radius, segments, face_color, edge_color, depth_test_face, depth_test_edge)
+            render._add_sphere(self, pos, radius, segments, face_color, edge_color, depth_test_face, depth_test_edge)
+            return self
+        end
+
+        ---@param pos1 vec3
+        ---@param pos2 vec3
+        ---@param color vec4|nil
+        ---@param depth_test boolean|nil
+        function mesh:line(pos1, pos2, color, depth_test)
+            render._add_line(self, pos1, pos2, color, depth_test)
+            return self
+        end
+
+        ---@param pos1 vec3
+        ---@param pos2 vec3
+        ---@param pos3 vec3
+        ---@param face_color vec4|nil
+        ---@param edge_color vec4|nil
+        ---@param depth_test_face boolean|nil
+        ---@param depth_test_edge boolean|nil
+        function mesh:triangle(pos1, pos2, pos3, face_color, edge_color, depth_test_face, depth_test_edge)
+            render._add_triangle(self, pos1, pos2, pos3, face_color, edge_color, depth_test_face, depth_test_edge)
+            return self
+        end
+
+        ---@param pos1 vec3
+        ---@param pos2 vec3
+        ---@param pos3 vec3
+        ---@param pos4 vec3
+        ---@param face_color vec4|nil
+        ---@param edge_color vec4|nil
+        ---@param depth_test_face boolean|nil
+        ---@param depth_test_edge boolean|nil
+        function mesh:quad(pos1, pos2, pos3, pos4, face_color, edge_color, depth_test_face, depth_test_edge)
+            render._add_quad(self, pos1, pos2, pos3, pos4, face_color, edge_color, depth_test_face, depth_test_edge)
+            return self
+        end
+
+        ---@param positions vec3[]
+        ---@param loop boolean|nil
+        ---@param color vec4|nil
+        ---@param depth_test boolean|nil
+        function mesh:line_strip(positions, loop, color, depth_test)
+            render._add_line_strip(self, positions, loop, color, depth_test)
             return self
         end
 
@@ -451,6 +883,17 @@ const std::string &LuaRenderLibrary::GetLuaSource() {
         end
 
         function render.delete_all()
+        end
+
+        ---@overload fun(hsb: vec3): vec3
+        ---@return vec3
+        function render.hsb(h, s, b)
+        end
+
+        function render.hsba(...)
+            local v = vec4(...)
+            local hsb = render.hsb(v.x, v.y, v.z)
+            return vec4(hsb.x, hsb.y, hsb.z, v.w)
         end
 
         --- Can only be called during the render event

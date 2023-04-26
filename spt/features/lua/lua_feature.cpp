@@ -156,6 +156,10 @@ void __fastcall LuaFeature::HOOKED_TeleportTouchingEntity(void *thisptr, int _ed
     Vector new_rot = *p_rot;
     QAngle new_ang = *p_ang;
 
+    if(is_player) {
+        lua_player_library.UpdateLocals(old_pos, old_ang, new_pos, new_ang);
+    }
+
     auto event_invocation = [&](lua_State *L) {
         lua_newtable(L);
 

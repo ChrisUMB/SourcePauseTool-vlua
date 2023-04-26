@@ -5,10 +5,25 @@
 #include "spt/sptlib-wrapper.hpp"
 #include "../libs/lua_lib_entity.hpp"
 #include "spt/features/generic.hpp"
+#include "interfaces.hpp"
+#include "signals.hpp"
 
 LuaPlayerLibrary lua_player_library;
 
-LuaPlayerLibrary::LuaPlayerLibrary() : LuaLibrary("player") {}
+// Fix angles to between -180 and 180 degrees
+#define FIX_ANGLE(x) ((x) > 180 ? (x) - 360 : (x) < -180 ? (x) + 360 : (x))
+
+static void ResetLocals(edict_t*) {
+    lua_player_library.local_angle_offset = QAngle(0.0f, 0.0f, 0.0f);
+    lua_player_library.local_position_origin = Vector(0.0f, 0.0f, 0.0f);
+    lua_player_library.local_position_offset = Vector(0.0f, 0.0f, 0.0f);
+}
+
+LuaPlayerLibrary::LuaPlayerLibrary() : LuaLibrary("player") {
+    this->local_angle_offset = QAngle(0.0f, 0.0f, 0.0f);
+    this->local_position_origin = Vector(0.0f, 0.0f, 0.0f);
+    this->local_position_offset = Vector(0.0f, 0.0f, 0.0f);
+}
 
 static void PlayerTeleport(const Vector *pos, const QAngle *ang, const Vector *vel) {
     LuaEntityLibrary::Teleport(spt_entprops.GetPlayer(true), pos, ang, vel);
@@ -103,6 +118,53 @@ static int PlayerIsGrounded(lua_State *L) {
     return 1;
 }
 
+static int PlayerGetLocalAng(lua_State *L) {
+    QAngle ang;
+    EngineGetViewAngles(reinterpret_cast<float *>(&ang));
+
+    ang.x = FIX_ANGLE(ang.x - lua_player_library.local_angle_offset.x);
+    ang.y = FIX_ANGLE(ang.y - lua_player_library.local_angle_offset.y);
+    ang.z = FIX_ANGLE(ang.z - lua_player_library.local_angle_offset.z);
+
+    LuaMathLibrary::LuaPushAngle(L, ang);
+    return 1;
+}
+
+static int PlayerSetLocalAng(lua_State *L) {
+    if (LuaMathLibrary::LuaIsAngle(L, 1)) {
+        QAngle ang = LuaMathLibrary::LuaGetAngle(L, 1);
+        ang.x = FIX_ANGLE(ang.x + lua_player_library.local_angle_offset.x);
+        ang.y = FIX_ANGLE(ang.y + lua_player_library.local_angle_offset.y);
+        ang.z = FIX_ANGLE(ang.z + lua_player_library.local_angle_offset.z);
+        EngineSetViewAngles(reinterpret_cast<float *>(&ang));
+    } else {
+        luaL_error(L, "player.set_local_ang: argument is not a vector");
+    }
+
+    return 0;
+}
+
+static int PlayerGetLocalAngOffset(lua_State *L) {
+    LuaMathLibrary::LuaPushAngle(L, lua_player_library.local_angle_offset);
+    return 1;
+}
+
+static int PlayerGetLocalPos(lua_State *L) {
+    LuaMathLibrary::LuaPushVector3D(L, lua_player_library.AsLocalPosition(spt_playerio.m_vecAbsOrigin.GetValue()));
+    return 1;
+}
+
+static int PlayerGetLocalPosOffset(lua_State *L) {
+    LuaMathLibrary::LuaPushVector3D(L, lua_player_library.local_position_offset);
+    return 1;
+}
+
+static int PlayerGetLocalPosOrigin(lua_State *L) {
+    LuaMathLibrary::LuaPushVector3D(L, lua_player_library.local_position_origin);
+    return 1;
+}
+
+
 //static int PlayerTrace(lua_State *L) {
 //
 //}
@@ -116,11 +178,12 @@ static const struct luaL_Reg player_class[] = {
         {"set_vel",     PlayerSetVel},
         {"get_eye_pos", PlayerGetEyePos},
 
-//        {"get_local_ang",        lua_player_get_local_ang},
-//        {"set_local_ang",        lua_player_set_local_ang},
-//        {"get_local_ang_offset", lua_player_get_local_ang_offset},
-//        {"get_local_pos",        lua_player_get_local_pos},
-//        {"get_local_pos_offset", lua_player_get_local_pos_offset},
+        {"get_local_ang",        PlayerGetLocalAng},
+        {"set_local_ang",        PlayerSetLocalAng},
+        {"get_local_ang_offset", PlayerGetLocalAngOffset},
+        {"get_local_pos",        PlayerGetLocalPos},
+        {"get_local_pos_offset", PlayerGetLocalPosOffset},
+        {"get_local_pos_origin", PlayerGetLocalPosOrigin},
         {"teleport",    PlayerTeleport},
         {"is_grounded", PlayerIsGrounded},
 //        {"trace",       PlayerTrace},
@@ -128,6 +191,12 @@ static const struct luaL_Reg player_class[] = {
 };
 
 void LuaPlayerLibrary::Load(lua_State *L) {
+    static bool first_load = true;
+    if(first_load) {
+        ClientActiveSignal.Connect(ResetLocals);
+        first_load = false;
+    }
+
     luaL_register(L, "player", player_class);
     lua_pop(L, 1);
 }
@@ -190,4 +259,28 @@ end
 )""";
 
     return sources;
+}
+
+Vector LuaPlayerLibrary::AsLocalPosition(const Vector &position) {
+    Vector forward, right, up;
+    AngleVectors(local_angle_offset, &forward, &right, &up);
+
+    Vector origin_pos = position - local_position_origin;
+    Vector local_pos = (forward * origin_pos.x) + (right * origin_pos.y) + (up * origin_pos.z);
+    return local_pos + local_position_offset;
+}
+
+void LuaPlayerLibrary::UpdateLocals(
+        const Vector &old_pos,
+        const QAngle &old_ang,
+        const Vector &new_pos,
+        const QAngle &new_ang
+) {
+    Vector new_offset = AsLocalPosition(old_pos);
+    local_position_origin = new_pos;
+    local_position_offset = new_offset;
+
+    local_angle_offset.x = FIX_ANGLE(new_ang.x - old_ang.x + local_angle_offset.x);
+    local_angle_offset.y = FIX_ANGLE(new_ang.y - old_ang.y + local_angle_offset.y);
+    local_angle_offset.z = FIX_ANGLE(new_ang.z - old_ang.z + local_angle_offset.z);
 }
