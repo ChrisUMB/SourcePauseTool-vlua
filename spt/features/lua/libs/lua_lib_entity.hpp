@@ -11,6 +11,9 @@ public:
     const std::string& GetLuaSource() override;
 
     static void *LuaCheckEntity(lua_State *L, int index);
+
+    //TODO: This should be elevated to a separate part of SPT or something, it's not really a lua specific thing
+    static void Teleport(void* entity, const Vector* pos, const QAngle* ang, const Vector* vel);
 };
 
 extern LuaEntityLibrary lua_entity_library;

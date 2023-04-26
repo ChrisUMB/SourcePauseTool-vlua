@@ -3,17 +3,15 @@
 #include "lua_lib_math.hpp"
 #include "../../playerio.hpp"
 #include "spt/sptlib-wrapper.hpp"
-#include "spt/features/lua/lua_util.hpp"
+#include "../libs/lua_lib_entity.hpp"
+#include "spt/features/generic.hpp"
 
 LuaPlayerLibrary lua_player_library;
 
 LuaPlayerLibrary::LuaPlayerLibrary() : LuaLibrary("player") {}
 
 static void PlayerTeleport(const Vector *pos, const QAngle *ang, const Vector *vel) {
-    void *player = spt_entprops.GetPlayer(true);
-    int *p_vtable = reinterpret_cast<int *>(player);
-    (*(void (__thiscall **)(void *, const Vector *, const QAngle *, const Vector *)) (*p_vtable + 420))(player, pos,
-                                                                                                        ang, vel);
+    LuaEntityLibrary::Teleport(spt_entprops.GetPlayer(true), pos, ang, vel);
 }
 
 static int PlayerGetPos(lua_State *L) {
@@ -66,6 +64,11 @@ static int PlayerSetVel(lua_State *L) {
     return 0;
 }
 
+static int PlayerGetEyePos(lua_State *L) {
+    LuaMathLibrary::LuaPushVector3D(L, spt_generic.GetCameraOrigin());
+    return 1;
+}
+
 static int PlayerTeleport(lua_State *L) {
     Vector pos;
     Vector *p_pos = &pos;
@@ -112,8 +115,8 @@ static const struct luaL_Reg player_class[] = {
         {"_set_ang",    PlayerSetAng},
         {"get_vel",     PlayerGetVel},
         {"set_vel",     PlayerSetVel},
+        {"get_eye_pos", PlayerGetEyePos},
 
-//        {"get_eye_pos",          lua_player_get_eye_pos},
 //        {"get_local_ang",        lua_player_get_local_ang},
 //        {"set_local_ang",        lua_player_set_local_ang},
 //        {"get_local_ang_offset", lua_player_get_local_ang_offset},
@@ -164,6 +167,10 @@ end
 
 ---@vararg vec3 Velocity vector
 function player.set_vel(vel)
+end
+
+---@return vec3 player eye position
+function player.get_eye_pos()
 end
 
 ---@param pos vec3 player position

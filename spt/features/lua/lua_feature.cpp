@@ -13,6 +13,7 @@
 #include "libs/lua_lib_game.hpp"
 #include "libs/lua_lib_math.hpp"
 #include "libs/lua_lib_player.hpp"
+#include "libs/lua_lib_entity.hpp"
 #include "signals.hpp"
 #include "../visualizations/renderer/mesh_renderer.hpp"
 #include "ent_utils.hpp"
@@ -54,6 +55,7 @@ void LuaFeature::LoadFeature() {
     RegisterLibrary(&lua_game_library);
     RegisterLibrary(&lua_math_library);
     RegisterLibrary(&lua_player_library);
+    RegisterLibrary(&lua_entity_library);
 
     void (*tick)() = []() {
         static int ticks = 0;

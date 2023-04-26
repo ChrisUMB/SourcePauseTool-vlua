@@ -11,6 +11,12 @@ LuaEntityLibrary lua_entity_library;
 
 LuaEntityLibrary::LuaEntityLibrary() : LuaLibrary("entity") {}
 
+void LuaEntityLibrary::Teleport(void *entity, const Vector *pos, const QAngle *ang, const Vector *vel) {
+    int *p_vtable = reinterpret_cast<int *>(entity);
+    (*(void (__thiscall **)(void *, const Vector *, const QAngle *, const Vector *)) (*p_vtable + 420))(entity, pos,
+                                                                                                        ang, vel);
+}
+
 static int EntityFromID(lua_State *L) {
     int id = luaL_checkinteger(L, 1);
 
@@ -39,18 +45,44 @@ static int EntityFromHammerID(lua_State *L) {
         return 1;
     }
 
-    void **entity_ptr = (void **) lua_newuserdata(L, sizeof(void *));
-
-    *entity_ptr = entity;
-
-    luaL_getmetatable(L, "entity");
+    lua_newtable(L);
+    lua_getglobal(L, "entity");
     lua_setmetatable(L, -2);
+
+    lua_pushlightuserdata(L, entity);
+    lua_setfield(L, -2, "data");
     return 1;
 }
 
-/*
- * TODO: Replace all setters with a CBaseEntity::Teleport() invocation
- */
+//static int EntitySpawn(lua_State *L) {
+//    const char *classname = luaL_checkstring(L, 1);
+//
+//    if(!LuaMathLibrary::LuaIsVector3D(L, 2)) {
+//        luaL_error(L, "entity.spawn: 2nd argument is not a vector");
+//        return 0;
+//    }
+//
+//    Vector pos = LuaMathLibrary::LuaGetVector3D(L, 2);
+//
+//    void *entity = interfaces::server_tools->CreateEntityByName(classname);
+//
+//    if (entity == nullptr) {
+//        lua_pushnil(L);
+//        return 1;
+//    }
+//
+//    interfaces::server_tools->DispatchSpawn(entity);
+//
+////    LuaEntityLibrary::Teleport(entity, &pos, nullptr, nullptr);
+//
+//    lua_newtable(L);
+//    lua_getglobal(L, "entity");
+//    lua_setmetatable(L, -2);
+//
+//    lua_pushlightuserdata(L, entity);
+//    lua_setfield(L, -2, "data");
+//    return 1;
+//}
 
 static int EntityGetPos(lua_State *L) {
     void *entity = LUA_GET_ENTITY()
@@ -69,9 +101,8 @@ static int EntitySetPos(lua_State *L) {
         return 1;
     }
 
-    Vector *p_pos = (Vector *) ((uintptr_t) entity +
-                                spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
-    *p_pos = LuaMathLibrary::LuaGetVector3D(L, 2);
+    Vector pos = LuaMathLibrary::LuaGetVector3D(L, 2);
+    LuaEntityLibrary::Teleport(entity, &pos, nullptr, nullptr);
     return 0;
 }
 
@@ -87,28 +118,43 @@ static int EntityGetRot(lua_State *L) {
 static int EntitySetRot(lua_State *L) {
     void *entity = LUA_GET_ENTITY()
 
+    if (!LuaMathLibrary::LuaIsAngle(L, 2)) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    QAngle ang = LuaMathLibrary::LuaGetAngle(L, 2);
+    LuaEntityLibrary::Teleport(entity, nullptr, &ang, nullptr);
+    return 0;
+}
+
+static int EntityGetVel(lua_State *L) {
+    void *entity = LUA_GET_ENTITY()
+
+    Vector *p_vel = (Vector *) ((uintptr_t) entity +
+                                spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsVelocity", true));
+
+    LuaMathLibrary::LuaPushVector3D(L, *p_vel);
+    return 1;
+}
+
+static int EntitySetVel(lua_State *L) {
+    void *entity = LUA_GET_ENTITY()
+
     if (!LuaMathLibrary::LuaIsVector3D(L, 2)) {
         lua_pushnil(L);
         return 1;
     }
 
-    Vector *p_rot = (Vector *) ((uintptr_t) entity +
-                                spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
-    *p_rot = LuaMathLibrary::LuaGetVector3D(L, 2);
+    Vector vel = LuaMathLibrary::LuaGetVector3D(L, 2);
+    LuaEntityLibrary::Teleport(entity, nullptr, nullptr, &vel);
     return 0;
-}
-
-static int EntityGetVel(lua_State *L) {
-    //TODO: Implement
-}
-
-static int EntitySetVel(lua_State *L) {
-    //TODO: Implement
 }
 
 static const struct luaL_Reg entity_class[] = {
         {"from_id",        EntityFromID},
         {"from_hammer_id", EntityFromHammerID},
+//        {"spawn",           EntitySpawn},
         {"get_pos",        EntityGetPos},
         {"set_pos",        EntitySetPos},
         {"get_rot",        EntityGetRot},
@@ -159,6 +205,13 @@ end
 function entity.from_hammer_id(hammer_id)
 end
 
+---@param classname string Entity class name
+---@param pos vec3|nil Entity position
+---@param rot vec3|nil Entity rotation
+---@param vel vec3|nil Entity velocity
+function entity.spawn(classname, pos, rot, vel)
+end
+
 ---@return vec3 Entity position
 function entity:get_pos()
 end
@@ -183,4 +236,6 @@ end
 function entity:set_vel(vel)
 end
 )";
+
+    return sources;
 }
