@@ -32,6 +32,38 @@ void DebugLuaStack(lua_State *L) {
     Msg("----------\n");
 }
 
+std::string RemoveFunctionBodies(const std::string &lua_source) {
+    std::stringstream ss(lua_source);
+    std::string line;
+    std::string output;
+
+    bool in_function = false;
+
+    while (std::getline(ss, line)) {
+        if (in_function) {
+            in_function = line != "end";
+            continue;
+        }
+
+        if(line == "\n" || line == "") {
+            output += "\n";
+            continue;
+        }
+
+        if (line.starts_with("function")) {
+            in_function = true;
+            output += line.substr(0, line.find_first_of(')') + 1) + " end\n";
+            continue;
+        }
+
+        output += line + "\n";
+    }
+
+    //close buffer
+    ss.clear();
+    return output;
+}
+
 void GetFilePath(file_path_t &file_path, const std::string &partial, const char *default_path) {
     file_path.path = partial;
     file_path.prefix = partial;

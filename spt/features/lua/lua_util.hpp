@@ -14,6 +14,8 @@ void lua_string_format(lua_State *L);
 
 void lua_new_class(lua_State *L, const char *name, const luaL_Reg *functions);
 
+std::string RemoveFunctionBodies(const std::string &lua_source);
+
 void DebugLuaStack(lua_State *L);
 
 bool LuaIsClass(lua_State *L, int index, const char *class_name);
