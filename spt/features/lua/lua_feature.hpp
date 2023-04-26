@@ -29,7 +29,7 @@ public:
 
     void InitLuaState(lua_State* L);
 
-    void RegisterLibrary(LuaLibrary *library);
+    void RegisterLibrary(LuaLibrary *library, bool write_docs = true);
 
     void LoadLibraries(lua_State *L);
 
@@ -61,7 +61,6 @@ private:
 
     using _GetPortalCallQueue = bool (*)();
     _GetPortalCallQueue ORIG_GetPortalCallQueue = nullptr;
-
 };
 
 extern LuaFeature spt_lua;

@@ -22,7 +22,7 @@ public:
     static Vector LuaGetVector3D(lua_State *L, int index);
     static bool LuaIsVector3D(lua_State *L, int index);
 
-    static void LuaPushVector4D(lua_State *L, const const Vector4D& vector);
+    static void LuaPushVector4D(lua_State *L, const Vector4D& vector);
     static Vector4D LuaGetVector4D(lua_State *L, int index);
     static bool LuaIsVector4D(lua_State *L, int index);
 
