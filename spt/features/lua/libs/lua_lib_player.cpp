@@ -76,7 +76,6 @@ static int PlayerTeleport(lua_State *L) {
     QAngle *p_ang = &ang;
     Vector vel;
     Vector *p_vel = &vel;
-
     if (LuaMathLibrary::LuaIsVector3D(L, 1)) {
         pos = LuaMathLibrary::LuaGetVector3D(L, 1);
     } else {

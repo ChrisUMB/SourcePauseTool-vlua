@@ -13,6 +13,7 @@
 #include "libs/lua_lib_game.hpp"
 #include "libs/lua_lib_math.hpp"
 #include "libs/lua_lib_player.hpp"
+#include "libs/lua_lib_render.hpp"
 #include "libs/lua_lib_entity.hpp"
 #include "signals.hpp"
 #include "../visualizations/renderer/mesh_renderer.hpp"
@@ -56,6 +57,7 @@ void LuaFeature::LoadFeature() {
     RegisterLibrary(&lua_math_library);
     RegisterLibrary(&lua_player_library);
     RegisterLibrary(&lua_entity_library);
+    RegisterLibrary(&lua_render_library);
 
     void (*tick)() = []() {
         static int ticks = 0;
@@ -107,18 +109,6 @@ void LuaFeature::LoadFeature() {
     };
 
     OngroundSignal.Connect(on_ground);
-
-    void (*rendering)(MeshRendererDelegate &mr) = [](MeshRendererDelegate &mr) {
-        mr.DrawMesh(spt_meshBuilder.CreateDynamicMesh([](MeshBuilderDelegate &mb) {
-            mb.AddBox({0, 0, 0}, {0, 0, 0}, {64, 64, 64}, {0, 0, 0}, {C_OUTLINE(0, 85, 255, 100)});
-        }), [](const CallbackInfoIn &infoIn, CallbackInfoOut &infoOut) {
-            if (infoIn.cvs.origin.z > 0) {
-                infoOut.colorModulate = {0, 15, 255, 255};
-            }
-        });
-    };
-
-    spt_meshRenderer.signal.Connect(*rendering);
 }
 
 void LuaFeature::UnloadFeature() {}

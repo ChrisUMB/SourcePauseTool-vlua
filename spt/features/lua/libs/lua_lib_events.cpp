@@ -64,6 +64,10 @@ events = {
     ---@type event_type<frame_event>
     frame = new_event_type(),
 
+    ---@class render_event : event
+    ---@type event_type<render_event>
+    render = new_event_type(),
+
     ---@class level_init_event : event
     ---@field map_name string The name of the map
     ---@type event_type<level_init_event>
