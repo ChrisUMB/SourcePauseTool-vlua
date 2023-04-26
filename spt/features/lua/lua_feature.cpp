@@ -23,15 +23,20 @@ LuaFeature spt_lua;
 
 namespace patterns {
 
-    auto TeleportTouchingEntity = ::patterns::make_pattern_array(
-            PatternWrapper{"5135",
-                           Pattern<count_bytes("81 EC ?? ?? ?? ?? 55 8B E9 89 6C 24 14 E8 ?? ?? ?? ??")>(
-                                   "81 EC ?? ?? ?? ?? 55 8B E9 89 6C 24 14 E8 ?? ?? ?? ??")});
+    static constexpr auto ptn_TeleportTouchingEntity_1 = Pattern<count_bytes(
+            "81 EC ?? ?? ?? ?? 55 8B E9 89 6C 24 14 E8 ?? ?? ?? ??")>(
+            "81 EC ?? ?? ?? ?? 55 8B E9 89 6C 24 14 E8 ?? ?? ?? ??");
 
-    auto GetPortalCallQueue = ::patterns::make_pattern_array(
-            PatternWrapper{"5135",
-                           Pattern<count_bytes("33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3")>(
-                                   "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3")});
+    constexpr auto TeleportTouchingEntity = make_pattern_array(
+            PatternWrapper{"5135", ptn_TeleportTouchingEntity_1});
+
+    static constexpr auto ptn_GetPortalCallQueue_1 = Pattern<count_bytes(
+            "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3")>(
+            "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3");
+
+    constexpr auto GetPortalCallQueue = make_pattern_array(
+            PatternWrapper{"5135", ptn_GetPortalCallQueue_1});
+
 }// namespace patterns
 
 bool LuaFeature::ShouldLoadFeature() {
