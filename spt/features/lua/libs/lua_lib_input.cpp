@@ -42,7 +42,7 @@ local function make_input(cmd)
     return input
 end
 
----@type table<string, input_key>
+---@class input : table<string, input_key>
 input = {
     move_forward = make_input("forward"),
     move_back = make_input("back"),
