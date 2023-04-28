@@ -37,10 +37,14 @@ namespace patterns {
     constexpr auto GetPortalCallQueue = make_pattern_array(
             PatternWrapper{"5135", ptn_GetPortalCallQueue_1});
 
-}// namespace patterns
+}
 
 bool LuaFeature::ShouldLoadFeature() {
     return true;
+}
+
+extern "C" __declspec(noinline) void AMOGUS(const char *str) {
+    Msg(str);
 }
 
 void LuaFeature::LoadFeature() {

@@ -20,18 +20,26 @@ function input_key:release()
 end
 
 --- Hold the input key down until it is released.
-function input_key:hold()
+---@param ticks number|nil The number of ticks to hold the key down for. If nil, the key will be held down until it is released.
+function input_key:hold(ticks)
     console.exec("+" .. self.cmd)
+
+    if ticks then
+        game.async(function()
+            events.tick:wait(ticks)
+            self:release()
+        end)
+    end
 end
 
 --- Hold the input key down for one tick.
 function input_key:tap()
     self:hold()
 
-    coroutine.resume(coroutine.create(function()
+    game.async(function()
         events.tick:wait()
         self:release()
-    end))
+    end)
 end
 
 ---@return input_key
@@ -44,20 +52,20 @@ end
 
 ---@class input : table<string, input_key>
 input = {
-    move_forward = make_input("forward"),
-    move_back = make_input("back"),
-    move_left = make_input("moveleft"),
-    move_right = make_input("moveright"),
-    move_up = make_input("moveup"),
-    move_down = make_input("movedown"),
-    look_left = make_input("left"),
-    look_right = make_input("right"),
-    look_up = make_input("lookup"),
-    look_down = make_input("lookdown"),
+    forward = make_input("forward"),
+    back = make_input("back"),
+    moveleft = make_input("moveleft"),
+    moveright = make_input("moveright"),
+    moveup = make_input("moveup"),
+    movedown = make_input("movedown"),
+    left = make_input("left"),
+    right = make_input("right"),
+    lookup = make_input("lookup"),
+    lookdown = make_input("lookdown"),
     jump = make_input("jump"),
     duck = make_input("duck"),
-    attack_primary = make_input("attack"),
-    attack_secondary = make_input("attack2"),
+    attack = make_input("attack"),
+    attack2 = make_input("attack2"),
     strafe = make_input("strafe"),
     speed = make_input("speed"),
     walk = make_input("walk"),
@@ -65,14 +73,14 @@ input = {
     klook = make_input("klook"),
     jlook = make_input("jlook"),
     reload = make_input("reload"),
-    alt_primary = make_input("alt1"),
-    alt_secondary = make_input("alt2"),
+    alt1 = make_input("alt1"),
+    alt2 = make_input("alt2"),
     score = make_input("score"),
-    show_scores = make_input("showscores"),
+    showscores = make_input("showscores"),
     graph = make_input("graph"),
     zoom = make_input("zoom"),
-    grenade_primary = make_input("grenade1"),
-    grenade_secondary = make_input("grenade2")
+    grenade1 = make_input("grenade1"),
+    grenade2 = make_input("grenade2")
 }
 
 --- Reset all input keys to released.
@@ -84,6 +92,13 @@ function input.reset()
     end
 end
 
+--- Creates an `input_key` with the given name. The name is also used as the command for the input.
+---@param name string The name of the input key
+---@return input_key The created input key
+function input.create(name)
+    local key = make_input(name)
+    return key
+end
 )""";
 
     return sources;
