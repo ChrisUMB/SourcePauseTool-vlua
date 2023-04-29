@@ -228,6 +228,35 @@ function player.set_ang(ang)
     end
 end
 
+---@return vec3
+function player.get_local_ang()
+    return nil
+end
+
+---@param ang vec3
+function player.set_local_ang(ang)
+end
+
+---@return vec3
+function player.get_local_ang_offset()
+    return nil
+end
+
+---@return vec3
+function player.get_local_pos()
+    return nil
+end
+
+---@return vec3
+function player.get_local_pos_offset()
+    return nil
+end
+
+---@return vec3
+function player.get_local_pos_origin()
+    return nil
+end
+
 ---@return vec3 player velocity
 function player.get_vel()
     return nil

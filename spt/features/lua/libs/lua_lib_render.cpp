@@ -837,7 +837,7 @@ const std::string &LuaRenderLibrary::GetLuaSource() {
         end
 
         ---@class static_mesh : mesh
-        static_mesh = {}
+        local static_mesh = {}
         static_mesh.__index = mesh
 
         function static_mesh:delete()
@@ -845,7 +845,7 @@ const std::string &LuaRenderLibrary::GetLuaSource() {
         end
 
         ---@class dynamic_mesh : mesh
-        dynamic_mesh = {}
+        local dynamic_mesh = {}
         dynamic_mesh.__index = mesh
 
         function render.static(name, frame_callback)
