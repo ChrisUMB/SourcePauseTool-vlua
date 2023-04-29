@@ -8,6 +8,7 @@
 #include "icliententitylist.h"
 #include "iserverunknown.h"
 #include "trace.h"
+#include "iserverentity.h"
 
 #define INDEX_MASK (MAX_EDICTS - 1)
 
@@ -25,6 +26,7 @@ namespace utils
 
 	void GetAllProps(RecvTable* table, void* ptr, std::vector<propValue>& props);
 	IClientEntity* GetClientEntity(int index);
+	IServerEntity* GetServerEntity(IClientEntity* ent);
 	void PrintAllClientEntities();
 	void PrintAllPortals();
 	IClientEntity* GetPlayer();

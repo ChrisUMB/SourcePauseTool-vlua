@@ -14,10 +14,12 @@
 #include "libs/lua_lib_player.hpp"
 #include "libs/lua_lib_render.hpp"
 #include "libs/lua_lib_syscall.hpp"
+#include "libs/lua_lib_portal.hpp"
 #include "lua_commands.hpp"
 #include "lua_util.hpp"
 #include "signals.hpp"
 #include "spt/sptlib-wrapper.hpp"
+#include "spt/utils/game_detection.hpp"
 
 LuaFeature spt_lua;
 
@@ -43,10 +45,6 @@ bool LuaFeature::ShouldLoadFeature() {
     return true;
 }
 
-extern "C" __declspec(noinline) void AMOGUS(const char *str) {
-    Msg(str);
-}
-
 void LuaFeature::LoadFeature() {
     InitConcommandBase(spt_lua_run_command);
     InitConcommandBase(spt_lua_reset_command);
@@ -60,6 +58,10 @@ void LuaFeature::LoadFeature() {
     RegisterLibrary(&lua_player_library);
     RegisterLibrary(&lua_entity_library);
     RegisterLibrary(&lua_render_library);
+
+    if (utils::DoesGameLookLikePortal()) {
+        RegisterLibrary(&lua_portal_library);
+    }
 
     void (*tick)() = []() {
         static int ticks = 0;
@@ -152,7 +154,7 @@ void __fastcall LuaFeature::HOOKED_TeleportTouchingEntity(void *thisptr, int _ed
     Vector new_rot = *p_rot;
     QAngle new_ang = *p_ang;
 
-    if(is_player) {
+    if (is_player) {
         lua_player_library.UpdateLocals(old_pos, old_ang, new_pos, new_ang);
     }
 
@@ -212,6 +214,12 @@ void LuaFeature::InitDirectory() {
 lua_State *LuaFeature::GetLuaState() {
     if (global_state == nullptr) {
         global_state = luaL_newstate();
+
+        if(!global_state) {
+            Warning("Failed to create lua state\n");
+            return nullptr;
+        }
+
         luaL_openlibs(global_state);
         InitLuaState(global_state);
     }
@@ -288,6 +296,9 @@ void LuaFeature::RegisterLibrary(LuaLibrary *library, bool write_docs) {
 
 void LuaFeature::LoadLibraries(lua_State *L) {
     for (const auto &item: this->libraries) {
+
+        int top_start = lua_gettop(L);
+
         const std::string &source = item->GetLuaSource();
         if (!source.empty()) {
             luaL_loadstring(L, source.c_str());
@@ -304,6 +315,12 @@ void LuaFeature::LoadLibraries(lua_State *L) {
         }
 
         item->Load(L);
+        int top_end = lua_gettop(L);
+
+        if (top_start != top_end) {
+            Warning("Lua library \"%s\" did not clean up the stack properly! (start: %d, end: %d)", item->name.c_str(),
+                    top_start, top_end);
+        }
     }
 }
 
