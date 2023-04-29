@@ -182,7 +182,7 @@ void LuaPortalLibrary::Load(lua_State *L) {
 }
 
 const std::string &LuaPortalLibrary::GetLuaSource() {
-    static const std::string source = R"(
+    static const std::string source = R"(---@meta
 ---@class portal
 portal = {}
 

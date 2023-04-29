@@ -40,7 +40,7 @@ void LuaEventsLibrary::Unload(lua_State *L) {
 }
 
 const std::string &LuaEventsLibrary::GetLuaSource() {
-    static std::string sources = R"""(
+    static std::string sources = R"""(---@meta
 ---@class event
 
 ---@generic T : event

@@ -224,7 +224,7 @@ void LuaConsoleLibrary::Load(lua_State *L) {
 void LuaConsoleLibrary::Unload(lua_State *L) {}
 
 const std::string &LuaConsoleLibrary::GetLuaSource() {
-    static std::string sources = R"""(
+    static std::string sources = R"""(---@meta
 ---@class console
 console = {}
 

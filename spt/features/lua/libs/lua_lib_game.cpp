@@ -44,7 +44,7 @@ void LuaGameLibrary::Load(lua_State *L) {
 }
 
 const std::string &LuaGameLibrary::GetLuaSource() {
-    static std::string sources = R"""(
+    static std::string sources = R"""(---@meta
 ---@class game
 game = {}
 

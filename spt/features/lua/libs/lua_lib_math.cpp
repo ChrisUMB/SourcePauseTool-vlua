@@ -223,7 +223,7 @@ bool LuaMathLibrary::LuaIsAngle(lua_State *L, int index) {
 }
 
 const std::string &LuaMathLibrary::GetLuaSource() {
-    static const std::string sources = R"(
+    static const std::string sources = R"(---@meta
 function table.shallow_copy(t)
     local t2 = {}
     for k, v in pairs(t) do
@@ -247,13 +247,18 @@ end
 if not unpack then
     unpack = table.unpack
 end
+)" R"(
 ---@class vec2 2D vector, XY
+---@operator call:vec2
 ---@field x number X component of the vector
 ---@field y number Y component of the vector
 vec2 = {
     components = { "x", "y" }
 }
 
+---@param x number|number[]|vec2|table|nil
+---@param y number|nil
+---@return vec2
 function vec2.new(x, y)
     if x == nil then
         return vec2(0, 0)
@@ -297,114 +302,158 @@ function vec2.new(x, y)
     return result
 end
 
+---@param ... number|number[]|vec2|table
+---@return vec2
 function vec2:add(...)
     local other = vec2(...)
     return vec2(self.x + other.x, self.y + other.y)
 end
 
+---@param other number|number[]|vec2|table
+---@return vec2
 function vec2:__add(other)
     return self:add(other)
 end
 
+---@param ... number|number[]|vec2|table
+---@return vec2
 function vec2:sub(...)
     local other = vec2(...)
     return vec2(self.x - other.x, self.y - other.y)
 end
 
+---@param other number|number[]|vec2|table
+---@return vec2
 function vec2:__sub(other)
     return self:sub(other)
 end
 
+---@param ... number|number[]|vec2|table
+---@return vec2
 function vec2:mul(...)
     local other = vec2(...)
     return vec2(self.x * other.x, self.y * other.y)
 end
 
+---@param other number|number[]|vec2|table
+---@return vec2
 function vec2:__mul(other)
     return self:mul(other)
 end
 
+---@param ... number|number[]|vec2|table
+---@return vec2
 function vec2:div(...)
     local other = vec2(...)
     return vec2(self.x / other.x, self.y / other.y)
 end
 
+---@param other number|number[]|vec2|table
+---@return vec2
 function vec2:__div(other)
     return self:div(other)
 end
 
+---@param ... number|number[]|vec2|table
+---@return vec2
 function vec2:mod(...)
     local other = vec2(...)
     return vec2(self.x % other.x, self.y % other.y)
 end
 
+---@param other number|number[]|vec2|table
+---@return vec2
 function vec2:__mod(other)
     return self:mod(other)
 end
 
+---@rturn vec2
 function vec2:negate()
     return vec2(-self.x, -self.y)
 end
 
+---@return vec2
 function vec2:__unm()
     return self:negate()
 end
 
+---@param ... number|number[]|vec2|table
+---@return boolean
 function vec2:equals(...)
     local other = vec2(...)
     return self.x == other.x and self.y == other.y
 end
 
+---@param other number|number[]|vec2|table
+---@return boolean
 function vec2:__eq(other)
     return self:equals(other)
 end
 
+---@param other number|number[]|vec2|table
+---@return boolean
 function vec2:__lt(other)
     other = vec2(other)
     return self:length() < other:length()
 end
 
+---@param other number|number[]|vec2|table
+---@return boolean
 function vec2:__le(other)
     other = vec2(other)
     return self:length() <= other:length()
 end
 
+---@return number
 function vec2:length_squared()
     return self.x * self.x + self.y * self.y
 end
 
+---@return number
 function vec2:length()
     return math.sqrt(self:length_squared())
 end
 
+---@return number
 function vec2:magnitude()
     return self:length()
 end
 
+---@return vec2
 function vec2:normalize()
     return self / self:length()
 end
 
+---@param ... number|number[]|vec2|table
+---@return number
 function vec2:distance(...)
     local other = vec2(...)
     return (self - other):length()
 end
 
+---@param ... number|number[]|vec2|table
+---@return number
 function vec2:distance_squared(...)
     local diff = self - vec2(...)
     return diff:length_squared()
 end
 
+---@param ... number|number[]|vec2|table
+---@return number
 function vec2:cross(...)
     local other = vec2(...)
     return self.x * other.y - self.y * other.x
 end
 
+---@param ... number|number[]|vec2|table
+---@return number
 function vec2:dot(...)
     local other = vec2(...)
     return self.x * other.x + self.y * other.y
 end
 
+---@param ... number|number[]|vec2|table
+---@return number
 function vec2:angle_to(...)
     local other = vec2(...)
     local dot = self:dot(other)
@@ -412,34 +461,44 @@ function vec2:angle_to(...)
     return math.atan2(det, dot)
 end
 
+---@return vec2
 function vec2:floor()
     return vec2(math.floor(self.x), math.floor(self.y))
 end
 
+---@return vec2
 function vec2:ceil()
     return vec2(math.ceil(self.x), math.ceil(self.y))
 end
 
+---@return number
 function vec2:angle()
     return math.atan2(self.y, self.x)
 end
 
+---@return vec2
 function vec2:round()
     return vec2(math.round(self.x), math.round(self.y))
 end
 
+---@return vec2
 function vec2:degrees()
     return vec2(math.degrees(self.x), math.degrees(self.y))
 end
 
+---@param func fun(c:number):number
+---@return vec2
 function vec2:map(func)
     return vec2(func(self.x), func(self.y))
 end
 
+---@param other number|number[]|vec2|table
+---@return vec2
 function vec2:look_at(other)
     return (other - self):normalize()
 end
 
+---@return number, number
 function vec2:unpack()
     return self.x, self.y
 end
@@ -471,7 +530,9 @@ end
 
 setmetatable(vec2, vec2)
 
+)" R"(
 ---@class vec3 3D vector, XYZ
+---@operator call:vec3
 ---@field x number X component of the vector
 ---@field y number Y component of the vector
 ---@field z number Z component of the vector
@@ -479,6 +540,10 @@ vec3 = {
     components = { "x", "y", "z" }
 }
 
+---@param x number|number[]|vec3|table|nil
+---@param y number|nil
+---@param z number|nil
+---@return vec3
 function vec3.new(x, y, z)
     if x == nil then
         return vec3(0, 0, 0)
@@ -525,104 +590,144 @@ function vec3.new(x, y, z)
     return result
 end
 
+---@param ... number|number[]|vec3|table
+---@return vec3
 function vec3:add(...)
     local other = vec3(...)
     return vec3(self.x + other.x, self.y + other.y, self.z + other.z)
 end
 
+---@param other number|number[]|vec3|table
+---@return vec3
 function vec3:__add(other)
     return self:add(other)
 end
 
+---@param ... number|number[]|vec3|table
+---@return vec3
 function vec3:sub(...)
     local other = vec3(...)
     return vec3(self.x - other.x, self.y - other.y, self.z - other.z)
 end
 
+---@param other number|number[]|vec3|table
+---@return vec3
 function vec3:__sub(other)
     return self:sub(other)
 end
 
+---@param ... number|number[]|vec3|table
+---@return vec3
 function vec3:mul(...)
     local other = vec3(...)
     return vec3(self.x * other.x, self.y * other.y, self.z * other.z)
 end
 
+---@param other number|number[]|vec3|table
+---@return vec3
 function vec3:__mul(other)
     return self:mul(other)
 end
 
+---@param ... number|number[]|vec3|table
+---@return vec3
 function vec3:div(...)
     local other = vec3(...)
     return vec3(self.x / other.x, self.y / other.y, self.z / other.z)
 end
 
+---@param other number|number[]|vec3|table
+---@return vec3
 function vec3:__div(other)
     return self:div(other)
 end
 
+---@param ... number|number[]|vec3|table
+---@return vec3
 function vec3:mod(...)
     local other = vec3(...)
     return vec3(self.x % other.x, self.y % other.y, self.z % other.z)
 end
 
+---@param other number|number[]|vec3|table
+---@return vec3
 function vec3:__mod(other)
     return self:mod(other)
 end
 
+---@return vec3
 function vec3:negate()
     return vec3(-self.x, -self.y, -self.z)
 end
 
+---@return vec3
 function vec3:__unm()
     return self:negate()
 end
 
+---@param ... number|number[]|vec3|table
+---@return boolean
 function vec3:equals(...)
     local other = vec3(...)
     return self.x == other.x and self.y == other.y and self.z == other.z
 end
 
+---@param other number|number[]|vec3|table
+---@return boolean
 function vec3:__eq(other)
     return self:equals(other)
 end
 
+---@param ... number|number[]|vec3|table
+---@return boolean
 function vec3:__lt(other)
     other = vec3(other)
     return self:length() < other:length()
 end
 
+---@param ... number|number[]|vec3|table
+---@return boolean
 function vec3:__le(other)
     other = vec3(other)
     return self:length() <= other:length()
 end
 
+---@return number
 function vec3:length_squared()
     return self.x * self.x + self.y * self.y + self.z * self.z
 end
 
+---@return number
 function vec3:length()
     return math.sqrt(self:length_squared())
 end
 
+---@return number
 function vec3:magnitude()
     return self:length()
 end
 
+---@return vec3
 function vec3:normalize()
     return self / self:length()
 end
 
+---@param ... number|number[]|vec3|table
+---@return number
 function vec3:distance(...)
     local diff = self - vec3(...)
     return diff:length()
 end
 
+---@param ... number|number[]|vec3|table
+---@return number
 function vec3:distance_squared(...)
     local diff = self - vec3(...)
     return diff:length_squared()
 end
 
+---@param ... number|number[]|vec3|table
+---@return vec3
 function vec3:cross(...)
     local other = vec3(...)
     local x = self.y * other.z - self.z * other.y
@@ -631,11 +736,15 @@ function vec3:cross(...)
     return vec3(x, y, z)
 end
 
+---@param ... number|number[]|vec3|table
+---@return number
 function vec3:dot(...)
     local other = vec3(...)
     return self.x * other.x + self.y * other.y + self.z * other.z
 end
 
+---@param ... number|number[]|vec3|table
+---@return number
 function vec3:angle_to(...)
     local other = vec3(...)
     local dot = self:dot(other)
@@ -643,34 +752,43 @@ function vec3:angle_to(...)
     return math.atan2(det, dot)
 end
 
+---@return vec3
 function vec3:floor()
     return vec3(math.floor(self.x), math.floor(self.y), math.floor(self.z))
 end
 
+---@return vec3
 function vec3:ceil()
     return vec3(math.ceil(self.x), math.ceil(self.y), math.ceil(self.z))
 end
 
+---@return number
 function vec3:angle()
     return math.atan2(self.y, self.x)
 end
 
+---@return vec3
 function vec3:round()
     return vec3(math.round(self.x), math.round(self.y), math.round(self.z))
 end
 
+---@return vec3
 function vec3:degrees()
     return vec3(math.deg(self.x), math.deg(self.y), math.deg(self.z))
 end
 
+---@return vec3
 function vec3:map(func)
     return vec3(func(self.x), func(self.y), func(self.z))
 end
 
+---@param other number|number[]|vec3|table
+---@return vec3
 function vec3:look_at(other)
     return (other - self):normalize()
 end
 
+---@return number, number
 function vec3:unpack()
     return self.x, self.y, self.z
 end
@@ -702,7 +820,9 @@ end
 
 setmetatable(vec3, vec3)
 
+)" R"(
 ---@class vec4 4D vector, XYZW
+---@operator call:vec4
 ---@field x number
 ---@field y number
 ---@field z number
@@ -711,6 +831,11 @@ vec4 = {
     components = { "x", "y", "z", "w" }
 }
 
+---@param x number|number[]|vec4|table|nil
+---@param y number|nil
+---@param z number|nil
+---@param w number|nil
+---@return vec4
 function vec4.new(x, y, z, w)
     if x == nil then
         return vec4(0, 0, 0, 0)
@@ -762,104 +887,144 @@ function vec4.new(x, y, z, w)
     return result
 end
 
+---@param ... number|number[]|vec4|table
+---@return vec4
 function vec4:add(...)
     local other = vec4(...)
     return vec4(self.x + other.x, self.y + other.y, self.z + other.z, self.w + other.w)
 end
 
+---@param other number|number[]|vec4|table
+---@return vec4
 function vec4:__add(other)
     return self:add(other)
 end
 
+---@param ... number|number[]|vec4|table
+---@return vec4
 function vec4:sub(...)
     local other = vec4(...)
     return vec4(self.x - other.x, self.y - other.y, self.z - other.z, self.w + other.w)
 end
 
+---@param other number|number[]|vec4|table
+---@return vec4
 function vec4:__sub(other)
     return self:sub(other)
 end
 
+---@param ... number|number[]|vec4|table
+---@return vec4
 function vec4:mul(...)
     local other = vec4(...)
     return vec4(self.x * other.x, self.y * other.y, self.z * other.z, self.w * other.w)
 end
 
+---@param other number|number[]|vec4|table
+---@return vec4
 function vec4:__mul(other)
     return self:mul(other)
 end
 
+---@param ... number|number[]|vec4|table
+---@return vec4
 function vec4:div(...)
     local other = vec4(...)
     return vec4(self.x / other.x, self.y / other.y, self.z / other.z, self.w / other.w)
 end
 
+---@param other number|number[]|vec4|table
+---@return vec4
 function vec4:__div(other)
     return self:div(other)
 end
 
+---@param ... number|number[]|vec4|table
+---@return vec4
 function vec4:mod(...)
     local other = vec4(...)
     return vec4(self.x % other.x, self.y % other.y, self.z % other.z, self.w % other.w)
 end
 
+---@param other number|number[]|vec4|table
+---@return vec4
 function vec4:__mod(other)
     return self:mod(other)
 end
 
+---@return vec4
 function vec4:negate()
     return vec4(-self.x, -self.y, -self.z, -self.w)
 end
 
+---@return vec4
 function vec4:__unm()
     return self:negate()
 end
 
+---@param ... number|number[]|vec4|table
+---@return vec4
 function vec4:equals(...)
     local other = vec4(...)
     return self.x == other.x and self.y == other.y and self.z == other.z and self.w == other.w
 end
 
+---@param other number|number[]|vec4|table
+---@return boolean
 function vec4:__eq(other)
     return self:equals(other)
 end
 
+---@param ... number|number[]|vec4|table
+---@return boolean
 function vec4:__lt(other)
     other = vec4(other)
     return self:length() < other:length()
 end
 
+---@param other number|number[]|vec4|table
+---@return boolean
 function vec4:__le(other)
     other = vec4(other)
     return self:length() <= other:length()
 end
 
+---@return number
 function vec4:length_squared()
     return self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w
 end
 
+---@return number
 function vec4:length()
     return math.sqrt(self:length_squared())
 end
 
+---@return number
 function vec4:magnitude()
     return self:length()
 end
 
+---@return number
 function vec4:normalize()
     return self / self:length()
 end
 
+---@param ... number|number[]|vec4|table
+---@return number
 function vec4:distance(...)
     local other = vec4(...)
     return (self - other):length()
 end
 
+---@param ... number|number[]|vec4|table
+---@return number
 function vec4:distance_squared(...)
     local other = vec4(...)
     return (self - other):length_squared()
 end
 
+---@param ... number|number[]|vec4|table
+---@return vec4
 function vec4:cross(...)
     local other = vec4(...)
     return vec4(
@@ -870,11 +1035,15 @@ function vec4:cross(...)
     )
 end
 
+---@param ... number|number[]|vec4|table
+---@return number
 function vec4:dot(...)
     local other = vec4(...)
     return self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
 end
 
+---@param ... number|number[]|vec4|table
+---@return number
 function vec4:angle_to(...)
     local other = vec4(...)
     local dot = self:dot(other)
@@ -882,34 +1051,44 @@ function vec4:angle_to(...)
     return math.atan2(det, dot)
 end
 
+---@return vec4
 function vec4:floor()
     return vec4(math.floor(self.x), math.floor(self.y), math.floor(self.z), math.floor(self.w))
 end
 
+---@return vec4
 function vec4:ceil()
     return vec4(math.ceil(self.x), math.ceil(self.y), math.ceil(self.z), math.ceil(self.w))
 end
 
+---@return number
 function vec4:angle()
     return math.atan2(self.y, self.x)
 end
 
+---@return vec4
 function vec4:round()
     return vec4(math.round(self.x), math.round(self.y), math.round(self.z), math.round(self.w))
 end
 
+---@return vec4
 function vec4:degrees()
     return vec4(math.deg(self.x), math.deg(self.y), math.deg(self.z), math.deg(w))
 end
 
+---@param func fun(c:number):number
+---@return vec4
 function vec4:map(func)
     return vec4(func(self.x), func(self.y), func(self.z), func(self.w))
 end
 
+---@param other number|number[]|vec4|table
+---@return vec4
 function vec4:look_at(other)
     return (other - self):normalize()
 end
 
+---@return number, number
 function vec4:unpack()
     return self.x, self.y, self.z, self.w
 end
@@ -970,37 +1149,21 @@ function axis:__index(name)
     return vec3(rawget(reference_axis, name))
 end
 
---TODO: What the fuck is this?
---function axis:__call(table, i, x)
---    if x == nil then
---        return axis.positive_y
---    end
---    if x.next == nil then
---        return nil
---    end
---
---    return axis[x.next]
---end
+function axis:__call(table, i, x)
+    if x == nil then
+        return axis.positive_y
+    end
+    if x.next == nil then
+        return nil
+    end
 
---setmetatable(axis, {
---    __index = function(self, name)
---        return vec3(rawget(reference_axis, name))
---    end,
---
---    __call = function(table, i, x)
---        if x == nil then
---            return axis.positive_y
---        end
---        if x.next == nil then
---            return nil
---        end
---
---        return axis[x.next]
---    end
---})
+    return axis[x.next]
+end
 
 setmetatable(axis, axis)
+)" R"(
 ---@class quat Quaternion, XYZW
+---@operator call:quat
 ---@field x number X component of the quaternion.
 ---@field y number Y component of the quaternion.
 ---@field z number Z component of the quaternion.
@@ -1009,6 +1172,11 @@ quat = {
     components = { "x", "y", "z", "w" }
 }
 
+---@param x number|table|quat|vec4
+---@param y number|nil Y component of the quaternion.
+---@param z number|nil Z component of the quaternion.
+---@param w number|nil W component of the quaternion.
+---@return quat
 function quat.new(x, y, z, w)
     if x == nil then
         return quat(0, 0, 0, 1)
@@ -1060,25 +1228,34 @@ function quat.new(x, y, z, w)
     return result
 end
 
+---@param ... table|quat|vec4
+---@return quat
 function quat:add(...)
     other = quat(...)
     return quat(self.x + other.x, self.y + other.y, self.z + other.z, self.w + other.w)
 end
 
+---@param other quat
+---@return quat
 function quat:__add(other)
     return self:add(other)
 end
 
+---@param ... table|quat|vec4
+---@return quat
 function quat:sub(...)
     local other = quat(...)
     return quat(self.x - other.x, self.y - other.y, self.z - other.z, self.w + other.w)
 end
 
+---@param other table|quat|vec4
+---@return quat
 function quat:__sub(other)
     return self:sub(other)
 end
 
-
+---@param ... table|quat|vec4
+---@return quat
 function quat:mul(...)
     local other = quat(...)
     local nx = self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y
@@ -1093,6 +1270,8 @@ math.fma = function(a, b, c)
     return a * b + c
 end
 
+---@param ... number[]|number|table|vec3
+---@return vec3
 function quat:transform(...)
     local other = vec3(...)
     local x = other.x
@@ -1117,46 +1296,61 @@ function quat:transform(...)
     )
 end
 
+---@param ... table|quat|vec4
+---@return quat
 function quat:__mul(other)
     return self:mul(other)
 end
 
+---@param ... number|number[]|table|quat|vec4
+---@return quat
 function quat:div(...)
     local other = quat(...)
     return self:mul(other:conjugate())
 end
 
+---@param other table|quat|vec4
+---@return quat
 function quat:__div(other)
     return self:div(other)
 end
 
+---@param ... number|number[]|table|quat|vec4
+---@return quat
 function quat:mod(...)
     local other = quat(...)
     return quat(self.x % other.x, self.y % other.y, self.z % other.z, self.w % other.w)
 end
 
+---@param other table|quat|vec4
+---@return quat
 function quat:__mod(other)
     return self:mod(other)
 end
 
+---@return quat
 function quat:conjugate()
     return quat(-self.x, -self.y, -self.z, self.w)
 end
 
+---@return number
 function quat:length_squared()
     return self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w
 end
 
+---@return number
 function quat:length()
     return math.sqrt(self:length_squared())
 end
 
+---@return quat
 function quat:normalize()
     local q_length = self:length()
 
     return quat(self.x / q_length, self.y / q_length, self.z / q_length, self.w / q_length)
 end
 
+---@return quat
 function quat:set_normalized()
     local q_length = self:length()
     self.x = self.x / q_length
@@ -1166,6 +1360,8 @@ function quat:set_normalized()
     return self
 end
 
+---@param angle number
+---@param ... number[]|number|table|vec3
 function quat:rotate(angle, ...)
     local axis = vec3(...)
     local hangle = angle / 2.0
@@ -1183,6 +1379,7 @@ function quat:rotate(angle, ...)
     )
 end
 
+---@return vec3
 function quat:to_euler()
     local x = self.x
     local y = self.y
@@ -1222,6 +1419,8 @@ function quat:to_euler()
     return vec3(roll, pitch, yaw)
 end
 
+---@param euler_angles table|vec3
+---@return quat
 function quat.from_euler(euler_angles)
     local yaw = euler_angles.z
     local pitch = euler_angles.y
@@ -1242,51 +1441,65 @@ function quat.from_euler(euler_angles)
     return quat(qx, qy, qz, qw)
 end
 
+---@return quat # conjugate
 function quat:__unm()
     return self:conjugate()
 end
 
+---@return boolean
 function quat:equals(...)
     local other = quat(...)
     return self.x == other.x and self.y == other.y and self.z == other.z and self.w == other.w
 end
 
+---@return vec3
 function quat:to_vec3()
     return vec3(self.x, self.y, self.z)
 end
 
+---@return vec4
 function quat:to_vec4()
     return vec4(self.x, self.y, self.z)
 end
 
+---@return vec3
 function quat:positive_z()
     return self:transform(0.0, 0.0, 1.0)
 end
 
+---@return vec3
 function quat:negative_z()
     return self:transform(0.0, 0.0, -1.0)
 end
 
+---@return vec3
 function quat:positive_y()
     return self:transform(0.0, 1.0, 0.0)
 end
 
+---@return vec3
 function quat:negative_y()
     return self:transform(0.0, -1.0, 0.0)
 end
 
+---@return vec3
 function quat:positive_x()
     return self:transform(1.0, 0.0, 0.0)
 end
 
+---@return vec3
 function quat:negative_x()
     return self:transform(-1.0, 0.0, 0.0)
 end
 
+---@return string
 function quat:__tostring()
     return "{x=" .. self.x .. ", y=" .. self.y .. ", z=" .. self.z .. ", w=" .. self.w .. "}"
 end
 
+---@param start vec3
+---@param dest vec3
+---@return quat
 function quat.rotation_between_vectors(start, dest)
     local n_start = start:normalize()
     local n_dest = dest:normalize()
@@ -1300,6 +1513,9 @@ function quat.rotation_between_vectors(start, dest)
     return quat(axis.x * inv_s, axis.y * inv_s, axis.z * inv_s, s * 0.5)
 end
 
+---@param dir vec3
+---@param up vec3
+---@return quat
 function quat.look_at(dir, up)
 
     local dirn = dir:normalize()
@@ -1345,6 +1561,8 @@ function quat.look_at(dir, up)
     return quat(x, y, z, w)
 end
 
+---@param ... number|number[]|table|vec3
+---@return quat
 function quat.from_forward(...)
     local forward = vec3(...)
 
@@ -1404,6 +1622,7 @@ end
 setmetatable(quat, quat)
 )" R"(
 ---@class mat4
+---@operator call:mat4
 ---@field m00 number
 ---@field m01 number
 ---@field m02 number
@@ -1427,6 +1646,7 @@ mat4 = {
     }
 }
 
+---@return mat4
 function mat4.new(
         m00, m01, m02, m03,
         m10, m11, m12, m13,
@@ -1560,6 +1780,8 @@ function mat4.new(
     return result
 end
 
+---@param ... any mat4 or anything that satisfies mat4 constructor
+---@return mat4
 function mat4:mul(...)
     local other = mat4(...)
     local nm00 = math.fma(self.m00, other.m00, math.fma(self.m10, other.m01, math.fma(self.m20, other.m02, self.m30 * other.m03)))
@@ -1598,10 +1820,13 @@ function mat4:mul(...)
     return result
 end
 
+---@param other mat4
 function mat4:__mul(other)
     return self:mul(other)
 end
 
+---@param other vec3
+---@return vec3 # transformed vector
 function mat4:transform(other)
     local x = other.x
     local y = other.y
@@ -1612,6 +1837,7 @@ function mat4:transform(other)
     return vec3(nx, ny, nz)
 end
 
+---@return mat4 # transposed matrix
 function mat4:transposed()
     local result = mat4()
     result.m00 = self.m00
@@ -1633,6 +1859,7 @@ function mat4:transposed()
     return result
 end
 
+---@return quat
 function mat4:to_quaternion()
     local tr = self.m00 + self.m11 + self.m22
     local quat = quat()

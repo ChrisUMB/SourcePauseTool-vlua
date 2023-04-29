@@ -229,7 +229,7 @@ void LuaEntityLibrary::Load(lua_State *L) {
 }
 
 const std::string &LuaEntityLibrary::GetLuaSource() {
-    static const std::string sources = R"(
+    static const std::string sources = R"(---@meta
 ---@class entity
 entity = {}
 
