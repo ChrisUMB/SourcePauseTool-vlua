@@ -291,10 +291,13 @@ void LuaFeature::LoadLibraries(lua_State *L) {
         const std::string &source = item->GetLuaSource();
         if (!source.empty()) {
             luaL_loadstring(L, source.c_str());
-            if (!lua_pcall(L, 0, 0, 0)) {
+            if (lua_pcall(L, 0, 0, 0) != 0) {
                 const char *error = lua_tostring(L, -1);
                 if (error != nullptr) {
                     Warning("Lua error loading library \"%s\": %s", item->name.c_str(), error);
+                    continue;
+                } else {
+                    Warning("Lua error loading library \"%s\": Unknown error", item->name.c_str());
                     continue;
                 }
             }
