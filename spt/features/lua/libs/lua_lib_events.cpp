@@ -85,10 +85,6 @@ events = {
     ---@type event_type<player_jump_event>
     player_jump = new_event_type(),
 
-    ---@class player_grounded_event : event
-    ---@type event_type<player_grounded_event>
-    player_grounded = new_event_type(),
-
     ---@class entity_teleport_event : event
     ---@field hammer_id number The entity hammer ID
     ---@field old_pos vec3 The position of the entity prior to the teleport

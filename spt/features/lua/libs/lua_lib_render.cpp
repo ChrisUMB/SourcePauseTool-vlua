@@ -731,7 +731,6 @@ void LuaRenderLibrary::Load(lua_State *L) {
     LuaLibrary::Load(L);
 
     luaStateRenderData[L] = LuaStateRenderData({}, {});
-
     luaL_register(L, this->name.c_str(), render_class);
     lua_pop(L, 1);
 }

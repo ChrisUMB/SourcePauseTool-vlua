@@ -54,6 +54,49 @@ static int EntityFromHammerID(lua_State *L) {
     return 1;
 }
 
+static int EntityList(lua_State *L) {
+    lua_newtable(L);
+
+    int i = 1;
+    for (int j = 0; j < MAX_EDICTS; ++j) {
+        void *entity = interfaces::server_tools->GetIServerEntity(interfaces::entList->GetClientEntity(j));
+
+        if (entity == nullptr) {
+            continue;
+        }
+
+        lua_pushinteger(L, i++);
+        lua_newtable(L);
+        lua_getglobal(L, "entity");
+        lua_setmetatable(L, -2);
+
+        lua_pushlightuserdata(L, entity);
+        lua_setfield(L, -2, "data");
+
+        lua_settable(L, -3);
+    }
+
+    return 1;
+}
+
+static int EntityGetID(lua_State *L) {
+    void *entity = LUA_GET_ENTITY()
+    lua_pushinteger(L, utils::GetIndex(entity));
+    return 1;
+}
+
+static int EntityGetClassName(lua_State *L) {
+    void *entity = LUA_GET_ENTITY()
+    lua_pushstring(L, interfaces::entList->GetClientEntity(utils::GetIndex(entity))->GetClientClass()->GetName());
+    return 1;
+}
+
+static int EntityGetModelName(lua_State* L) {
+    void* entity = LUA_GET_ENTITY()
+    lua_pushstring(L, utils::GetModelName(interfaces::entList->GetClientEntity(utils::GetIndex(entity))));
+    return 1;
+}
+
 //static int EntitySpawn(lua_State *L) {
 //    const char *classname = luaL_checkstring(L, 1);
 //
@@ -152,25 +195,20 @@ static int EntitySetVel(lua_State *L) {
 }
 
 static const struct luaL_Reg entity_class[] = {
+        {"_list",          EntityList},
         {"from_id",        EntityFromID},
         {"from_hammer_id", EntityFromHammerID},
-//        {"spawn",           EntitySpawn},
+        {"get_id",         EntityGetID},
+        {"get_class_name", EntityGetClassName},
+        {"get_model_name", EntityGetModelName},
         {"get_pos",        EntityGetPos},
         {"set_pos",        EntitySetPos},
         {"get_rot",        EntityGetRot},
         {"set_rot",        EntitySetRot},
         {"get_vel",        EntityGetVel},
         {"set_vel",        EntitySetVel},
-
-//        {"get_eye_pos",          lua_player_get_eye_pos},
-//        {"get_local_ang",        lua_player_get_local_ang},
-//        {"set_local_ang",        lua_player_set_local_ang},
-//        {"get_local_ang_offset", lua_player_get_local_ang_offset},
-//        {"get_local_pos",        lua_player_get_local_pos},
-//        {"get_local_pos_offset", lua_player_get_local_pos_offset},
-//        {"teleport",    PlayerTeleport},
-//        {"is_grounded", PlayerIsGrounded},
-//        {"trace",       PlayerTrace},
+//        {"teleport",    EntityTeleport},
+//        {"is_grounded", EntityIsGrounded},
         {nullptr,          nullptr}
 };
 
@@ -196,23 +234,63 @@ const std::string &LuaEntityLibrary::GetLuaSource() {
 entity = {}
 
 ---@param id number Entity index
----@return entity Entity instance
+---@return entity # Entity instance
 function entity.from_id(id)
 end
 
 ---@param hammer_id number Entity hammer ID
----@return entity Entity instance
+---@return entity # Entity instance
 function entity.from_hammer_id(hammer_id)
 end
 
----@param classname string Entity class name
----@param pos vec3|nil Entity position
----@param rot vec3|nil Entity rotation
----@param vel vec3|nil Entity velocity
-function entity.spawn(classname, pos, rot, vel)
+---@param filter fun(entity):boolean|nil Filter function, or `nil` to not filter
+---@overload fun():entity[]
+---@return entity[] # List of all entities
+function entity.list(filter)
+    local list = entity._list()
+    if not filter then return list end
+
+    local filtered = {}
+    for _, ent in ipairs(list) do
+        if filter(ent) then
+            table.insert(filtered, ent)
+        end
+    end
+
+    return filtered
 end
 
----@return vec3 Entity position
+---@param filter fun(entity):boolean|nil Filter function, or `nil` to not filter
+---@overload fun():entity
+---@return entity? # Closest entity, or `nil` if none found based on `filter`
+function entity.closest(filter)
+    local closest = nil
+    local closest_dist = math.huge
+
+    for _, ent in ipairs(entity.list(filter)) do
+        local dist = ent:get_pos():distance_squared(player.get_pos())
+        if dist < closest_dist then
+            closest = ent
+            closest_dist = dist
+        end
+    end
+
+    return closest
+end
+
+---@return number # Entity ID
+function entity:get_id()
+end
+
+---@return string # Entity class name
+function entity:get_class_name()
+end
+
+---@return string # Entity model name
+function entity:get_model_name()
+end
+
+---@return vec3 # Entity position
 function entity:get_pos()
 end
 
@@ -220,7 +298,7 @@ end
 function entity:set_pos(pos)
 end
 
----@return vec3 Entity rotation
+---@return vec3 # Entity rotation
 function entity:get_rot()
 end
 
@@ -228,7 +306,7 @@ end
 function entity:set_rot(rot)
 end
 
----@return vec3 Entity velocity
+---@return vec3 # Entity velocity
 function entity:get_vel()
 end
 

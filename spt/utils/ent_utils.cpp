@@ -39,6 +39,11 @@ namespace utils
 		return interfaces::entList->GetClientEntity(index + 1);
 	}
 
+    IServerEntity* GetServerEntity(IClientEntity* ent)
+    {
+        return interfaces::server_tools->GetIServerEntity(ent);
+    }
+
 	void PrintAllClientEntities()
 	{
 		int maxIndex = interfaces::entList->GetHighestEntityIndex();
