@@ -581,6 +581,13 @@ CON_COMMAND(_y_spt_getvel, "Gets the last velocity of the player.")
 	Warning("Velocity (xy): %f\n", vel.Length2D());
 }
 
+CON_COMMAND(y_spt_getpos, "Gets the position of the player.")
+{
+    Vector *pos = spt_playerio.m_vecAbsOrigin.GetPtr();
+
+    Warning("Position (x, y, z): %f %f %f\n", pos->x, pos->y, pos->z);
+}
+
 #ifdef SPT_PORTAL_UTILS
 CON_COMMAND(y_spt_find_portals, "Prints info for all portals")
 {
@@ -927,6 +934,11 @@ void PlayerIOFeature::LoadFeature()
 #endif
 #endif
 	}
+
+    if(m_vecAbsOrigin.Found())
+    {
+        InitCommand(y_spt_getpos);
+    }
 
 	if (ORIG_GetButtonBits)
 	{

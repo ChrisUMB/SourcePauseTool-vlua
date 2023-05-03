@@ -97,36 +97,6 @@ static int EntityGetModelName(lua_State* L) {
     return 1;
 }
 
-//static int EntitySpawn(lua_State *L) {
-//    const char *classname = luaL_checkstring(L, 1);
-//
-//    if(!LuaMathLibrary::LuaIsVector3D(L, 2)) {
-//        luaL_error(L, "entity.spawn: 2nd argument is not a vector");
-//        return 0;
-//    }
-//
-//    Vector pos = LuaMathLibrary::LuaGetVector3D(L, 2);
-//
-//    void *entity = interfaces::server_tools->CreateEntityByName(classname);
-//
-//    if (entity == nullptr) {
-//        lua_pushnil(L);
-//        return 1;
-//    }
-//
-//    interfaces::server_tools->DispatchSpawn(entity);
-//
-////    LuaEntityLibrary::Teleport(entity, &pos, nullptr, nullptr);
-//
-//    lua_newtable(L);
-//    lua_getglobal(L, "entity");
-//    lua_setmetatable(L, -2);
-//
-//    lua_pushlightuserdata(L, entity);
-//    lua_setfield(L, -2, "data");
-//    return 1;
-//}
-
 static int EntityGetPos(lua_State *L) {
     void *entity = LUA_GET_ENTITY()
 
@@ -208,7 +178,6 @@ static const struct luaL_Reg entity_class[] = {
         {"get_vel",        EntityGetVel},
         {"set_vel",        EntitySetVel},
 //        {"teleport",    EntityTeleport},
-//        {"is_grounded", EntityIsGrounded},
         {nullptr,          nullptr}
 };
 
@@ -243,7 +212,7 @@ end
 function entity.from_hammer_id(hammer_id)
 end
 
----@param filter fun(entity):boolean|nil Filter function, or `nil` to not filter
+---@param filter fun(entity:entity):boolean|nil Filter function, or `nil` to not filter
 ---@overload fun():entity[]
 ---@return entity[] # List of all entities
 function entity.list(filter)
@@ -260,12 +229,18 @@ function entity.list(filter)
     return filtered
 end
 
----@param filter fun(entity):boolean|nil Filter function, or `nil` to not filter
----@overload fun():entity
+---@param filter (fun(entity:entity):boolean)|string|nil Filter function, or a `string` class name, or `nil` to not filter
+---@overload fun():entity?
+---@overload fun(class_name:string):entity?
 ---@return entity? # Closest entity, or `nil` if none found based on `filter`
 function entity.closest(filter)
     local closest = nil
     local closest_dist = math.huge
+
+    if type(filter) == "string" then
+        local name = filter
+        filter = function(e) return e:get_class_name() == name end
+    end
 
     for _, ent in ipairs(entity.list(filter)) do
         local dist = ent:get_pos():distance_squared(player.get_pos())

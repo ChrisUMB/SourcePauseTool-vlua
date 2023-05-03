@@ -3,6 +3,8 @@
 #include "ent_utils.hpp"
 #include "lua_lib_math.hpp"
 #include "../../ent_props.hpp"
+#include "basehandle.h"
+#include "interfaces.hpp"
 
 LuaPortalLibrary lua_portal_library;
 
@@ -24,7 +26,7 @@ static IServerEntity *LuaCheckPortalEntity(lua_State *L, int index) {
 
     auto server_ent = utils::GetServerEntity((IClientEntity *) client_ent);
 
-    if(!server_ent) {
+    if (!server_ent) {
         luaL_error(L, "server entity expected, but the pointer is nil");
         return nullptr;
     }
@@ -121,9 +123,16 @@ static int PortalGetMatrix(lua_State *L) {
 static int PortalGetLinked(lua_State *L) {
     auto portal_ent = LuaCheckPortalEntity(L, 1);
     static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_hLinkedPortal", true);
-    auto linked = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
+    CBaseHandle linked_handle = *reinterpret_cast<CBaseHandle *>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
+    if(!linked_handle.IsValid()) {
+        lua_pushnil(L);
+        return 1;
+    }
 
-    if (!linked) {
+    edict_t *edict = interfaces::engine_server->PEntityOfEntIndex(linked_handle.GetEntryIndex());
+    IServerEntity *ent = edict->GetIServerEntity();
+
+    if (!ent) {
         lua_pushnil(L);
         return 1;
     }
@@ -132,7 +141,7 @@ static int PortalGetLinked(lua_State *L) {
     lua_getglobal(L, "portal");
     lua_setmetatable(L, -2);
 
-    lua_pushlightuserdata(L, linked);
+    lua_pushlightuserdata(L, ent);
     lua_setfield(L, -2, "data");
     return 1;
 }

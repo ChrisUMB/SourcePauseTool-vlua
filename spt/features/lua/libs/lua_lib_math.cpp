@@ -146,21 +146,23 @@ bool LuaMathLibrary::LuaIsQuaternion(lua_State *L, int index) {
 
 void LuaMathLibrary::LuaPushMatrix(lua_State *L, const VMatrix &matrix) {
     lua_newtable(L);
+
+    // this is intentionally transposed
     LUA_SET(matrix[0][0], "m00")
-    LUA_SET(matrix[0][1], "m01")
-    LUA_SET(matrix[0][2], "m02")
-    LUA_SET(matrix[0][3], "m03")
-    LUA_SET(matrix[1][0], "m10")
+    LUA_SET(matrix[1][0], "m01")
+    LUA_SET(matrix[2][0], "m02")
+    LUA_SET(matrix[3][0], "m03")
+    LUA_SET(matrix[0][1], "m10")
     LUA_SET(matrix[1][1], "m11")
-    LUA_SET(matrix[1][2], "m12")
-    LUA_SET(matrix[1][3], "m13")
-    LUA_SET(matrix[2][0], "m20")
-    LUA_SET(matrix[2][1], "m21")
+    LUA_SET(matrix[2][1], "m12")
+    LUA_SET(matrix[3][1], "m13")
+    LUA_SET(matrix[0][2], "m20")
+    LUA_SET(matrix[1][2], "m21")
     LUA_SET(matrix[2][2], "m22")
-    LUA_SET(matrix[2][3], "m23")
-    LUA_SET(matrix[3][0], "m30")
-    LUA_SET(matrix[3][1], "m31")
-    LUA_SET(matrix[3][2], "m32")
+    LUA_SET(matrix[3][2], "m23")
+    LUA_SET(matrix[0][3], "m30")
+    LUA_SET(matrix[1][3], "m31")
+    LUA_SET(matrix[2][3], "m32")
     LUA_SET(matrix[3][3], "m33")
     lua_getglobal(L, "mat4");
     lua_setmetatable(L, -2);
@@ -223,7 +225,7 @@ bool LuaMathLibrary::LuaIsAngle(lua_State *L, int index) {
 }
 
 const std::string &LuaMathLibrary::GetLuaSource() {
-    static const std::string sources = R"(---@meta
+    static const std::string sources =R"(---@meta
 function table.shallow_copy(t)
     local t2 = {}
     for k, v in pairs(t) do
@@ -250,6 +252,12 @@ end
 )" R"(
 ---@class vec2 2D vector, XY
 ---@operator call:vec2
+---@operator unm:vec2
+---@operator mul(vec2):vec2
+---@operator div(vec2):vec2
+---@operator mod(vec2):vec2
+---@operator add(vec2):vec2
+---@operator sub(vec2):vec2
 ---@field x number X component of the vector
 ---@field y number Y component of the vector
 vec2 = {
@@ -533,6 +541,12 @@ setmetatable(vec2, vec2)
 )" R"(
 ---@class vec3 3D vector, XYZ
 ---@operator call:vec3
+---@operator unm:vec3
+---@operator mul(vec3):vec3
+---@operator div(vec3):vec3
+---@operator mod(vec3):vec3
+---@operator add(vec3):vec3
+---@operator sub(vec3):vec3
 ---@field x number X component of the vector
 ---@field y number Y component of the vector
 ---@field z number Z component of the vector
@@ -823,6 +837,12 @@ setmetatable(vec3, vec3)
 )" R"(
 ---@class vec4 4D vector, XYZW
 ---@operator call:vec4
+---@operator unm:vec4
+---@operator mul(vec4):vec4
+---@operator div(vec4):vec4
+---@operator mod(vec4):vec4
+---@operator add(vec4):vec4
+---@operator sub(vec4):vec4
 ---@field x number
 ---@field y number
 ---@field z number
@@ -1835,6 +1855,62 @@ function mat4:transform(other)
     local ny = math.fma(self.m01, x, math.fma(self.m11, y, math.fma(self.m21, z, self.m31)))
     local nz = math.fma(self.m02, x, math.fma(self.m12, y, math.fma(self.m22, z, self.m32)))
     return vec3(nx, ny, nz)
+end
+
+---@param other vec3
+---@return mat4
+function mat4:translate(other)
+    return self * mat4.translation(other)
+end
+
+---@param translation vec3
+---@return mat4
+function mat4.translation(translation)
+    local m = mat4()
+    m.m30 = translation.x
+    m.m31 = translation.y
+    m.m32 = translation.z
+    return m
+end
+
+---@param scale vec3
+---@return mat4
+function mat4:scale(scale)
+    self.m00 = self.m00 * scale.x
+    self.m01 = self.m01 * scale.x
+    self.m02 = self.m02 * scale.x
+    self.m03 = self.m03 * scale.x
+    self.m10 = self.m10 * scale.y
+    self.m11 = self.m11 * scale.y
+    self.m12 = self.m12 * scale.y
+    self.m13 = self.m13 * scale.y
+    self.m20 = self.m20 * scale.z
+    self.m21 = self.m21 * scale.z
+    self.m22 = self.m22 * scale.z
+    self.m23 = self.m23 * scale.z
+    return self
+end
+
+---@param scale vec3
+---@return mat4
+function mat4.scaling(scale)
+        local m = mat4()
+        m.m00 = scale.x
+        m.m11 = scale.y
+        m.m22 = scale.z
+        return m
+end
+
+---@param rotation quat
+---@return mat4
+function mat4:rotate(rotation)
+    return self * mat4.rotation(rotation)
+end
+
+---@param rotation quat
+---@return mat4
+function mat4.rotation(rotation)
+    return mat4(rotation)
 end
 
 ---@return mat4 # transposed matrix
