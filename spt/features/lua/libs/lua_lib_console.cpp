@@ -6,56 +6,64 @@
 
 LuaConsoleLibrary lua_console_library;
 
-#define CON_PRINT(func) [](lua_State *L) { ConsolePrint(L, func); return 0; }
+#define CON_PRINT(func) \
+	[](lua_State* L) \
+	{ \
+		ConsolePrint(L, func); \
+		return 0; \
+	}
 
-static void ConsolePrint(lua_State *L, void (*function)(const tchar *pMsg, ...)) {
-    int argc = lua_gettop(L);
-    if (argc < 1) {
-        return;
-    }
+static void ConsolePrint(lua_State* L, void (*function)(const tchar* pMsg, ...))
+{
+	int argc = lua_gettop(L);
+	if (argc < 1)
+	{
+		return;
+	}
 
-    int first_type = lua_type(L, 1);
-    if (argc == 1 || first_type == LUA_TSTRING) {
-        lua_string_format(L);
-        function("%s", luaL_checkstring(L, -1));
-    } else if (first_type == LUA_TNUMBER) {
-        int hex_or_red = lua_tointeger(L, 1);
-        lua_remove(L, 1);
+	int first_type = lua_type(L, 1);
+	if (argc == 1 || first_type == LUA_TSTRING)
+	{
+		lua_string_format(L);
+		function("%s", luaL_checkstring(L, -1));
+	}
+	else if (first_type == LUA_TNUMBER)
+	{
+		int hex_or_red = lua_tointeger(L, 1);
+		lua_remove(L, 1);
 
-        if (argc >= 4
-            && lua_type(L, 1) == LUA_TNUMBER
-            && lua_type(L, 2) == LUA_TNUMBER
-            && lua_type(L, 3) == LUA_TSTRING
-                ) {
-            int green = lua_tointeger(L, 1);
-            lua_remove(L, 1);
-            int blue = lua_tointeger(L, 1);
-            lua_remove(L, 1);
-            lua_string_format(L);
+		if (argc >= 4 && lua_type(L, 1) == LUA_TNUMBER && lua_type(L, 2) == LUA_TNUMBER
+		    && lua_type(L, 3) == LUA_TSTRING)
+		{
+			int green = lua_tointeger(L, 1);
+			lua_remove(L, 1);
+			int blue = lua_tointeger(L, 1);
+			lua_remove(L, 1);
+			lua_string_format(L);
 
-            ConColorMsg(Color(hex_or_red, green, blue, 255), "%s", luaL_checkstring(L, -1));
-        } else {
-            lua_string_format(L);
+			ConColorMsg(Color(hex_or_red, green, blue, 255), "%s", luaL_checkstring(L, -1));
+		}
+		else
+		{
+			lua_string_format(L);
 
-            Color color = Color(
-                    hex_or_red >> 16 & 0xFF,
-                    hex_or_red >> 8 & 0xFF,
-                    hex_or_red & 0xFF,
-                    255
-            );
+			Color color = Color(hex_or_red >> 16 & 0xFF, hex_or_red >> 8 & 0xFF, hex_or_red & 0xFF, 255);
 
-            ConColorMsg(color, "%s", luaL_checkstring(L, -1));
-        }
-    } else {
-        luaL_error(L, "console.msg: invalid argument type, expected string or number");
-    }
+			ConColorMsg(color, "%s", luaL_checkstring(L, -1));
+		}
+	}
+	else
+	{
+		luaL_error(L, "console.msg: invalid argument type, expected string or number");
+	}
 }
 
-static int ConsoleExec(lua_State *L) {
-    lua_string_format(L);
-    const char *string = luaL_checkstring(L, 1);
-    interfaces::engine->ClientCmd(string);
-    return 0;
+static int ConsoleExec(lua_State* L)
+{
+	lua_string_format(L);
+	const char* string = luaL_checkstring(L, 1);
+	interfaces::engine->ClientCmd(string);
+	return 0;
 }
 
 /*
@@ -101,130 +109,139 @@ static int lua_console_is_visible(lua_State *L) {
 }
 
 */
-static int ConsolePrintln(lua_State *L) {
-    Msg("%s\n", luaL_checkstring(L, 1));
-    return 0;
+static int ConsolePrintln(lua_State* L)
+{
+	Msg("%s\n", luaL_checkstring(L, 1));
+	return 0;
 }
 
-static int ConsoleVarFind(lua_State *L) {
-    const char *string = luaL_checkstring(L, 1);
+static int ConsoleVarFind(lua_State* L)
+{
+	const char* string = luaL_checkstring(L, 1);
 
-    ConVar *convar = interfaces::g_pCVar->FindVar(string);
+	ConVar* convar = interfaces::g_pCVar->FindVar(string);
 
-    if (convar == nullptr) {
-        lua_pushnil(L);
-        return 1;
-    }
+	if (convar == nullptr)
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
-    auto **convar_ptr = (ConVar **) lua_newuserdata(L, sizeof(ConVar *));
-    *convar_ptr = convar;
+	auto** convar_ptr = (ConVar**)lua_newuserdata(L, sizeof(ConVar*));
+	*convar_ptr = convar;
 
-    luaL_getmetatable(L, "convar");
-    lua_setmetatable(L, -2);
-    return 1;
+	luaL_getmetatable(L, "convar");
+	lua_setmetatable(L, -2);
+	return 1;
 }
 
-static const struct luaL_Reg console_class[] = {
-        {"msg",     CON_PRINT(Msg)},
-        {"dev_msg", CON_PRINT(DevMsg)},
-        {"log",     CON_PRINT(Log)},
-        {"warning", CON_PRINT(Warning)},
-        {"error",   CON_PRINT(Error)},
-        {"exec",     ConsoleExec},
-//        {"clear",      lua_console_clear},
-        {"var_find", ConsoleVarFind},
-//        {"var_create", lua_console_var_create},
-//        {"cmd_find",   lua_console_cmd_find},
-//        {"cmd_create", lua_console_cmd_create},
-//        {"close",      lua_console_close},
-//        {"hide",       lua_console_hide},
-//        {"open",       lua_console_open},
-//        {"is_visible", lua_console_is_visible},
-        {nullptr,    nullptr}
-};
+static const struct luaL_Reg console_class[] = {{"msg", CON_PRINT(Msg)},
+                                                {"dev_msg", CON_PRINT(DevMsg)},
+                                                {"log", CON_PRINT(Log)},
+                                                {"warning", CON_PRINT(Warning)},
+                                                {"error", CON_PRINT(Error)},
+                                                {"exec", ConsoleExec},
+                                                //        {"clear",      lua_console_clear},
+                                                {"var_find", ConsoleVarFind},
+                                                //        {"var_create", lua_console_var_create},
+                                                //        {"cmd_find",   lua_console_cmd_find},
+                                                //        {"cmd_create", lua_console_cmd_create},
+                                                //        {"close",      lua_console_close},
+                                                //        {"hide",       lua_console_hide},
+                                                //        {"open",       lua_console_open},
+                                                //        {"is_visible", lua_console_is_visible},
+                                                {nullptr, nullptr}};
 
-#define CONVAR_GET() ConVar **convar_ptr = (ConVar **) luaL_checkudata(L, 1, "convar");\
-if (convar_ptr == nullptr) {\
-luaL_argcheck(L, convar_ptr != nullptr, 1, "convar expected");\
-return 0;\
+#define CONVAR_GET() \
+	ConVar** convar_ptr = (ConVar**)luaL_checkudata(L, 1, "convar"); \
+	if (convar_ptr == nullptr) \
+	{ \
+		luaL_argcheck(L, convar_ptr != nullptr, 1, "convar expected"); \
+		return 0; \
+	}
+
+static int ConvarGetNumber(lua_State* L)
+{
+	CONVAR_GET();
+
+	lua_pushnumber(L, (*convar_ptr)->GetFloat());
+	return 1;
 }
 
-static int ConvarGetNumber(lua_State *L) {
-    CONVAR_GET();
+static int ConvarGetString(lua_State* L)
+{
+	CONVAR_GET();
 
-    lua_pushnumber(L, (*convar_ptr)->GetFloat());
-    return 1;
+	lua_pushstring(L, (*convar_ptr)->GetString());
+	return 1;
 }
 
-static int ConvarGetString(lua_State *L) {
-    CONVAR_GET();
+static int ConvarGetBool(lua_State* L)
+{
+	CONVAR_GET();
 
-    lua_pushstring(L, (*convar_ptr)->GetString());
-    return 1;
+	lua_pushboolean(L, (*convar_ptr)->GetBool());
+	return 1;
 }
 
-static int ConvarGetBool(lua_State *L) {
-    CONVAR_GET();
+static int ConvarSetNumber(lua_State* L)
+{
+	CONVAR_GET();
 
-    lua_pushboolean(L, (*convar_ptr)->GetBool());
-    return 1;
+	(*convar_ptr)->SetValue((float)luaL_checknumber(L, 2));
+	return 0;
 }
 
-static int ConvarSetNumber(lua_State *L) {
-    CONVAR_GET();
+static int ConvarSetString(lua_State* L)
+{
+	CONVAR_GET();
 
-    (*convar_ptr)->SetValue((float) luaL_checknumber(L, 2));
-    return 0;
+	(*convar_ptr)->SetValue(luaL_checkstring(L, 2));
+	return 0;
 }
 
-static int ConvarSetString(lua_State *L) {
-    CONVAR_GET();
+static int ConvarSetBool(lua_State* L)
+{
+	CONVAR_GET();
 
-    (*convar_ptr)->SetValue(luaL_checkstring(L, 2));
-    return 0;
+	(*convar_ptr)->SetValue(lua_toboolean(L, 2));
+	return 0;
 }
 
-static int ConvarSetBool(lua_State *L) {
-    CONVAR_GET();
-
-    (*convar_ptr)->SetValue(lua_toboolean(L, 2));
-    return 0;
-}
-
-static const struct luaL_Reg convar_class[] = {
-        {"get_number", ConvarGetNumber},
-        {"get_string", ConvarGetString},
-        {"get_bool",   ConvarGetBool},
-        {"set_number", ConvarSetNumber},
-        {"set_string", ConvarSetString},
-        {"set_bool",   ConvarSetBool},
-        {nullptr,      nullptr}
-};
+static const struct luaL_Reg convar_class[] = {{"get_number", ConvarGetNumber},
+                                               {"get_string", ConvarGetString},
+                                               {"get_bool", ConvarGetBool},
+                                               {"set_number", ConvarSetNumber},
+                                               {"set_string", ConvarSetString},
+                                               {"set_bool", ConvarSetBool},
+                                               {nullptr, nullptr}};
 
 LuaConsoleLibrary::LuaConsoleLibrary() : LuaLibrary("console") {}
 
-void LuaConsoleLibrary::Load(lua_State *L) {
-    luaL_register(L, this->name.c_str(), console_class);
-    lua_pop(L, 1);
+void LuaConsoleLibrary::Load(lua_State* L)
+{
+	luaL_register(L, this->name.c_str(), console_class);
+	lua_pop(L, 1);
 
-    lua_pushcfunction(L, &ConsolePrintln);
-    lua_setglobal(L, "print");
+	lua_pushcfunction(L, &ConsolePrintln);
+	lua_setglobal(L, "print");
 
-    luaL_newmetatable(L, "convar");
-    lua_pushstring(L, "__index");
-    lua_pushvalue(L, -2);
-    lua_settable(L, -3);
+	luaL_newmetatable(L, "convar");
+	lua_pushstring(L, "__index");
+	lua_pushvalue(L, -2);
+	lua_settable(L, -3);
 
-    luaL_register(L, nullptr, convar_class);
-    lua_pop(L, 1);
+	luaL_register(L, nullptr, convar_class);
+	lua_pop(L, 1);
 
-//    lua_register_concmd(L);
+	//    lua_register_concmd(L);
 }
 
-void LuaConsoleLibrary::Unload(lua_State *L) {}
+void LuaConsoleLibrary::Unload(lua_State* L) {}
 
-const std::string &LuaConsoleLibrary::GetLuaSource() {
-    static std::string sources = R"""(---@meta
+const std::string& LuaConsoleLibrary::GetLuaSource()
+{
+	static std::string sources = R"""(---@meta
 ---@class console
 console = {}
 
@@ -363,5 +380,5 @@ function convar:unregister()
 end
     )""";
 
-    return sources;
+	return sources;
 }

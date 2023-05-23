@@ -3,21 +3,21 @@
 #include "../lua_feature.hpp"
 #include <set>
 
-class LuaEventsLibrary : public LuaLibrary {
-
+class LuaEventsLibrary : public LuaLibrary
+{
 protected:
-    std::set<lua_State *> states;
+	std::set<lua_State*> states;
 
 public:
-    explicit LuaEventsLibrary();
+	explicit LuaEventsLibrary();
 
-    void InvokeEvent(const std::string &event_name, const std::function<void(lua_State *)> &lambda);
+	void InvokeEvent(const std::string& event_name, const std::function<void(lua_State*)>& lambda);
 
-    void Load(lua_State *L) override;
+	void Load(lua_State* L) override;
 
-    void Unload(lua_State *L) override;
+	void Unload(lua_State* L) override;
 
-    const std::string &GetLuaSource() override;
+	const std::string& GetLuaSource() override;
 };
 
 extern LuaEventsLibrary lua_events_library;

@@ -6,61 +6,61 @@
 #include <vector>
 #include "lua.hpp"
 
-class LuaLibrary {
-
+class LuaLibrary
+{
 public:
-    const std::string name;
+	const std::string name;
 
-    explicit LuaLibrary(std::string name);
+	explicit LuaLibrary(std::string name);
 
-    virtual void Load(lua_State *L);
+	virtual void Load(lua_State* L);
 
-    virtual void Unload(lua_State *L);
+	virtual void Unload(lua_State* L);
 
-    virtual const std::string& GetLuaSource();
+	virtual const std::string& GetLuaSource();
 };
 
-class LuaFeature : public FeatureWrapper<LuaFeature> {
-
+class LuaFeature : public FeatureWrapper<LuaFeature>
+{
 public:
-    lua_State * GetLuaState();
+	lua_State* GetLuaState();
 
-    void ResetLuaState();
+	void ResetLuaState();
 
-    void InitLuaState(lua_State* L);
+	void InitLuaState(lua_State* L);
 
-    void RegisterLibrary(LuaLibrary *library, bool write_docs = true);
+	void RegisterLibrary(LuaLibrary* library, bool write_docs = true);
 
-    void LoadLibraries(lua_State *L);
+	void LoadLibraries(lua_State* L);
 
-    void UnloadLibraries(lua_State *L);
+	void UnloadLibraries(lua_State* L);
 
-//    void Execute(const std::string &code);
+	//    void Execute(const std::string &code);
 
-//    void ExecuteFile(const std::string &path);
+	//    void ExecuteFile(const std::string &path);
 
 protected:
-    bool ShouldLoadFeature() override;
+	bool ShouldLoadFeature() override;
 
-    void InitHooks() override;
+	void InitHooks() override;
 
-    void LoadFeature() override;
+	void LoadFeature() override;
 
-    void UnloadFeature() override;
+	void UnloadFeature() override;
 
 private:
-    lua_State *global_state = nullptr;
+	lua_State* global_state = nullptr;
 
-    std::vector<LuaLibrary *> libraries;
+	std::vector<LuaLibrary*> libraries;
 
-    static void InitDirectory();
+	static void InitDirectory();
 
-    using _TeleportTouchingEntity = void (__thiscall *)(void *thisptr, void *);
-    _TeleportTouchingEntity ORIG_TeleportTouchingEntity = nullptr;
-    static void __fastcall HOOKED_TeleportTouchingEntity(void *thisptr, int _edx, void *other);
+	using _TeleportTouchingEntity = void(__thiscall*)(void* thisptr, void*);
+	_TeleportTouchingEntity ORIG_TeleportTouchingEntity = nullptr;
+	static void __fastcall HOOKED_TeleportTouchingEntity(void* thisptr, int _edx, void* other);
 
-    using _GetPortalCallQueue = bool (*)();
-    _GetPortalCallQueue ORIG_GetPortalCallQueue = nullptr;
+	using _GetPortalCallQueue = bool (*)();
+	_GetPortalCallQueue ORIG_GetPortalCallQueue = nullptr;
 };
 
 extern LuaFeature spt_lua;

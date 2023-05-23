@@ -4,68 +4,70 @@
 
 LuaMemoryLibrary::LuaMemoryLibrary() : LuaLibrary("memory") {}
 
-static int MemoryHook(lua_State *L) {
-    if(!lua_istable(L, 1)) {
-        return 0;
-    }
+static int MemoryHook(lua_State* L)
+{
+	if (!lua_istable(L, 1))
+	{
+		return 0;
+	}
 
-    lua_getfield(L, 1, "base");
-    int module_base = lua_tointeger(L, -1);
-    lua_pop(L, 1);
+	lua_getfield(L, 1, "base");
+	int module_base = lua_tointeger(L, -1);
+	lua_pop(L, 1);
 
-    lua_getfield(L, 1, "handle");
-    int module_handle = lua_tointeger(L, -1);
-    lua_pop(L, 1);
+	lua_getfield(L, 1, "handle");
+	int module_handle = lua_tointeger(L, -1);
+	lua_pop(L, 1);
 
-    lua_getfield(L, 1, "offset");
-    int module_offset = lua_tointeger(L, -1);
-    lua_pop(L, 1);
+	lua_getfield(L, 1, "offset");
+	int module_offset = lua_tointeger(L, -1);
+	lua_pop(L, 1);
 
-    if(!lua_isnumber(L, 2)) {
-        return 0;
-    }
+	if (!lua_isnumber(L, 2))
+	{
+		return 0;
+	}
 
-    int hook_offset = lua_tointeger(L, 2);
-    const char* hook_signature = lua_tostring(L, 3);
-    return 1;
+	int hook_offset = lua_tointeger(L, 2);
+	const char* hook_signature = lua_tostring(L, 3);
+	return 1;
 }
 
-static int MemoryModule(lua_State *L) {
+static int MemoryModule(lua_State* L)
+{
+	const char* name = luaL_checkstring(L, 1);
 
-    const char *name = luaL_checkstring(L, 1);
+	void* handle;
+	void* start;
+	size_t size;
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	if (!MemUtils::GetModuleInfo(converter.from_bytes(name), &handle, &start, &size))
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
-    void *handle;
-    void *start;
-    size_t size;
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    if (!MemUtils::GetModuleInfo(converter.from_bytes(name), &handle, &start, &size)) {
-        lua_pushnil(L);
-        return 1;
-    }
-
-    lua_newtable(L);
-    lua_pushnumber(L, (uintptr_t) handle);
-    lua_setfield(L, -2, "handle");
-    lua_pushnumber(L, (uintptr_t) start);
-    lua_setfield(L, -2, "base");
-    lua_pushnumber(L, size);
-    lua_setfield(L, -2, "size");
-    return 1;
+	lua_newtable(L);
+	lua_pushnumber(L, (uintptr_t)handle);
+	lua_setfield(L, -2, "handle");
+	lua_pushnumber(L, (uintptr_t)start);
+	lua_setfield(L, -2, "base");
+	lua_pushnumber(L, size);
+	lua_setfield(L, -2, "size");
+	return 1;
 }
 
-static const struct luaL_Reg memory_class[] = {
-        {"hook",   MemoryHook},
-        {"module", MemoryModule},
-        {nullptr,  nullptr}
-};
+static const struct luaL_Reg memory_class[] = {{"hook", MemoryHook}, {"module", MemoryModule}, {nullptr, nullptr}};
 
-void LuaMemoryLibrary::Load(lua_State *L) {
-    luaL_register(L, "memory", memory_class);
-    lua_pop(L, 1);
+void LuaMemoryLibrary::Load(lua_State* L)
+{
+	luaL_register(L, "memory", memory_class);
+	lua_pop(L, 1);
 }
 
-const std::string &LuaMemoryLibrary::GetLuaSource() {
-    static const std::string sources = R"(
+const std::string& LuaMemoryLibrary::GetLuaSource()
+{
+	static const std::string sources = R"(
 ---@class memory
 memory = {}
 
@@ -150,5 +152,5 @@ modules = {
 }
 )";
 
-    return sources;
+	return sources;
 }

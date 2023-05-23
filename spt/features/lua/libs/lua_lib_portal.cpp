@@ -9,189 +9,210 @@
 LuaPortalLibrary lua_portal_library;
 
 // This is duplicated code from lua_lib_entity.cpp, wahh wahh wahh
-static IServerEntity *LuaCheckPortalEntity(lua_State *L, int index) {
-    if (!LuaIsClass(L, index, "portal")) {
-        luaL_error(L, "entity expected but the metatable is not correct");
-        return nullptr;
-    }
+static IServerEntity* LuaCheckPortalEntity(lua_State* L, int index)
+{
+	if (!LuaIsClass(L, index, "portal"))
+	{
+		luaL_error(L, "entity expected but the metatable is not correct");
+		return nullptr;
+	}
 
-    lua_getfield(L, index, "data");
-    auto client_ent = (IClientEntity *) lua_touserdata(L, -1);
-    lua_pop(L, 1);
+	lua_getfield(L, index, "data");
+	auto client_ent = (IClientEntity*)lua_touserdata(L, -1);
+	lua_pop(L, 1);
 
-    if (!client_ent) {
-        luaL_error(L, "entity expected but pointer is nil");
-        return nullptr;
-    }
+	if (!client_ent)
+	{
+		luaL_error(L, "entity expected but pointer is nil");
+		return nullptr;
+	}
 
-    auto server_ent = utils::GetServerEntity((IClientEntity *) client_ent);
+	auto server_ent = utils::GetServerEntity((IClientEntity*)client_ent);
 
-    if (!server_ent) {
-        luaL_error(L, "server entity expected, but the pointer is nil");
-        return nullptr;
-    }
+	if (!server_ent)
+	{
+		luaL_error(L, "server entity expected, but the pointer is nil");
+		return nullptr;
+	}
 
-    return server_ent;
+	return server_ent;
 }
 
 LuaPortalLibrary::LuaPortalLibrary() : LuaLibrary("portal") {}
 
-static int PortalList(lua_State *L) {
-    lua_newtable(L);
+static int PortalList(lua_State* L)
+{
+	lua_newtable(L);
 
-    int portals = 1;
+	int portals = 1;
 
-    for (int i = 0; i < MAX_EDICTS; ++i) {
-        IClientEntity *ent = utils::GetClientEntity(i);
+	for (int i = 0; i < MAX_EDICTS; ++i)
+	{
+		IClientEntity* ent = utils::GetClientEntity(i);
 
-        if (!ent || strcmp(ent->GetClientClass()->GetName(), "CProp_Portal") != 0) {
-            continue;
-        }
+		if (!ent || strcmp(ent->GetClientClass()->GetName(), "CProp_Portal") != 0)
+		{
+			continue;
+		}
 
-        lua_pushinteger(L, portals);
-        lua_newtable(L);
-        lua_getglobal(L, "portal");
-        lua_setmetatable(L, -2);
+		lua_pushinteger(L, portals);
+		lua_newtable(L);
+		lua_getglobal(L, "portal");
+		lua_setmetatable(L, -2);
 
-        lua_pushlightuserdata(L, ent);
-        lua_setfield(L, -2, "data");
+		lua_pushlightuserdata(L, ent);
+		lua_setfield(L, -2, "data");
 
-        lua_settable(L, -3);
-        portals++;
-    }
+		lua_settable(L, -3);
+		portals++;
+	}
 
-    return 1;
+	return 1;
 }
 
-static int PortalFromEntity(lua_State *L) {
-    if (!lua_istable(L, 1)) {
-        lua_pushnil(L);
-        return 1;
-    }
+static int PortalFromEntity(lua_State* L)
+{
+	if (!lua_istable(L, 1))
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
-    lua_getfield(L, 1, "data");
-    auto *ent = static_cast<IClientEntity *>(lua_touserdata(L, -1));
-    lua_pop(L, 1);
+	lua_getfield(L, 1, "data");
+	auto* ent = static_cast<IClientEntity*>(lua_touserdata(L, -1));
+	lua_pop(L, 1);
 
-    if (!ent || !strcmp(ent->GetClientClass()->GetName(), "CProp_Portal")) {
-        lua_pushnil(L);
-        return 1;
-    }
+	if (!ent || !strcmp(ent->GetClientClass()->GetName(), "CProp_Portal"))
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
-    lua_newtable(L);
-    lua_getglobal(L, "portal");
-    lua_setmetatable(L, -2);
+	lua_newtable(L);
+	lua_getglobal(L, "portal");
+	lua_setmetatable(L, -2);
 
-    lua_pushlightuserdata(L, ent);
-    lua_setfield(L, -2, "data");
-    return 1;
+	lua_pushlightuserdata(L, ent);
+	lua_setfield(L, -2, "data");
+	return 1;
 }
 
-static int PortalGetEntity(lua_State *L) {
-    auto ent = LuaCheckPortalEntity(L, 1);
+static int PortalGetEntity(lua_State* L)
+{
+	auto ent = LuaCheckPortalEntity(L, 1);
 
-    lua_newtable(L);
-    lua_getglobal(L, "entity");
-    lua_setmetatable(L, -2);
+	lua_newtable(L);
+	lua_getglobal(L, "entity");
+	lua_setmetatable(L, -2);
 
-    lua_pushlightuserdata(L, ent);
-    lua_setfield(L, -2, "data");
-    return 1;
+	lua_pushlightuserdata(L, ent);
+	lua_setfield(L, -2, "data");
+	return 1;
 }
 
-static int PortalIsActive(lua_State *L) {
-    auto portal_ent = LuaCheckPortalEntity(L, 1);
-    static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_bActivated", true);
-    bool *is_activated = (bool *) ((uintptr_t) portal_ent + offset);
-    lua_pushboolean(L, *is_activated);
-    return 1;
+static int PortalIsActive(lua_State* L)
+{
+	auto portal_ent = LuaCheckPortalEntity(L, 1);
+	static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_bActivated", true);
+	bool* is_activated = (bool*)((uintptr_t)portal_ent + offset);
+	lua_pushboolean(L, *is_activated);
+	return 1;
 }
 
-static int PortalGetMatrix(lua_State *L) {
-    auto portal_ent = LuaCheckPortalEntity(L, 1);
-    static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_matrixThisToLinked", true);
-    auto matrix = reinterpret_cast<VMatrix *>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
-    if (!matrix) {
-        lua_pushnil(L);
-        return 1;
-    }
+static int PortalGetMatrix(lua_State* L)
+{
+	auto portal_ent = LuaCheckPortalEntity(L, 1);
+	static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_matrixThisToLinked", true);
+	auto matrix = reinterpret_cast<VMatrix*>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
+	if (!matrix)
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
-    LuaMathLibrary::LuaPushMatrix(L, *matrix);
-    return 1;
+	LuaMathLibrary::LuaPushMatrix(L, *matrix);
+	return 1;
 }
 
-static int PortalGetLinked(lua_State *L) {
-    auto portal_ent = LuaCheckPortalEntity(L, 1);
-    static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_hLinkedPortal", true);
-    CBaseHandle linked_handle = *reinterpret_cast<CBaseHandle *>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
-    if(!linked_handle.IsValid()) {
-        lua_pushnil(L);
-        return 1;
-    }
+static int PortalGetLinked(lua_State* L)
+{
+	auto portal_ent = LuaCheckPortalEntity(L, 1);
+	static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_hLinkedPortal", true);
+	CBaseHandle linked_handle = *reinterpret_cast<CBaseHandle*>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
+	if (!linked_handle.IsValid())
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
-    edict_t *edict = interfaces::engine_server->PEntityOfEntIndex(linked_handle.GetEntryIndex());
-    IServerEntity *ent = edict->GetIServerEntity();
+	edict_t* edict = interfaces::engine_server->PEntityOfEntIndex(linked_handle.GetEntryIndex());
+	IServerEntity* ent = edict->GetIServerEntity();
 
-    if (!ent) {
-        lua_pushnil(L);
-        return 1;
-    }
+	if (!ent)
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
-    lua_newtable(L);
-    lua_getglobal(L, "portal");
-    lua_setmetatable(L, -2);
+	lua_newtable(L);
+	lua_getglobal(L, "portal");
+	lua_setmetatable(L, -2);
 
-    lua_pushlightuserdata(L, ent);
-    lua_setfield(L, -2, "data");
-    return 1;
+	lua_pushlightuserdata(L, ent);
+	lua_setfield(L, -2, "data");
+	return 1;
 }
 
-static int PortalGetLinkageID(lua_State *L) {
-    auto portal_ent = LuaCheckPortalEntity(L, 1);
-    static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_iLinkageGroupID", true);
-    auto linkage_id = reinterpret_cast<int *>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
+static int PortalGetLinkageID(lua_State* L)
+{
+	auto portal_ent = LuaCheckPortalEntity(L, 1);
+	static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_iLinkageGroupID", true);
+	auto linkage_id = reinterpret_cast<int*>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
 
-    if (!linkage_id) {
-        lua_pushnil(L);
-        return 1;
-    }
+	if (!linkage_id)
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
-    lua_pushinteger(L, *linkage_id);
-    return 1;
+	lua_pushinteger(L, *linkage_id);
+	return 1;
 }
 
-static int PortalIsOrange(lua_State *L) {
-    auto portal_ent = LuaCheckPortalEntity(L, 1);
-    static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_bIsPortal2", true);
-    auto is_orange = reinterpret_cast<bool *>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
+static int PortalIsOrange(lua_State* L)
+{
+	auto portal_ent = LuaCheckPortalEntity(L, 1);
+	static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_bIsPortal2", true);
+	auto is_orange = reinterpret_cast<bool*>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
 
-    if (!is_orange) {
-        lua_pushnil(L);
-        return 1;
-    }
+	if (!is_orange)
+	{
+		lua_pushnil(L);
+		return 1;
+	}
 
-    lua_pushboolean(L, *is_orange);
-    return 1;
+	lua_pushboolean(L, *is_orange);
+	return 1;
 }
 
-static const struct luaL_Reg portal_class[] = {
-        {"list",           PortalList},
-        {"from_entity",    PortalFromEntity},
-        {"get_entity",     PortalGetEntity},
-        {"is_active",      PortalIsActive},
-        {"get_matrix",     PortalGetMatrix},
-        {"get_linked",     PortalGetLinked},
-        {"get_linkage_id", PortalGetLinkageID},
-        {"is_orange",      PortalIsOrange},
-        {nullptr,          nullptr}
-};
+static const struct luaL_Reg portal_class[] = {{"list", PortalList},
+                                               {"from_entity", PortalFromEntity},
+                                               {"get_entity", PortalGetEntity},
+                                               {"is_active", PortalIsActive},
+                                               {"get_matrix", PortalGetMatrix},
+                                               {"get_linked", PortalGetLinked},
+                                               {"get_linkage_id", PortalGetLinkageID},
+                                               {"is_orange", PortalIsOrange},
+                                               {nullptr, nullptr}};
 
-void LuaPortalLibrary::Load(lua_State *L) {
-    lua_new_class(L, "portal", portal_class);
+void LuaPortalLibrary::Load(lua_State* L)
+{
+	lua_new_class(L, "portal", portal_class);
 }
 
-const std::string &LuaPortalLibrary::GetLuaSource() {
-    static const std::string source = R"(---@meta
+const std::string& LuaPortalLibrary::GetLuaSource()
+{
+	static const std::string source = R"(---@meta
 ---@class portal
 portal = {}
 
@@ -273,5 +294,5 @@ function portal:get_entity()
 end
 )";
 
-    return source;
+	return source;
 }

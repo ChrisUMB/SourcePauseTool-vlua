@@ -4,14 +4,16 @@
 
 LuaGameLibrary lua_game_library;
 
-static int GetClientTick(lua_State *L) {
-    lua_pushinteger(L, interfaces::engine_tool->ClientTick());
-    return 1;
+static int GetClientTick(lua_State* L)
+{
+	lua_pushinteger(L, interfaces::engine_tool->ClientTick());
+	return 1;
 }
 
-static int GetServerTick(lua_State *L) {
-    lua_pushinteger(L, interfaces::engine_tool->ServerTick());
-    return 1;
+static int GetServerTick(lua_State* L)
+{
+	lua_pushinteger(L, interfaces::engine_tool->ServerTick());
+	return 1;
 }
 
 //static int IsGamePaused(lua_State *L) {
@@ -23,28 +25,30 @@ static int GetServerTick(lua_State *L) {
 //    return 1;
 //}
 
-static int GetGameDirectory(lua_State *L) {
-    lua_pushstring(L, interfaces::engine->GetGameDirectory());
-    return 1;
+static int GetGameDirectory(lua_State* L)
+{
+	lua_pushstring(L, interfaces::engine->GetGameDirectory());
+	return 1;
 }
 
 static const struct luaL_Reg game_class[] = {
-//        {"is_paused", IsGamePaused},
-        {"get_client_tick", GetClientTick},
-        {"get_server_tick", GetServerTick},
-        {"get_directory", GetGameDirectory},
-        {nullptr, nullptr}
-};
+    //        {"is_paused", IsGamePaused},
+    {"get_client_tick", GetClientTick},
+    {"get_server_tick", GetServerTick},
+    {"get_directory", GetGameDirectory},
+    {nullptr, nullptr}};
 
 LuaGameLibrary::LuaGameLibrary() : LuaLibrary("game") {}
 
-void LuaGameLibrary::Load(lua_State *L) {
-    luaL_register(L, "game", game_class);
-    lua_pop(L, 1);
+void LuaGameLibrary::Load(lua_State* L)
+{
+	luaL_register(L, "game", game_class);
+	lua_pop(L, 1);
 }
 
-const std::string &LuaGameLibrary::GetLuaSource() {
-    static std::string sources = R"""(---@meta
+const std::string& LuaGameLibrary::GetLuaSource()
+{
+	static std::string sources = R"""(---@meta
 ---@class game
 game = {}
 
@@ -101,5 +105,5 @@ function game.async(callback)
 end
 )""";
 
-    return sources;
+	return sources;
 }

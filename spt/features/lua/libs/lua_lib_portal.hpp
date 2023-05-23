@@ -2,13 +2,14 @@
 
 #include "../lua_feature.hpp"
 
-class LuaPortalLibrary : public LuaLibrary {
+class LuaPortalLibrary : public LuaLibrary
+{
 public:
-    explicit LuaPortalLibrary();
+	explicit LuaPortalLibrary();
 
-    void Load(lua_State *L) override;
+	void Load(lua_State* L) override;
 
-    const std::string &GetLuaSource() override;
+	const std::string& GetLuaSource() override;
 };
 
 extern LuaPortalLibrary lua_portal_library;

@@ -2,13 +2,14 @@
 
 #include "../lua_feature.hpp"
 
-class LuaGameLibrary : public LuaLibrary {
+class LuaGameLibrary : public LuaLibrary
+{
 public:
-    explicit LuaGameLibrary();
+	explicit LuaGameLibrary();
 
-    void Load(lua_State *L) override;
+	void Load(lua_State* L) override;
 
-    const std::string &GetLuaSource() override;
+	const std::string& GetLuaSource() override;
 };
 
 extern LuaGameLibrary lua_game_library;
