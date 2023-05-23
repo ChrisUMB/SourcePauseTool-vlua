@@ -16,6 +16,7 @@
 #include "engine\IEngineTrace.h"
 #include "vphysics_interface.h"
 #include "toolframework/itoolentity.h"
+#include "vstdlib/random.h"
 
 namespace interfaces
 {

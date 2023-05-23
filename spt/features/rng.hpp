@@ -8,6 +8,8 @@ public:
 	int GetPredictionRandomSeed(int commandOffset);
 	int commandNumber = 0;
 
+    void* vstdlibBase;
+
 	DECL_MEMBER_CDECL(void, ivp_srand, uint32_t seed);
 
 protected:
@@ -18,6 +20,7 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
+    void LevelInit(const char* mapName);
 	DECL_HOOK_CDECL(void, SetPredictionRandomSeed, void* usercmd);
 #ifdef OE
 	DECL_HOOK_THISCALL(void, CBasePlayer__InitVCollision, void*);

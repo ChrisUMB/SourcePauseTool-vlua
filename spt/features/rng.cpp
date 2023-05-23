@@ -7,7 +7,11 @@
 #ifdef OE
 #include "..\game_shared\usercmd.h"
 #else
+
 #include "usercmd.h"
+#include "signals.hpp"
+#include "interfaces.hpp"
+
 #endif
 
 ConVar y_spt_set_ivp_seed_on_load(
@@ -15,6 +19,11 @@ ConVar y_spt_set_ivp_seed_on_load(
     "",
     FCVAR_CHEAT,
     "Sets the ivp seed once during the next load, can prevent some physics rng when running a tas.\n");
+
+ConVar spt_set_uniform_seed_on_load("spt_set_uniform_seed_on_load",
+                                    "",
+                                    FCVAR_CHEAT,
+                                    "Sets the uniform seed once during the next load.\n");
 
 RNGStuff spt_rng;
 
@@ -74,9 +83,30 @@ void RNGStuff::LoadFeature()
 {
 	if (ORIG_ivp_srand && ORIG_CBasePlayer__InitVCollision)
 		InitConcommandBase(y_spt_set_ivp_seed_on_load);
+
+	InitConcommandBase(spt_set_uniform_seed_on_load);
+
+	MemUtils::GetModuleInfo(L"vstdlib.dll", nullptr, &vstdlibBase, nullptr);
+
+	LevelInitSignal.Connect(this, &RNGStuff::LevelInit);
 }
 
 void RNGStuff::UnloadFeature() {}
+
+void RNGStuff::LevelInit(const char* mapName)
+{
+	static IUniformRandomStream* uniformStream = *(IUniformRandomStream**)(((uintptr_t)vstdlibBase) + 0x24634);
+	int cached = *reinterpret_cast<int*>(((uintptr_t)uniformStream) + 4);
+
+	if (spt_set_uniform_seed_on_load.GetString()[0] != '\0')
+	{
+		uniformStream->SetSeed((int)strtoul(spt_set_uniform_seed_on_load.GetString(), nullptr, 10));
+		spt_set_uniform_seed_on_load.SetValue("");
+	}
+
+	int seed = *reinterpret_cast<int*>(((uintptr_t)uniformStream) + 4);
+	DevWarning("spt: uniform seed is %u (old: %u)\n", seed, cached);
+}
 
 IMPL_HOOK_CDECL(RNGStuff, void, SetPredictionRandomSeed, void* usercmd)
 {
@@ -94,6 +124,7 @@ IMPL_HOOK_THISCALL(RNGStuff, void, CBasePlayer__InitVCollision, void*)
 {
 	spt_rng.ORIG_CBasePlayer__InitVCollision(thisptr);
 #else
+
 IMPL_HOOK_THISCALL(RNGStuff,
                    void,
                    CBasePlayer__InitVCollision,
