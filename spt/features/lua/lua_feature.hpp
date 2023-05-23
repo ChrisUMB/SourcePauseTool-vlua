@@ -35,9 +35,9 @@ public:
 
     void UnloadLibraries(lua_State *L);
 
-    void Execute(const std::string &code);
+//    void Execute(const std::string &code);
 
-    void ExecuteFile(const std::string &path);
+//    void ExecuteFile(const std::string &path);
 
 protected:
     bool ShouldLoadFeature() override;

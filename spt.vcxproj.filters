@@ -361,6 +361,18 @@
     <ClCompile Include="spt\features\lua\libs\lua_lib_syscall.cpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_entity.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_memory.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_portal.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_render.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -763,6 +775,18 @@
       <Filter>spt\features\lua\libs</Filter>
     </ClInclude>
     <ClInclude Include="spt\features\lua\libs\lua_lib_syscall.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_entity.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_memory.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_portal.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_render.hpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClInclude>
   </ItemGroup>
