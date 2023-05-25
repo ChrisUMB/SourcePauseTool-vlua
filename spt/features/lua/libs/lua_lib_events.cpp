@@ -107,7 +107,7 @@ events = {
     player_jump = new_event_type(),
 
     ---@class entity_teleport_event : event
-    ---@field hammer_id number The entity hammer ID
+    ---@field entity entity The entity that was teleported
     ---@field old_pos vec3 The position of the entity prior to the teleport
     ---@field new_pos vec3 The position of the entity after the teleport
     ---@field old_rot vec3 The rotation of the entity prior to the teleport
@@ -118,6 +118,7 @@ events = {
     entity_teleport = new_event_type(),
 
     ---@class player_teleport_event : entity_teleport_event
+    ---@field entity entity The player that was teleported
     )" EVENT_TYPE_LUA(player_teleport) R"(
     player_teleport = new_event_type(),
 
@@ -129,17 +130,16 @@ events = {
     )" EVENT_TYPE_LUA(player_ungrounded) R"(
     player_ungrounded = new_event_type(),
 
-    ---@class entity_touch_trigger : event
+    ---@class entity_touch_trigger_event : event
     ---@field trigger entity The trigger that was touched
     ---@field entity entity The entity that touched the trigger
-    )" EVENT_TYPE_LUA(player_ungrounded) R"(
+    )" EVENT_TYPE_LUA(entity_touch_trigger) R"(
     entity_touch_trigger = new_event_type(),
 
-    ---@class player_touch_trigger : entity_touch_trigger
+    ---@class player_touch_trigger_event : entity_touch_trigger_event
     ---@field entity entity The player that touched the trigger
-    )" EVENT_TYPE_LUA(player_ungrounded) R"(
+    )" EVENT_TYPE_LUA(player_touch_trigger) R"(
     player_touch_trigger = new_event_type(),
-
 
     ---@class portal_moved_event : event
     ---@field old_pos vec3 The position of the portal prior to the move

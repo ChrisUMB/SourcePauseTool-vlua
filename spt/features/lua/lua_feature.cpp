@@ -364,8 +364,8 @@ void __fastcall LuaFeature::HOOKED_TeleportTouchingEntity(void *thisptr, int _ed
     auto event_invocation = [&](lua_State *L) {
         lua_newtable(L);
 
-        lua_pushinteger(L, hammer_id);
-        lua_setfield(L, -2, "hammer_id");
+        LuaEntityLibrary::LuaPushEntity(L, other);
+        lua_setfield(L, -2, "entity");
 
         LuaMathLibrary::LuaPushVector3D(L, old_pos);
         lua_setfield(L, -2, "old_pos");
