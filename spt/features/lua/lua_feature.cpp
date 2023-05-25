@@ -20,6 +20,7 @@
 #include "signals.hpp"
 #include "spt/sptlib-wrapper.hpp"
 #include "spt/utils/game_detection.hpp"
+#include "libs/lua_lib_camera.hpp"
 
 LuaFeature spt_lua;
 
@@ -58,6 +59,7 @@ void LuaFeature::LoadFeature() {
     RegisterLibrary(&lua_player_library);
     RegisterLibrary(&lua_entity_library);
     RegisterLibrary(&lua_render_library);
+//    RegisterLibrary(&lua_camera_library);
 
     if (utils::DoesGameLookLikePortal()) {
         RegisterLibrary(&lua_portal_library);

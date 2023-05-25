@@ -16,7 +16,7 @@ void LuaEventsLibrary::InvokeEvent(const std::string& event_name, const std::fun
 		if (!lua_istable(L, -1))
 		{
 			lua_pop(L, 2);
-			Msg("event doesn't exist: %s\n", event_name.c_str());
+			Warning("event doesn't exist: %s\n", event_name.c_str());
 			return;
 		}
 

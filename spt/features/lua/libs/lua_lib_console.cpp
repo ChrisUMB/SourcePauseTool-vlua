@@ -66,49 +66,6 @@ static int ConsoleExec(lua_State* L)
 	return 0;
 }
 
-/*
-static int lua_console_clear(lua_State *L) {
-    interfaces::engine_vgui->ClearConsole();
-    return 0;
-}
-
-static int lua_console_close(lua_State *L) {
-    IEngineVGui *vgui = interfaces::engine_vgui;
-
-    if (vgui->IsConsoleVisible()) {
-        vgui->HideConsole();
-    }
-
-    vgui->HideGameUI();
-    return 0;
-}
-
-static int lua_console_hide(lua_State *L) {
-    IEngineVGuiInternal *vgui = interfaces::engine_vgui;
-
-    if (vgui->IsConsoleVisible()) {
-        vgui->HideConsole();
-    }
-
-    return 0;
-}
-
-static int lua_console_open(lua_State *L) {
-    IEngineVGuiInternal *vgui = interfaces::engine_vgui;
-
-    if (!vgui->IsConsoleVisible()) {
-        vgui->ShowConsole();
-    }
-
-    return 0;
-}
-
-static int lua_console_is_visible(lua_State *L) {
-    lua_pushboolean(L, interfaces::engine_vgui->IsConsoleVisible());
-    return 1;
-}
-
-*/
 static int ConsolePrintln(lua_State* L)
 {
 	Msg("%s\n", luaL_checkstring(L, 1));
@@ -153,58 +110,60 @@ static const struct luaL_Reg console_class[] = {{"msg", CON_PRINT(Msg)},
                                                 {nullptr, nullptr}};
 
 #define CONVAR_GET() \
-	ConVar** convar_ptr = (ConVar**)luaL_checkudata(L, 1, "convar"); \
-	if (convar_ptr == nullptr) \
+    auto convar_ptrptr = (ConVar**) luaL_checkudata(L, 1, "convar"); \
+	if (convar_ptrptr == nullptr) \
 	{ \
-		luaL_argcheck(L, convar_ptr != nullptr, 1, "convar expected"); \
+		luaL_argcheck(L, convar_ptrptr != nullptr, 1, "convar expected"); \
 		return 0; \
-	}
+	}                   \
+    auto convar_ptr = *convar_ptrptr;                 \
+    do {} while(0)
 
 static int ConvarGetNumber(lua_State* L)
 {
-	CONVAR_GET();
+    CONVAR_GET();
 
-	lua_pushnumber(L, (*convar_ptr)->GetFloat());
+	lua_pushnumber(L, convar_ptr->GetFloat());
 	return 1;
 }
 
 static int ConvarGetString(lua_State* L)
 {
-	CONVAR_GET();
+    CONVAR_GET();
 
-	lua_pushstring(L, (*convar_ptr)->GetString());
+	lua_pushstring(L, convar_ptr->GetString());
 	return 1;
 }
 
 static int ConvarGetBool(lua_State* L)
 {
-	CONVAR_GET();
+    CONVAR_GET();
 
-	lua_pushboolean(L, (*convar_ptr)->GetBool());
+	lua_pushboolean(L, convar_ptr->GetBool());
 	return 1;
 }
 
 static int ConvarSetNumber(lua_State* L)
 {
-	CONVAR_GET();
+    CONVAR_GET();
 
-	(*convar_ptr)->SetValue((float)luaL_checknumber(L, 2));
+	convar_ptr->SetValue((float)luaL_checknumber(L, 2));
 	return 0;
 }
 
 static int ConvarSetString(lua_State* L)
 {
-	CONVAR_GET();
+    CONVAR_GET();
 
-	(*convar_ptr)->SetValue(luaL_checkstring(L, 2));
+	convar_ptr->SetValue(luaL_checkstring(L, 2));
 	return 0;
 }
 
 static int ConvarSetBool(lua_State* L)
 {
-	CONVAR_GET();
+    CONVAR_GET();
 
-	(*convar_ptr)->SetValue(lua_toboolean(L, 2));
+	convar_ptr->SetValue(lua_toboolean(L, 2));
 	return 0;
 }
 
