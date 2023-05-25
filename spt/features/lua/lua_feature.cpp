@@ -24,23 +24,6 @@
 
 LuaFeature spt_lua;
 
-namespace patterns {
-
-    static constexpr auto ptn_TeleportTouchingEntity_1 =
-            Pattern<count_bytes("81 EC ?? ?? ?? ?? 55 8B E9 89 6C 24 14 E8 ?? ?? ?? ??")>(
-                    "81 EC ?? ?? ?? ?? 55 8B E9 89 6C 24 14 E8 ?? ?? ?? ??");
-
-    constexpr auto TeleportTouchingEntity =
-            make_pattern_array(PatternWrapper{"5135", ptn_TeleportTouchingEntity_1});
-
-    static constexpr auto ptn_GetPortalCallQueue_1 =
-            Pattern<count_bytes("33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3")>(
-                    "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3");
-
-    constexpr auto GetPortalCallQueue = make_pattern_array(PatternWrapper{"5135", ptn_GetPortalCallQueue_1});
-
-} // namespace patterns
-
 bool LuaFeature::ShouldLoadFeature() {
     return utils::GetBuildNumber() >= 5135;
 }
@@ -117,84 +100,6 @@ void LuaFeature::LoadFeature() {
 }
 
 void LuaFeature::UnloadFeature() {}
-
-void LuaFeature::InitHooks() {
-    AddPatternHook(patterns::TeleportTouchingEntity,
-                   "server",
-                   "TeleportTouchingEntity",
-                   reinterpret_cast<void **>(&ORIG_TeleportTouchingEntity),
-                   reinterpret_cast<void *>(HOOKED_TeleportTouchingEntity));
-
-    AddPatternHook(patterns::GetPortalCallQueue,
-                   "server",
-                   "GetPortalCallQueue",
-                   reinterpret_cast<void **>(&ORIG_GetPortalCallQueue),
-                   nullptr);
-}
-
-void __fastcall LuaFeature::HOOKED_TeleportTouchingEntity(void *thisptr, int _edx, void *other) {
-    if (spt_lua.ORIG_GetPortalCallQueue()) {
-        spt_lua.ORIG_TeleportTouchingEntity(thisptr, other);
-        return;
-    }
-
-    int hammer_id = (int) ((uintptr_t) other + spt_entprops.GetFieldOffset("CBaseEntity", "m_iHammerID", true));
-
-    Vector *p_pos =
-            (Vector *) ((uintptr_t) other + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
-
-    Vector *p_rot =
-            (Vector *) ((uintptr_t) other + spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
-
-    QAngle *p_ang = (QAngle *) ((uintptr_t) other + spt_entprops.GetFieldOffset("CBaseEntity", "m_angRotation", true));
-
-    bool is_player = other == spt_entprops.GetPlayer(true);
-
-    Vector old_pos = *p_pos;
-    Vector old_rot = *p_rot;
-    QAngle old_ang = *p_ang;
-
-    spt_lua.ORIG_TeleportTouchingEntity(thisptr, other);
-
-    Vector new_pos = *p_pos;
-    Vector new_rot = *p_rot;
-    QAngle new_ang = *p_ang;
-
-    if (is_player) {
-        lua_player_library.UpdateLocals(old_pos, old_ang, new_pos, new_ang);
-    }
-
-    auto event_invocation = [&](lua_State *L) {
-        lua_newtable(L);
-
-        lua_pushinteger(L, hammer_id);
-        lua_setfield(L, -2, "hammer_id");
-
-        LuaMathLibrary::LuaPushVector3D(L, old_pos);
-        lua_setfield(L, -2, "old_pos");
-
-        LuaMathLibrary::LuaPushVector3D(L, old_rot);
-        lua_setfield(L, -2, "old_rot");
-
-        LuaMathLibrary::LuaPushAngle(L, old_ang);
-        lua_setfield(L, -2, "old_ang");
-
-        LuaMathLibrary::LuaPushVector3D(L, new_pos);
-        lua_setfield(L, -2, "new_pos");
-
-        LuaMathLibrary::LuaPushVector3D(L, new_rot);
-        lua_setfield(L, -2, "new_rot");
-
-        LuaMathLibrary::LuaPushAngle(L, new_ang);
-        lua_setfield(L, -2, "new_ang");
-    };
-
-    lua_events_library.InvokeEvent("entity_teleport", event_invocation);
-
-    if (is_player) {
-        lua_events_library.InvokeEvent("player_teleport", event_invocation);
-    }
-}
 
 void LuaFeature::InitDirectory() {
     auto game_dir = std::string(interfaces::engine->GetGameDirectory());
@@ -351,4 +256,139 @@ void LuaLibrary::Unload(lua_State *L) {
 const std::string &LuaLibrary::GetLuaSource() {
     static std::string default_sources;
     return default_sources;
+}
+
+//Hooks
+
+namespace patterns {
+    PATTERNS(TeleportTouchingEntity, "5135", "81 EC ?? ?? ?? ?? 55 8B E9 89 6C 24 14 E8 ?? ?? ?? ??");
+    PATTERNS(PortalNewLocation, "5135", "83 EC 2C 53 55 56 8B F1 57"); //8D 8E ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B 06 8B 90");
+    PATTERNS(TriggerStartTouch, "5135", "55 8B 6C 24 08 56 8B F1 8B 06 8B 90 ?? ?? ?? ?? 55 FF D2 84 C0");
+    PATTERNS(GetPortalCallQueue, "5135", "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3");
+
+} // namespace patterns
+
+void LuaFeature::InitHooks() {
+    HOOK_FUNCTION(server, TeleportTouchingEntity);
+    HOOK_FUNCTION(server, PortalNewLocation);
+    HOOK_FUNCTION(server, TriggerStartTouch);
+    FIND_PATTERN(server, GetPortalCallQueue);
+}
+
+void LuaFeature::HOOKED_TriggerStartTouch(void *thisptr, int _edx, void *other) {
+    spt_lua.ORIG_TriggerStartTouch(thisptr, other);
+
+    if (other == nullptr) {
+        return;
+    }
+
+    bool is_player = other == spt_entprops.GetPlayer(true);
+
+    auto event_invocation = [&](lua_State *L) {
+        lua_newtable(L);
+
+        LuaEntityLibrary::LuaPushEntity(L, thisptr);
+        lua_setfield(L, -2, "trigger");
+
+        LuaEntityLibrary::LuaPushEntity(L, other);
+        lua_setfield(L, -2, "entity");
+    };
+
+    lua_events_library.InvokeEvent("entity_touch_trigger", event_invocation);
+
+    if (is_player) {
+        lua_events_library.InvokeEvent("player_touch_trigger", event_invocation);
+    }
+}
+
+void __fastcall LuaFeature::HOOKED_PortalNewLocation(void *thisptr, int _edx, Vector &origin, QAngle &angles) {
+    Vector *p_pos = (Vector *) ((uintptr_t) thisptr +
+                                spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
+
+    QAngle *p_ang = (QAngle *) ((uintptr_t) thisptr +
+                                spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
+
+    Vector &old_pos = *p_pos;
+    QAngle &old_ang = *p_ang;
+
+    spt_lua.ORIG_PortalNewLocation(thisptr, origin, angles);
+    lua_events_library.InvokeEvent("portal_moved", [&](lua_State *L) {
+        lua_newtable(L);
+
+        LuaMathLibrary::LuaPushVector3D(L, old_pos);
+        lua_setfield(L, -2, "old_pos");
+
+        LuaMathLibrary::LuaPushAngle(L, old_ang);
+        lua_setfield(L, -2, "old_ang");
+
+        LuaMathLibrary::LuaPushVector3D(L, origin);
+        lua_setfield(L, -2, "new_pos");
+
+        LuaMathLibrary::LuaPushAngle(L, angles);
+        lua_setfield(L, -2, "new_ang");
+    });
+}
+
+void __fastcall LuaFeature::HOOKED_TeleportTouchingEntity(void *thisptr, int _edx, void *other) {
+    if (spt_lua.ORIG_GetPortalCallQueue()) {
+        spt_lua.ORIG_TeleportTouchingEntity(thisptr, other);
+        return;
+    }
+
+    int hammer_id = (int) ((uintptr_t) other + spt_entprops.GetFieldOffset("CBaseEntity", "m_iHammerID", true));
+
+    Vector *p_pos =
+            (Vector *) ((uintptr_t) other + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
+
+    Vector *p_rot =
+            (Vector *) ((uintptr_t) other + spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
+
+    QAngle *p_ang = (QAngle *) ((uintptr_t) other + spt_entprops.GetFieldOffset("CBaseEntity", "m_angRotation", true));
+
+    bool is_player = other == spt_entprops.GetPlayer(true);
+
+    Vector old_pos = *p_pos;
+    Vector old_rot = *p_rot;
+    QAngle old_ang = *p_ang;
+
+    spt_lua.ORIG_TeleportTouchingEntity(thisptr, other);
+
+    Vector new_pos = *p_pos;
+    Vector new_rot = *p_rot;
+    QAngle new_ang = *p_ang;
+
+    if (is_player) {
+        lua_player_library.UpdateLocals(old_pos, old_ang, new_pos, new_ang);
+    }
+
+    auto event_invocation = [&](lua_State *L) {
+        lua_newtable(L);
+
+        lua_pushinteger(L, hammer_id);
+        lua_setfield(L, -2, "hammer_id");
+
+        LuaMathLibrary::LuaPushVector3D(L, old_pos);
+        lua_setfield(L, -2, "old_pos");
+
+        LuaMathLibrary::LuaPushVector3D(L, old_rot);
+        lua_setfield(L, -2, "old_rot");
+
+        LuaMathLibrary::LuaPushAngle(L, old_ang);
+        lua_setfield(L, -2, "old_ang");
+
+        LuaMathLibrary::LuaPushVector3D(L, new_pos);
+        lua_setfield(L, -2, "new_pos");
+
+        LuaMathLibrary::LuaPushVector3D(L, new_rot);
+        lua_setfield(L, -2, "new_rot");
+
+        LuaMathLibrary::LuaPushAngle(L, new_ang);
+        lua_setfield(L, -2, "new_ang");
+    };
+
+    lua_events_library.InvokeEvent("entity_teleport", event_invocation);
+
+    if (is_player) {
+        lua_events_library.InvokeEvent("player_teleport", event_invocation);
+    }
 }

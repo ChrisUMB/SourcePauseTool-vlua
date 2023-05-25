@@ -19,6 +19,15 @@ LuaEntityLibrary lua_entity_library;
 
 LuaEntityLibrary::LuaEntityLibrary() : LuaLibrary("entity") {}
 
+void LuaEntityLibrary::LuaPushEntity(lua_State *L, void *entity) {
+    lua_newtable(L);
+    lua_getglobal(L, "entity");
+    lua_setmetatable(L, -2);
+
+    lua_pushlightuserdata(L, entity);
+    lua_setfield(L, -2, "data");
+}
+
 void LuaEntityLibrary::Teleport(void *entity, const Vector *pos, const QAngle *ang, const Vector *vel) {
     int *p_vtable = reinterpret_cast<int *>(entity);
     (*(void (__thiscall **)(void *, const Vector *, const QAngle *, const Vector *)) (*p_vtable
@@ -35,12 +44,7 @@ static int EntityFromID(lua_State *L) {
         return 1;
     }
 
-    lua_newtable(L);
-    lua_getglobal(L, "entity");
-    lua_setmetatable(L, -2);
-
-    lua_pushlightuserdata(L, entity);
-    lua_setfield(L, -2, "data");
+    LuaEntityLibrary::LuaPushEntity(L, entity);
     return 1;
 }
 
@@ -53,12 +57,7 @@ static int EntityFromHammerID(lua_State *L) {
         return 1;
     }
 
-    lua_newtable(L);
-    lua_getglobal(L, "entity");
-    lua_setmetatable(L, -2);
-
-    lua_pushlightuserdata(L, entity);
-    lua_setfield(L, -2, "data");
+    LuaEntityLibrary::LuaPushEntity(L, entity);
     return 1;
 }
 
@@ -74,13 +73,7 @@ static int EntityList(lua_State *L) {
         }
 
         lua_pushinteger(L, i++);
-        lua_newtable(L);
-        lua_getglobal(L, "entity");
-        lua_setmetatable(L, -2);
-
-        lua_pushlightuserdata(L, entity);
-        lua_setfield(L, -2, "data");
-
+        LuaEntityLibrary::LuaPushEntity(L, entity);
         lua_settable(L, -3);
     }
 
@@ -93,16 +86,62 @@ static int EntityGetID(lua_State *L) {
     return 1;
 }
 
+static int EntityGetHammerID(lua_State *L) {
+    void *entity = LUA_GET_ENTITY();
+    int *p_hammerID = (int *) ((uintptr_t) entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_iHammerID", true));
+    lua_pushinteger(L, *p_hammerID);
+    return 1;
+}
+
 static int EntityGetClassName(lua_State *L) {
     void *entity = LUA_GET_ENTITY();
-    lua_pushstring(L,
-                   interfaces::entList->GetClientEntity(utils::GetIndex(entity))->GetClientClass()->GetName());
+
+    string_t *p_name =
+            (string_t *) ((uintptr_t) entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_iClassname", true));
+
+    // From what I can tell, class name should never be null
+//    if(p_name == nullptr || *p_name == NULL_STRING) {
+//        lua_pushnil(L);
+//        return 1;
+//    }
+
+    lua_pushstring(L, p_name->ToCStr());
+    return 1;
+}
+
+static int EntityGetInternalClassName(lua_State *L) {
+    void *entity = LUA_GET_ENTITY();
+    lua_pushstring(L, interfaces::entList->GetClientEntity(utils::GetIndex(entity))->GetClientClass()->GetName());
     return 1;
 }
 
 static int EntityGetModelName(lua_State *L) {
     void *entity = LUA_GET_ENTITY();
-    lua_pushstring(L, utils::GetModelName(interfaces::entList->GetClientEntity(utils::GetIndex(entity))));
+
+    string_t *p_mdl_name = (string_t *) ((uintptr_t) entity +
+                                         spt_entprops.GetFieldOffset("CBaseEntity", "m_ModelName", true));
+
+    if (p_mdl_name == nullptr || *p_mdl_name == NULL_STRING) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_pushstring(L, p_mdl_name->ToCStr());
+    return 1;
+}
+
+static int EntityGetName(lua_State *L) {
+    void *entity = LUA_GET_ENTITY();
+
+    string_t *p_name =
+            (string_t *) ((uintptr_t) entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_iName", true));
+
+    if (p_name == nullptr || *p_name == NULL_STRING) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_pushstring(L, p_name->ToCStr());
     return 1;
 }
 
@@ -111,6 +150,7 @@ static int EntityGetPos(lua_State *L) {
 
     Vector *p_pos =
             (Vector *) ((uintptr_t) entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
+
     LuaMathLibrary::LuaPushVector3D(L, *p_pos);
     return 1;
 }
@@ -170,24 +210,27 @@ static int EntitySetVel(lua_State *L) {
     return 0;
 }
 
-static const struct luaL_Reg entity_class[] = {{"_list",          EntityList},
-                                               {"from_id",        EntityFromID},
-                                               {"from_hammer_id", EntityFromHammerID},
-                                               {"get_id",         EntityGetID},
-                                               {"get_class_name", EntityGetClassName},
-                                               {"get_model_name", EntityGetModelName},
-                                               {"get_pos",        EntityGetPos},
-                                               {"set_pos",        EntitySetPos},
-                                               {"get_rot",        EntityGetRot},
-                                               {"set_rot",        EntitySetRot},
-                                               {"get_vel",        EntityGetVel},
-                                               {"set_vel",        EntitySetVel},
+static const struct luaL_Reg entity_class[] = {{"_list",                   EntityList},
+                                               {"from_id",                 EntityFromID},
+                                               {"from_hammer_id",          EntityFromHammerID},
+                                               {"get_id",                  EntityGetID},
+                                               {"get_hammer_id",           EntityGetHammerID},
+                                               {"get_class_name",          EntityGetClassName},
+                                               {"get_internal_class_name", EntityGetInternalClassName},
+                                               {"get_model_name",          EntityGetModelName},
+                                               {"get_name",                EntityGetName},
+                                               {"get_pos",                 EntityGetPos},
+                                               {"set_pos",                 EntitySetPos},
+                                               {"get_rot",                 EntityGetRot},
+                                               {"set_rot",                 EntitySetRot},
+                                               {"get_vel",                 EntityGetVel},
+                                               {"set_vel",                 EntitySetVel},
         //        {"teleport",    EntityTeleport},
-                                               {nullptr,          nullptr}};
+                                               {nullptr,                   nullptr}};
 
 void *LuaEntityLibrary::LuaCheckEntity(lua_State *L, int index) {
     if (!LuaIsClass(L, index, "entity")) {
-        return luaL_error(L, "entity expected");
+        luaL_error(L, "entity expected");
         return nullptr;
     }
 
@@ -261,12 +304,24 @@ end
 function entity:get_id()
 end
 
+---@return number # Entity Hammer ID
+function entity:get_hammer_id()
+end
+
+---@return string? # Entity name, or `nil` if the entity does not have a name
+function entity:get_name()
+end
+
+---@return string? # Entity model name, or `nil` if the entity does not have a model name
+function entity:get_model_name()
+end
+
 ---@return string # Entity class name
 function entity:get_class_name()
 end
 
----@return string # Entity model name
-function entity:get_model_name()
+---@return string # Entity internal class name, or what the C++ code would know it as
+function entity:get_internal_class_name()
 end
 
 ---@return vec3 # Entity position

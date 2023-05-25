@@ -129,6 +129,26 @@ events = {
     )" EVENT_TYPE_LUA(player_ungrounded) R"(
     player_ungrounded = new_event_type(),
 
+    ---@class entity_touch_trigger : event
+    ---@field trigger entity The trigger that was touched
+    ---@field entity entity The entity that touched the trigger
+    )" EVENT_TYPE_LUA(player_ungrounded) R"(
+    entity_touch_trigger = new_event_type(),
+
+    ---@class player_touch_trigger : entity_touch_trigger
+    ---@field entity entity The player that touched the trigger
+    )" EVENT_TYPE_LUA(player_ungrounded) R"(
+    player_touch_trigger = new_event_type(),
+
+
+    ---@class portal_moved_event : event
+    ---@field old_pos vec3 The position of the portal prior to the move
+    ---@field new_pos vec3 The position of the portal after the move
+    ---@field old_ang vec3 The angles of the portal prior to the move
+    ---@field new_ang vec3 The angles of the portal after the move
+    )" EVENT_TYPE_LUA(portal_moved) R"(
+    portal_moved = new_event_type(),
+
 }
 
 local listeners = {}

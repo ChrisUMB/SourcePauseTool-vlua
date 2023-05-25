@@ -373,6 +373,9 @@
     <ClCompile Include="spt\features\lua\libs\lua_lib_render.cpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_camera.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -787,6 +790,9 @@
       <Filter>spt\features\lua\libs</Filter>
     </ClInclude>
     <ClInclude Include="spt\features\lua\libs\lua_lib_render.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_camera.hpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClInclude>
   </ItemGroup>

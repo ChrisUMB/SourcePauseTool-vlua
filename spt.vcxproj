@@ -1196,6 +1196,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClCompile Include="spt\features\ipc-spt.cpp" />
     <ClCompile Include="spt\features\isg.cpp" />
     <ClCompile Include="spt\features\leafvis.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_camera.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_console.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_entity.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_events.cpp" />
@@ -1423,6 +1424,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClInclude Include="spt\features\ent_props.hpp" />
     <ClInclude Include="spt\features\generic.hpp" />
     <ClInclude Include="spt\features\hud.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_camera.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_console.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_entity.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_events.hpp" />

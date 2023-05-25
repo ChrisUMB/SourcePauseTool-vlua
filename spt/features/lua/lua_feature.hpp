@@ -59,6 +59,14 @@ private:
 	_TeleportTouchingEntity ORIG_TeleportTouchingEntity = nullptr;
 	static void __fastcall HOOKED_TeleportTouchingEntity(void* thisptr, int _edx, void* other);
 
+    using _PortalNewLocation = void(__thiscall*)(void* thisptr, Vector &origin, QAngle &angles);
+    _PortalNewLocation ORIG_PortalNewLocation = nullptr;
+    static void __fastcall HOOKED_PortalNewLocation(void* thisptr, int _edx, Vector &origin, QAngle &angles);
+
+    using _TriggerStartTouch = void(__thiscall*)(void* thisptr, void* other);
+    _TriggerStartTouch ORIG_TriggerStartTouch = nullptr;
+    static void __fastcall HOOKED_TriggerStartTouch(void* thisptr, int _edx, void* other);
+
 	using _GetPortalCallQueue = bool (*)();
 	_GetPortalCallQueue ORIG_GetPortalCallQueue = nullptr;
 };
