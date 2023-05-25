@@ -45,9 +45,23 @@ void LuaEventsLibrary::Unload(lua_State* L)
 	states.erase(L);
 }
 
+/*
+ *  ---@class entity_teleport_event_type : event_type<entity_teleport_event>
+    ---@field wait fun(self, count:number|nil):entity_teleport_event
+    ---@field listen fun(self, callback:fun(event:entity_teleport_event, cancel:fun())):fun()
+    ---@field next fun(self, callback:fun(event:entity_teleport_event)):fun()
+ */
+
+#define EVENT_TYPE_LUA(name) \
+    "---@class " #name "_event_type : event_type<" #name "_event>\n" \
+    "    ---@field wait fun(self, count:number|nil):" #name "_event\n" \
+    "    ---@field listen fun(self, callback:fun(event:" #name "_event, cancel:fun())):fun()\n" \
+    "    ---@field next fun(self, callback:fun(event:" #name "_event)):fun()"
+
 const std::string& LuaEventsLibrary::GetLuaSource()
 {
-	static std::string sources = R"""(---@meta
+	static std::string sources = R"(
+---@meta
 ---@class event
 
 ---@generic T : event
@@ -63,33 +77,33 @@ end
 events = {
     ---@class tick_event : event
     ---@field tick number The tick number
-    ---@type event_type<tick_event>
+    )" EVENT_TYPE_LUA(tick) R"(
     tick = new_event_type(),
 
     ---@class frame_event : event
     ---@field delta number The delta time since the last frame
-    ---@type event_type<frame_event>
+    )" EVENT_TYPE_LUA(frame) R"(
     frame = new_event_type(),
 
     ---@class render_event : event
-    ---@type event_type<render_event>
+    )" EVENT_TYPE_LUA(render) R"(
     render = new_event_type(),
 
     ---@class level_init_event : event
     ---@field map_name string The name of the map
-    ---@type event_type<level_init_event>
+    )" EVENT_TYPE_LUA(level_init) R"(
     level_init = new_event_type(),
 
     ---@class client_active_event : event
-    ---@type event_type<client_active_event>
+    )" EVENT_TYPE_LUA(client_active) R"(
     client_active = new_event_type(),
 
     ---@class client_disconnect_event : event
-    ---@type event_type<client_disconnect_event>
+    )" EVENT_TYPE_LUA(client_disconnect) R"(
     client_disconnect = new_event_type(),
 
     ---@class player_jump_event : event
-    ---@type event_type<player_jump_event>
+    )" EVENT_TYPE_LUA(player_jump) R"(
     player_jump = new_event_type(),
 
     ---@class entity_teleport_event : event
@@ -100,19 +114,19 @@ events = {
     ---@field new_rot vec3 The rotation of the entity after the teleport
     ---@field old_ang vec3 The angles of the entity prior to the teleport
     ---@field new_ang vec3 The angles of the entity after the teleport
-    ---@type event_type<entity_teleport_event>
+    )" EVENT_TYPE_LUA(entity_teleport) R"(
     entity_teleport = new_event_type(),
 
     ---@class player_teleport_event : entity_teleport_event
-    ---@type event_type<player_teleport_event>
+    )" EVENT_TYPE_LUA(player_teleport) R"(
     player_teleport = new_event_type(),
 
     ---@class player_grounded_event : event
-    ---@type event_type<player_grounded_event>
+    )" EVENT_TYPE_LUA(player_grounded) R"(
     player_grounded = new_event_type(),
 
     ---@class player_ungrounded_event : event
-    ---@type event_type<player_ungrounded_event>
+    )" EVENT_TYPE_LUA(player_ungrounded) R"(
     player_ungrounded = new_event_type(),
 
 }
@@ -200,7 +214,8 @@ function event_type.listen(self, callback)
 
     return cancel
 end
-)""";
+
+)";
 
 	return sources;
 }
