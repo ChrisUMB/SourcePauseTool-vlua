@@ -216,7 +216,7 @@ static const struct luaL_Reg player_class[] = {{"get_pos", PlayerGetPos},
                                                {"get_eye_pos", PlayerGetEyePos},
 
                                                {"get_local_ang", PlayerGetLocalAng},
-                                               {"set_local_ang", PlayerSetLocalAng},
+                                               {"_set_local_ang", PlayerSetLocalAng},
                                                {"get_local_ang_offset", PlayerGetLocalAngOffset},
                                                {"get_local_pos", PlayerGetLocalPos},
                                                {"get_local_pos_offset", PlayerGetLocalPosOffset},
@@ -274,6 +274,11 @@ end
 
 ---@param ang vec3
 function player.set_local_ang(ang)
+    if getmetatable(ang) == vec2 then
+        player._set_local_ang(vec3(ang.x, ang.y, player.get_ang().z))
+    else
+        player._set_local_ang(ang)
+    end
 end
 
 ---@return vec3
