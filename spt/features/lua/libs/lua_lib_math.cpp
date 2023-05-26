@@ -8,29 +8,6 @@ LuaMathLibrary::LuaMathLibrary() : LuaLibrary("math") {}
 
 void LuaMathLibrary::Load(lua_State* L) {}
 
-static bool LuaIsClass(lua_State* L, int index, const char* class_name)
-{
-	if (!lua_getmetatable(L, index))
-	{
-		return false;
-	}
-
-	lua_getglobal(L, class_name);
-	bool is_class = lua_rawequal(L, -1, -2);
-	lua_pop(L, 2);
-	return is_class;
-}
-
-static bool LuaCheckClass(lua_State* L, int index, const char* class_name)
-{
-	if (!LuaIsClass(L, index, class_name))
-	{
-		luaL_error(L, "Expected %s", class_name);
-		return false;
-	}
-	return true;
-}
-
 #define LUA_GET(target, name) \
 	lua_getfield(L, index, name); \
 	target = (vec_t)lua_tonumber(L, -1); \

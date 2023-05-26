@@ -2,7 +2,6 @@
 
 #include "lua.hpp"
 #include <filesystem>
-namespace fs = std::filesystem;
 
 struct file_path_t
 {

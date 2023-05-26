@@ -1,6 +1,11 @@
 #include "stdafx.hpp"
 #include "lua_util.hpp"
 #include "interfaces.hpp"
+#include <string>
+#include <vector>
+#include <sstream>
+
+namespace fs = std::filesystem;
 
 void lua_string_format(lua_State* L)
 {
@@ -12,16 +17,6 @@ void lua_string_format(lua_State* L)
 	lua_pop(L, 1);
 
 	lua_call(L, arg_count, 1);
-}
-
-void lua_new_class(lua_State* L, const char* name, const luaL_Reg* functions)
-{
-	lua_getglobal(L, name);
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -1, "__index");
-
-	luaL_register(L, nullptr, functions);
-	lua_setfield(L, LUA_REGISTRYINDEX, name);
 }
 
 void DebugLuaStack(lua_State* L)
@@ -151,6 +146,37 @@ std::vector<std::string> GetFileSuggestions(file_path_t& file_path, const std::s
 	return suggestions;
 }
 
+std::vector<std::string> split(const std::string& s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+bool GetLuaGlobal(lua_State* L, const std::string& path) {
+    std::vector<std::string> tokens = split(path, '.');
+    if(tokens.size() == 0) {
+        return false;
+    }
+
+    lua_getglobal(L, tokens[0].c_str());
+
+    for(size_t i = 1; i < tokens.size(); i++) {
+        if(!lua_istable(L, -1)) {
+            lua_pop(L, 1);
+            return false;
+        }
+
+        lua_getfield(L, -1, tokens[i].c_str());
+        lua_remove(L, -2);
+    }
+
+    return true;
+}
+
 bool LuaCheckClass(lua_State* L, int index, const char* class_name)
 {
 	if (!LuaIsClass(L, index, class_name))
@@ -164,8 +190,20 @@ bool LuaCheckClass(lua_State* L, int index, const char* class_name)
 bool LuaIsClass(lua_State* L, int index, const char* class_name)
 {
 	lua_getmetatable(L, index);
-	lua_getglobal(L, class_name);
+//	lua_getglobal(L, class_name);
+    GetLuaGlobal(L, class_name);
 	bool is_class = lua_rawequal(L, -1, -2);
 	lua_pop(L, 2);
 	return is_class;
+}
+
+void lua_new_class(lua_State* L, const char* name, const luaL_Reg* functions)
+{
+//    lua_getglobal(L, name);
+    GetLuaGlobal(L, name);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -1, "__index");
+
+    luaL_register(L, nullptr, functions);
+    lua_setfield(L, LUA_REGISTRYINDEX, name);
 }

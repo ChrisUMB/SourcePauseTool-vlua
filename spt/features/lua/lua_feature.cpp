@@ -14,6 +14,7 @@
 #include "libs/lua_lib_player.hpp"
 #include "libs/lua_lib_render.hpp"
 #include "libs/lua_lib_syscall.hpp"
+#include "libs/lua_lib_filesystem.hpp"
 #include "libs/lua_lib_portal.hpp"
 #include "lua_commands.hpp"
 #include "lua_util.hpp"
@@ -21,6 +22,8 @@
 #include "spt/sptlib-wrapper.hpp"
 #include "spt/utils/game_detection.hpp"
 #include "libs/lua_lib_camera.hpp"
+
+namespace fs = std::filesystem;
 
 LuaFeature spt_lua;
 
@@ -35,6 +38,7 @@ void LuaFeature::LoadFeature() {
 
     RegisterLibrary(&lua_console_library);
     RegisterLibrary(&lua_syscall_library);
+    RegisterLibrary(&lua_filesystem_library);
     RegisterLibrary(&lua_events_library);
     RegisterLibrary(&lua_input_library);
     RegisterLibrary(&lua_game_library);
