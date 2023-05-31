@@ -267,7 +267,7 @@ const std::string &LuaLibrary::GetLuaSource() {
 namespace patterns {
     PATTERNS(TeleportTouchingEntity, "5135", "81 EC ?? ?? ?? ?? 55 8B E9 89 6C 24 14 E8 ?? ?? ?? ??");
     PATTERNS(PortalNewLocation, "5135", "83 EC 2C 53 55 56 8B F1 57"); //8D 8E ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B 06 8B 90");
-    PATTERNS(TriggerStartTouch, "5135", "55 8B 6C 24 08 56 8B F1 8B 06 8B 90 ?? ?? ?? ?? 55 FF D2 84 C0");
+    PATTERNS(TriggerStartTouch, "5135", "55 8B 6C 24 08 56 8B F1 8B 06 8B 90");
     PATTERNS(GetPortalCallQueue, "5135", "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3");
 
 } // namespace patterns

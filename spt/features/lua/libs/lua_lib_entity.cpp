@@ -210,6 +210,24 @@ static int EntitySetVel(lua_State *L) {
     return 0;
 }
 
+static int EntityGetCollisionMin(lua_State* L) {
+    void *entity = LUA_GET_ENTITY();
+
+    Vector *p_mins =
+            (Vector *) ((uintptr_t) entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_Collision.m_vecMins", true));
+
+    LuaMathLibrary::LuaPushVector3D(L, *p_mins);
+}
+
+static int EntityGetCollisionMax(lua_State* L) {
+    void *entity = LUA_GET_ENTITY();
+
+    Vector *p_maxs =
+            (Vector *) ((uintptr_t) entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_Collision.m_vecMaxs", true));
+
+    LuaMathLibrary::LuaPushVector3D(L, *p_maxs);
+}
+
 static const struct luaL_Reg entity_class[] = {{"_list",                   EntityList},
                                                {"from_id",                 EntityFromID},
                                                {"from_hammer_id",          EntityFromHammerID},
@@ -225,6 +243,8 @@ static const struct luaL_Reg entity_class[] = {{"_list",                   Entit
                                                {"set_rot",                 EntitySetRot},
                                                {"get_vel",                 EntityGetVel},
                                                {"set_vel",                 EntitySetVel},
+                                               {"get_collision_min",       EntityGetCollisionMin},
+                                               {"get_collision_max",       EntityGetCollisionMax},
         //        {"teleport",    EntityTeleport},
                                                {nullptr,                   nullptr}};
 
@@ -346,6 +366,14 @@ end
 
 ---@param vel vec3 Entity velocity
 function entity:set_vel(vel)
+end
+
+---@return vec3 # Entity collision min
+function entity:get_collision_min()
+end
+
+---@return vec3 # Entity collision max
+function entity:get_collision_max()
 end
 )";
 
