@@ -48,6 +48,14 @@ namespace patterns
 	    "53 55 56 57 8B F1 E8 ?? ?? ?? ?? 8B 3D ?? ?? ?? ??",
 	    "7197370",
 	    "55 8B EC 53 56 57 8B F9 C6 87 ?? ?? ?? ?? 01 E8 ?? ?? ?? ?? 8B 35 ?? ?? ?? ?? 68 ?? ?? ?? ?? 6A 00 C7 05 ?? ?? ?? ?? FF FF FF FF");
+    PATTERNS(
+        CDemoPlayer__StopPlayback,
+        "5135",
+        "51 56 8B F1 8B 06 8B 50");
+	PATTERNS(
+		CDemoActionManager__Update, 
+		"5135", 
+		"83 EC 10 53 57 8B");
 	PATTERNS(CDemoFile__ReadConsoleCommand, "5135", "68 00 04 00 00 68 ?? ?? ?? ?? E8 ?? ?? ?? ?? B8 ?? ?? ?? ??");
 } // namespace patterns
 
@@ -55,6 +63,8 @@ void DemoStuff::InitHooks()
 {
 	HOOK_FUNCTION(engine, StopRecording);
 	HOOK_FUNCTION(engine, CDemoPlayer__StartPlayback);
+	HOOK_FUNCTION(engine, CDemoPlayer__StopPlayback);
+	HOOK_FUNCTION(engine, CDemoActionManager__Update);
 	HOOK_FUNCTION(engine, Stop);
 	HOOK_FUNCTION(engine, CDemoFile__ReadConsoleCommand);
 	FIND_PATTERN(engine, Record);
@@ -152,6 +162,12 @@ void DemoStuff::PreHook()
 
 		if (ORIG_CDemoPlayer__StartPlayback)
 			DemoStartPlaybackSignal.Works = true;
+
+        if(ORIG_CDemoPlayer__StopPlayback)
+            DemoStopPlaybackSignal.Works = true;
+
+		if (ORIG_CDemoActionManager__Update)
+			DemoUpdateSignal.Works = true;
 	}
 }
 
@@ -276,8 +292,30 @@ void DemoStuff::OnSignonStateSignal(void* thisptr, int state)
 IMPL_HOOK_THISCALL(DemoStuff, bool, CDemoPlayer__StartPlayback, void*, const char* filename, bool as_time_demo)
 {
 	bool result = spt_demostuff.ORIG_CDemoPlayer__StartPlayback(thisptr, filename, as_time_demo);
-	DemoStartPlaybackSignal();
-	return result;
+
+    if(result)
+        DemoStartPlaybackSignal(filename, as_time_demo);
+
+
+    return result;
+}
+
+IMPL_HOOK_THISCALL(DemoStuff, void, CDemoPlayer__StopPlayback, void*)
+{
+
+    bool was_playing_back = spt_demostuff.Demo_IsPlayingBack();
+    spt_demostuff.ORIG_CDemoPlayer__StopPlayback(thisptr);
+
+    if(was_playing_back)
+    {
+        DemoStopPlaybackSignal();
+    }
+}
+
+IMPL_HOOK_THISCALL(DemoStuff, void, CDemoActionManager__Update, void*, bool new_frame, int demo_tick, float demo_time)
+{
+	spt_demostuff.ORIG_CDemoActionManager__Update(thisptr, new_frame, demo_tick, demo_time);
+    DemoUpdateSignal(new_frame, demo_tick, demo_time);
 }
 
 IMPL_HOOK_THISCALL(DemoStuff, const char*, CDemoFile__ReadConsoleCommand, void*)

@@ -1200,6 +1200,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClCompile Include="spt\features\lua\libs\lua_lib_console.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_entity.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_events.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_filesystem.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_game.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_input.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_math.cpp" />
@@ -1207,7 +1208,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClCompile Include="spt\features\lua\libs\lua_lib_player.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_portal.cpp" />
     <ClCompile Include="spt\features\lua\libs\lua_lib_render.cpp" />
-    <ClCompile Include="spt\features\lua\libs\lua_lib_syscall.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_system.cpp" />
     <ClCompile Include="spt\features\lua\lua_commands.cpp" />
     <ClCompile Include="spt\features\lua\lua_feature.cpp" />
     <ClCompile Include="spt\features\lua\lua_util.cpp" />
@@ -1428,6 +1429,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClInclude Include="spt\features\lua\libs\lua_lib_console.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_entity.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_events.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_filesystem.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_game.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_input.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_math.hpp" />
@@ -1435,7 +1437,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClInclude Include="spt\features\lua\libs\lua_lib_player.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_portal.hpp" />
     <ClInclude Include="spt\features\lua\libs\lua_lib_render.hpp" />
-    <ClInclude Include="spt\features\lua\libs\lua_lib_syscall.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_system.hpp" />
     <ClInclude Include="spt\features\lua\lua_commands.hpp" />
     <ClInclude Include="spt\features\lua\lua_feature.hpp" />
     <ClInclude Include="spt\features\lua\lua_util.hpp" />

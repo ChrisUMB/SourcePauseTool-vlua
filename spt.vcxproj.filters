@@ -358,9 +358,6 @@
     <ClCompile Include="spt\features\lua\libs\lua_lib_player.cpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_syscall.cpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClCompile>
     <ClCompile Include="spt\features\lua\libs\lua_lib_entity.cpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClCompile>
@@ -374,6 +371,12 @@
       <Filter>spt\features\lua\libs</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\lua\libs\lua_lib_camera.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_system.cpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\lua\libs\lua_lib_filesystem.cpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClCompile>
   </ItemGroup>
@@ -777,9 +780,6 @@
     <ClInclude Include="spt\features\lua\libs\lua_lib_player.hpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_syscall.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
     <ClInclude Include="spt\features\lua\libs\lua_lib_entity.hpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClInclude>
@@ -793,6 +793,12 @@
       <Filter>spt\features\lua\libs</Filter>
     </ClInclude>
     <ClInclude Include="spt\features\lua\libs\lua_lib_camera.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_system.hpp">
+      <Filter>spt\features\lua\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\lua\libs\lua_lib_filesystem.hpp">
       <Filter>spt\features\lua\libs</Filter>
     </ClInclude>
   </ItemGroup>

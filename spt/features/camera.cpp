@@ -115,7 +115,7 @@ private:
 	void HandleCinematicMode(bool active);
 	static std::vector<Vector> CameraInfoToPoints(float* x, CameraInfo* y, CameraInfoParameter param);
 	CameraInfo InterpPath(float time);
-	void RequestTimeOffsetRefresh();
+	void RequestTimeOffsetRefresh(const char* fileName, bool asTimeDemo);
 
 #ifdef SPT_MESH_RENDERING_ENABLED
 	void OnMeshRenderSignal(MeshRendererDelegate& mr);
@@ -432,7 +432,7 @@ bool Camera::CanInput() const
 	return canInput && !interfaces::engine_vgui->IsGameUIVisible();
 }
 
-void Camera::RequestTimeOffsetRefresh()
+void Camera::RequestTimeOffsetRefresh(const char* fileName, bool asTimeDemo)
 {
 	timeOffsetRefreshRequested = true;
 }

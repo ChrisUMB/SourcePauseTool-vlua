@@ -149,6 +149,26 @@ events = {
     )" EVENT_TYPE_LUA(portal_moved) R"(
     portal_moved = new_event_type(),
 
+    ---@class demo_start_event : event
+    ---@field file_name string The name of the demo file
+    ---@field demo_protocol number The protocol version of the demo
+    ---@field network_protocol number The protocol version of the network
+    ---@field playback_ticks number The number of ticks in the demo
+    ---@field playback_frames number The number of frames in the demo
+    ---@field playback_time number The time of the demo in seconds
+    ---@field map_name string The name of the map
+    )" EVENT_TYPE_LUA(demo_start) R"(
+    demo_start = new_event_type(),
+
+    ---@class demo_tick_event : event
+    ---@field tick number The tick number
+    )" EVENT_TYPE_LUA(demo_tick) R"(
+    demo_tick = new_event_type(),
+
+    ---@class demo_stop_event : event
+    )" EVENT_TYPE_LUA(demo_stop) R"(
+    demo_stop = new_event_type(),
+
 }
 
 local listeners = {}
