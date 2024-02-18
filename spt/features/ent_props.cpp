@@ -64,7 +64,7 @@ void EntProps::WalkDatamap(std::string key)
 	if (result)
 		result->ExploreOffsets();
 	else
-		Msg("No datamap found with name %s\n", key.c_str());
+		Msg("No datamap found with name \"%s\"\n", key.c_str());
 }
 
 void EntProps::PrintDatamaps()
@@ -228,10 +228,13 @@ void EntProps::AddMap(datamap_t* map, bool server)
 {
 	std::string name = map->dataClassName;
 
-	// Pop the _ out of the client maps to make them match the server
-	if (!server && strstr(map->dataClassName, "C_") == map->dataClassName)
+	// if this is a client map, get the associated server name
+	if (!server)
 	{
-		name = name.erase(1, 1);
+		if (!strcmp(map->dataClassName, "C_BaseHLPlayer"))
+			name = "CHL2_Player";
+		else if (strstr(map->dataClassName, "C_") == map->dataClassName)
+			name = name.erase(1, 1);
 	}
 
 	auto result = nameToMapWrapper.find(name);
@@ -443,42 +446,48 @@ void EntProps::LoadFeature()
 	if (utils::DoesGameLookLikePortal())
 	{
 		AddHudCallback(
-		    "portal bubble",
-		    [this]()
+		    "portal_bubble",
+		    [this](std::string)
 		    {
 			    int in_bubble = GetEnvironmentPortal() != NULL;
-			    spt_hud.DrawTopHudElement(L"portal bubble: %d", in_bubble);
+			    spt_hud_feat.DrawTopHudElement(L"portal bubble: %d", in_bubble);
 		    },
 		    y_spt_hud_portal_bubble);
-
-		bool result = spt_hud.AddHudCallback(HudCallback(
-		    "z",
-		    []()
-		    {
-			    std::string info(y_spt_hud_ent_info.GetString());
-			    if (!whiteSpacesOnly(info))
-			    {
-				    int entries = utils::FillInfoArray(info,
-				                                       INFO_ARRAY,
-				                                       MAX_ENTRIES,
-				                                       INFO_BUFFER_SIZE,
-				                                       PROP_SEPARATOR,
-				                                       ENT_SEPARATOR);
-				    for (int i = 0; i < entries; ++i)
-				    {
-					    spt_hud.DrawTopHudElement(INFO_ARRAY + i * INFO_BUFFER_SIZE);
-				    }
-			    }
-		    },
-		    []() { return true; },
-		    false));
-
-		if (result)
-		{
-			InitConcommandBase(y_spt_hud_ent_info);
-		}
 	}
 #endif
+
+	bool result = spt_hud_feat.AddHudCallback("ent_info",
+	                                          HudCallback(
+	                                              [](std::string args)
+	                                              {
+		                                              std::string info;
+		                                              if (args == "")
+			                                              info = y_spt_hud_ent_info.GetString();
+		                                              else
+			                                              info = args;
+		                                              if (!whiteSpacesOnly(info))
+		                                              {
+			                                              int entries =
+			                                                  utils::FillInfoArray(info,
+			                                                                       INFO_ARRAY,
+			                                                                       MAX_ENTRIES,
+			                                                                       INFO_BUFFER_SIZE,
+			                                                                       PROP_SEPARATOR,
+			                                                                       ENT_SEPARATOR);
+			                                              for (int i = 0; i < entries; ++i)
+			                                              {
+				                                              spt_hud_feat.DrawTopHudElement(
+				                                                  INFO_ARRAY + i * INFO_BUFFER_SIZE);
+			                                              }
+		                                              }
+	                                              },
+	                                              []() { return true; },
+	                                              false));
+
+	if (result)
+	{
+		InitConcommandBase(y_spt_hud_ent_info);
+	}
 }
 
 void** _InternalPlayerField::GetServerPtr() const

@@ -26,17 +26,24 @@
 PlayerIOFeature spt_playerio;
 static void* cinput_thisptr = nullptr;
 
-ConVar y_spt_hud_accel("y_spt_hud_accel", "0", FCVAR_CHEAT, "Turns on the acceleration hud.\n");
+ConVar spt_hud_position("spt_hud_position",
+                        "0",
+                        FCVAR_CHEAT,
+                        "Turns on the position hud.\n"
+                        "=1: eye position\n"
+                        ">1: player position with more precision.");
+ConVar spt_hud_angles("spt_hud_angles", "0", FCVAR_CHEAT, "Turns on the angles hud with more precision.");
+ConVar y_spt_hud_accel("y_spt_hud_accel", "0", FCVAR_CHEAT, "Turns on the acceleration hud.");
 ConVar y_spt_hud_ag_sg_tester("y_spt_hud_ag_sg_tester",
                               "0",
                               FCVAR_CHEAT,
-                              "Tests if angle glitch will save glitch you.\n");
-ConVar y_spt_hud_flags("y_spt_hud_flags", "0", FCVAR_CHEAT, "Turns on the flags hud.\n");
-ConVar y_spt_hud_moveflags("y_spt_hud_moveflags", "0", FCVAR_CHEAT, "Turns on the move type hud.\n");
-ConVar y_spt_hud_movecollideflags("y_spt_hud_movecollideflags", "0", FCVAR_CHEAT, "Turns on the move collide hud.\n");
-ConVar y_spt_hud_collisionflags("y_spt_hud_collisionflags", "0", FCVAR_CHEAT, "Turns on the collision group hud.\n");
-ConVar y_spt_hud_vars("y_spt_hud_vars", "0", FCVAR_CHEAT, "Turns on the movement vars HUD.\n");
-ConVar y_spt_hud_velocity("y_spt_hud_velocity", "0", FCVAR_CHEAT, "Turns on the velocity hud.\n");
+                              "Tests if angle glitch will save glitch you.");
+ConVar y_spt_hud_flags("y_spt_hud_flags", "0", FCVAR_CHEAT, "Turns on the flags hud.");
+ConVar y_spt_hud_moveflags("y_spt_hud_moveflags", "0", FCVAR_CHEAT, "Turns on the move type hud.");
+ConVar y_spt_hud_movecollideflags("y_spt_hud_movecollideflags", "0", FCVAR_CHEAT, "Turns on the move collide hud.");
+ConVar y_spt_hud_collisionflags("y_spt_hud_collisionflags", "0", FCVAR_CHEAT, "Turns on the collision group hud.");
+ConVar y_spt_hud_vars("y_spt_hud_vars", "0", FCVAR_CHEAT, "Turns on the movement vars HUD.");
+ConVar y_spt_hud_velocity("y_spt_hud_velocity", "0", FCVAR_CHEAT, "Turns on the velocity hud.");
 ConVar y_spt_hud_velocity_angles("y_spt_hud_velocity_angles", "0", FCVAR_CHEAT, "Display velocity Euler angles.");
 
 extern ConVar tas_force_airaccelerate;
@@ -135,7 +142,15 @@ void PlayerIOFeature::PreHook()
 		}
 		else if (index == 0) // 5135
 		{
-			offM_pCommands = 180;
+			if (utils::GetBuildNumber() <= 3740)
+			{
+				// Both 3420 and 3740 use 196, but 3420 uses 4104 pattern
+				offM_pCommands = 196;
+			}
+			else
+			{
+				offM_pCommands = 180;
+			}
 		}
 		else if (index == 7 || index == 8 || utils::DoesGameLookLikeBMSRetail()) // OE & BMS
 		{
@@ -445,7 +460,6 @@ bool PlayerIOFeature::PlayerIOAddressesFound()
 	    m_vecPreviouslyPredictedOrigin.Found() &&
 #endif
 	    m_vecAbsOrigin.Found() && m_flMaxspeed.Found() && m_fFlags.Found() && m_bDucking.Found()
-	    && m_vecAbsOrigin.Found() && m_flMaxspeed.Found() && m_fFlags.Found() && m_bDucking.Found()
 	    && m_flDuckJumpTime.Found() && m_hGroundEntity.Found() && ORIG_CreateMove && ORIG_GetButtonBits
 	    && _sv_airaccelerate && _sv_accelerate && _sv_friction && _sv_maxspeed && _sv_stopspeed
 	    && interfaces::engine_server != nullptr;
@@ -658,74 +672,86 @@ CON_COMMAND(_y_spt_getangles, "Gets the view angles of the player.")
 
 static uint32_t hud_flags_filter = 0xffffffff;
 
+// char version of flags
+static const char* FLAGS[] = {
+    "ONGROUND",
+    "DUCKING",
+    "WATERJUMP",
+    "ONTRAIN",
+    "INRAIN",
+    "FROZEN",
+    "ATCONTROLS",
+    "CLIENT",
+    "FAKECLIENT",
+    "INWATER",
+    "FLY",
+    "SWIM",
+    "CONVEYOR",
+    "NPC",
+    "GODMODE",
+    "NOTARGET",
+    "AIMTARGET",
+    "PARTIALGROUND",
+    "STATICPROP",
+    "GRAPHED",
+    "GRENADE",
+    "STEPMOVEMENT",
+    "DONTTOUCH",
+    "BASEVELOCITY",
+    "WORLDBRUSH",
+    "OBJECT",
+    "KILLME",
+    "ONFIRE",
+    "DISSOLVING",
+    "TRANSRAGDOLL",
+    "UNBLOCKABLE_BY_PLAYER",
+};
+
+static uint32_t GetFlagsFilter(std::string args, bool verbose)
+{
+	int result = 0;
+	std::istringstream iss(args);
+	std::string arg;
+	while (iss >> arg)
+	{
+		bool found = false;
+		for (int j = 0; j < ARRAYSIZE(FLAGS); j++)
+		{
+			std::string flag = FLAGS[j];
+			if (std::equal(flag.begin(),
+			               flag.end(),
+			               arg.begin(),
+			               arg.end(),
+			               [](char a, char b) { return tolower(a) == tolower(b); }))
+			{
+				result |= (1 << j);
+				found = true;
+				break;
+			}
+		}
+		if (!found && verbose)
+			Msg("Unknown flag: %s\n", arg.c_str());
+	}
+	return result;
+}
+
 CON_COMMAND(y_spt_hud_flags_filter, "Sets the filter for spt_hud_flags.")
 {
-	// char version of flags
-	const char* flags[] = {
-	    "ONGROUND",
-	    "DUCKING",
-	    "WATERJUMP",
-	    "ONTRAIN",
-	    "INRAIN",
-	    "FROZEN",
-	    "ATCONTROLS",
-	    "CLIENT",
-	    "FAKECLIENT",
-	    "INWATER",
-	    "FLY",
-	    "SWIM",
-	    "CONVEYOR",
-	    "NPC",
-	    "GODMODE",
-	    "NOTARGET",
-	    "AIMTARGET",
-	    "PARTIALGROUND",
-	    "STATICPROP",
-	    "GRAPHED",
-	    "GRENADE",
-	    "STEPMOVEMENT",
-	    "DONTTOUCH",
-	    "BASEVELOCITY",
-	    "WORLDBRUSH",
-	    "OBJECT",
-	    "KILLME",
-	    "ONFIRE",
-	    "DISSOLVING",
-	    "TRANSRAGDOLL",
-	    "UNBLOCKABLE_BY_PLAYER",
-	};
-
 	if (args.ArgC() < 2)
 	{
 		Msg("Flags filter resets.\n");
 		hud_flags_filter = 0xffffffff;
 		Msg("All flags:\n");
-		for (int i = 0; i < ARRAYSIZE(flags); i++)
+		for (int i = 0; i < ARRAYSIZE(FLAGS); i++)
 		{
-			Msg("    %s\n", flags[i]);
+			Msg("    %s\n", FLAGS[i]);
 		}
 		return;
 	}
-
-	hud_flags_filter = 0;
-	for (int i = 1; i < args.ArgC(); i++)
-	{
-		bool found = false;
-		for (int j = 0; j < ARRAYSIZE(flags); j++)
-		{
-			if (Q_strcasecmp(flags[j], args.Arg(i)) == 0)
-			{
-				hud_flags_filter |= (1 << j);
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-			Msg("Unknown flag: %s\n", args.Arg(i));
-	}
+	hud_flags_filter = GetFlagsFilter(args.Arg(1), true);
 }
 
-static const wchar* FLAGS[] = {
+static const wchar* L_FLAGS[] = {
     L"FL_ONGROUND",
     L"FL_DUCKING",
     L"FL_WATERJUMP",
@@ -817,11 +843,11 @@ void DrawFlagsHud(const wchar* hudName,
 		{
 			if (mutuallyExclusiveFlags && (flags & mask) == u)
 			{
-				spt_hud.DrawTopHudElement(L"%s: %s", hudName, nameArray[u]);
+				spt_hud_feat.DrawTopHudElement(L"%s: %s", hudName, nameArray[u]);
 			}
 			else if (!mutuallyExclusiveFlags && (filter & (1 << u)))
 			{
-				spt_hud.DrawTopHudElement(L"%s: %d", nameArray[u], (flags & (1 << u)) != 0);
+				spt_hud_feat.DrawTopHudElement(L"%s: %d", nameArray[u], (flags & (1 << u)) != 0);
 			}
 		}
 	}
@@ -856,19 +882,19 @@ void PlayerIOFeature::LoadFeature()
 
 #ifdef SPT_HUD_ENABLED
 		AddHudCallback(
-		    "accelerate",
-		    [this]()
+		    "vars",
+		    [this](std::string)
 		    {
 			    auto vars = GetMovementVars();
-			    spt_hud.DrawTopHudElement(L"accelerate: %.3f", vars.Accelerate);
-			    spt_hud.DrawTopHudElement(L"airaccelerate: %.3f", vars.Airaccelerate);
-			    spt_hud.DrawTopHudElement(L"ent friction: %.3f", vars.EntFriction);
-			    spt_hud.DrawTopHudElement(L"frametime: %.3f", vars.Frametime);
-			    spt_hud.DrawTopHudElement(L"friction %.3f", vars.Friction);
-			    spt_hud.DrawTopHudElement(L"maxspeed: %.3f", vars.Maxspeed);
-			    spt_hud.DrawTopHudElement(L"stopspeed: %.3f", vars.Stopspeed);
-			    spt_hud.DrawTopHudElement(L"wishspeed cap: %.3f", vars.WishspeedCap);
-			    spt_hud.DrawTopHudElement(L"onground: %d", (int)vars.OnGround);
+			    spt_hud_feat.DrawTopHudElement(L"accelerate: %.3f", vars.Accelerate);
+			    spt_hud_feat.DrawTopHudElement(L"airaccelerate: %.3f", vars.Airaccelerate);
+			    spt_hud_feat.DrawTopHudElement(L"ent friction: %.3f", vars.EntFriction);
+			    spt_hud_feat.DrawTopHudElement(L"frametime: %.3f", vars.Frametime);
+			    spt_hud_feat.DrawTopHudElement(L"friction %.3f", vars.Friction);
+			    spt_hud_feat.DrawTopHudElement(L"maxspeed: %.3f", vars.Maxspeed);
+			    spt_hud_feat.DrawTopHudElement(L"stopspeed: %.3f", vars.Stopspeed);
+			    spt_hud_feat.DrawTopHudElement(L"wishspeed cap: %.3f", vars.WishspeedCap);
+			    spt_hud_feat.DrawTopHudElement(L"onground: %d", (int)vars.OnGround);
 		    },
 		    y_spt_hud_vars);
 #endif
@@ -883,37 +909,80 @@ void PlayerIOFeature::LoadFeature()
 			TickSignal.Connect(this, &PlayerIOFeature::OnTick);
 
 			AddHudCallback(
-			    "accel(xyz)",
-			    [this]()
+			    "accel",
+			    [this](std::string)
 			    {
 				    Vector accel = currentVelocity - previousVelocity;
-				    spt_hud.DrawTopHudElement(L"accel(xyz): %.3f %.3f %.3f", accel.x, accel.y, accel.z);
-				    spt_hud.DrawTopHudElement(L"accel(xy): %.3f", accel.Length2D());
+				    spt_hud_feat.DrawTopHudElement(L"accel(xyz): %.3f %.3f %.3f",
+				                                   accel.x,
+				                                   accel.y,
+				                                   accel.z);
+				    spt_hud_feat.DrawTopHudElement(L"accel(xy): %.3f", accel.Length2D());
 			    },
 			    y_spt_hud_accel);
 		}
 
 		AddHudCallback(
-		    "vel(xyz)",
-		    [this]()
+		    "position",
+		    [this](std::string args)
 		    {
+			    int mode = (args == "") ? spt_hud_position.GetInt() : std::stoi(args);
+			    Vector pos = (mode == 1) ? m_vecAbsOrigin.GetValue() + m_vecViewOffset.GetValue()
+			                             : m_vecAbsOrigin.GetValue();
+			    int precision = (mode == 1) ? 2 : mode;
+
+			    spt_hud_feat.DrawTopHudElement(L"pos: %.*f %.*f %.*f",
+			                                   precision,
+			                                   pos.x,
+			                                   precision,
+			                                   pos.y,
+			                                   precision,
+			                                   pos.z);
+		    },
+		    spt_hud_position);
+
+		AddHudCallback(
+		    "angles",
+		    [this](std::string args)
+		    {
+			    int mode = (args == "") ? spt_hud_angles.GetInt() : std::stoi(args);
+			    QAngle ang = utils::GetPlayerEyeAngles();
+			    int precision = (mode < 2) ? 2 : mode;
+
+			    spt_hud_feat.DrawTopHudElement(L"ang: %.*f %.*f %.*f",
+			                                   precision,
+			                                   ang.x,
+			                                   precision,
+			                                   ang.y,
+			                                   precision,
+			                                   ang.z);
+		    },
+		    spt_hud_angles);
+
+		AddHudCallback(
+		    "velocity",
+		    [this](std::string args)
+		    {
+			    int mode = (args == "") ? y_spt_hud_velocity.GetInt() : std::stoi(args);
 			    Vector currentVel = GetPlayerVelocity();
-			    spt_hud.DrawTopHudElement(L"vel(xyz): %.3f %.3f %.3f",
-			                              currentVel.x,
-			                              currentVel.y,
-			                              currentVel.z);
-			    spt_hud.DrawTopHudElement(L"vel(xy): %.3f", currentVel.Length2D());
+			    if (mode != 2)
+				    spt_hud_feat.DrawTopHudElement(L"vel(xyz): %.3f %.3f %.3f",
+				                                   currentVel.x,
+				                                   currentVel.y,
+				                                   currentVel.z);
+			    if (mode != 3)
+				    spt_hud_feat.DrawTopHudElement(L"vel(xy): %.3f", currentVel.Length2D());
 		    },
 		    y_spt_hud_velocity);
 
 		AddHudCallback(
-		    "vel(p/y/r)",
-		    [this]()
+		    "velocity_angles",
+		    [this](std::string)
 		    {
 			    Vector currentVel = GetPlayerVelocity();
 			    QAngle angles;
 			    VectorAngles(currentVel, Vector(0, 0, 1), angles);
-			    spt_hud.DrawTopHudElement(L"vel(p/y/r): %.3f %.3f %.3f", angles.x, angles.y, angles.z);
+			    spt_hud_feat.DrawTopHudElement(L"vel(p/y/r): %.3f %.3f %.3f", angles.x, angles.y, angles.z);
 		    },
 		    y_spt_hud_velocity_angles);
 
@@ -921,13 +990,13 @@ void PlayerIOFeature::LoadFeature()
 		if (utils::DoesGameLookLikePortal())
 		{
 			AddHudCallback(
-			    "ag sg",
-			    [this]()
+			    "ag_sg_tester",
+			    [this](std::string)
 			    {
 				    Vector v = spt_playerio.GetPlayerEyePos();
 				    QAngle q;
 				    std::wstring result = calculateWillAGSG(v, q);
-				    spt_hud.DrawTopHudElement(L"ag sg: %s", result.c_str());
+				    spt_hud_feat.DrawTopHudElement(L"ag sg: %s", result.c_str());
 			    },
 			    y_spt_hud_ag_sg_tester);
 		}
@@ -960,11 +1029,12 @@ void PlayerIOFeature::LoadFeature()
 	if (m_fFlags.Found())
 	{
 		bool hasHudFlags = AddHudCallback(
-		    "fl_",
-		    [this]()
+		    "flags",
+		    [this](std::string args)
 		    {
 			    int flags = spt_playerio.m_fFlags.GetValue();
-			    DrawFlagsHud(NULL, FLAGS, ARRAYSIZE(FLAGS), flags, false, hud_flags_filter);
+			    int filter = args == "" ? hud_flags_filter : GetFlagsFilter(args, false);
+			    DrawFlagsHud(NULL, L_FLAGS, ARRAYSIZE(L_FLAGS), flags, false, filter);
 		    },
 		    y_spt_hud_flags);
 
@@ -976,7 +1046,7 @@ void PlayerIOFeature::LoadFeature()
 	{
 		AddHudCallback(
 		    "moveflags",
-		    [this]()
+		    [this](std::string)
 		    {
 			    int flags = spt_playerio.m_MoveType.GetValue();
 			    DrawFlagsHud(L"Move type", MOVETYPE_FLAGS, ARRAYSIZE(MOVETYPE_FLAGS), flags);
@@ -988,7 +1058,7 @@ void PlayerIOFeature::LoadFeature()
 	{
 		AddHudCallback(
 		    "collisionflags",
-		    [this]()
+		    [this](std::string)
 		    {
 			    int flags = spt_playerio.m_CollisionGroup.GetValue();
 			    DrawFlagsHud(L"Collision group", COLLISION_GROUPS, ARRAYSIZE(COLLISION_GROUPS), flags);
@@ -999,8 +1069,8 @@ void PlayerIOFeature::LoadFeature()
 	if (m_MoveCollide.Found())
 	{
 		AddHudCallback(
-		    "movecollide",
-		    [this]()
+		    "movecollideflags",
+		    [this](std::string)
 		    {
 			    int flags = spt_playerio.m_MoveCollide.GetValue();
 			    DrawFlagsHud(L"Move collide", MOVECOLLIDE_FLAGS, ARRAYSIZE(MOVECOLLIDE_FLAGS), flags);

@@ -400,8 +400,9 @@ namespace ljstats
 class HopsHud : public FeatureWrapper<HopsHud>
 {
 public:
+	void OnTick();
+	void OnJump();
 	void OnGround(bool onground);
-	void Jump();
 	void CalculateAbhVel();
 	void DrawHopHud();
 	bool ShouldDraw();
@@ -425,13 +426,15 @@ private:
 	bool velNotCalced = true;
 	int lastHop = 0;
 	int displayHop = 0;
-	float percentage = 0;
-	float maxVel = 0;
-	float loss = 0;
+	float percentage = 0.0f;
+	float maxVel = 0.0f;
+	float loss = 0.0f;
 
 	// velocity hud
-	float prevHopVel = 0;
-	float hopVel = 0;
+	float prevHopVel = 0.0f;
+	float hopVel = 0.0f;
+	float prevVel = 0.0f;
+	float currVel = 0.0f;
 
 	vgui::HFont hopsFont = 0;
 };
@@ -440,7 +443,7 @@ static HopsHud spt_hops_hud;
 
 bool HopsHud::ShouldLoadFeature()
 {
-	return spt_hud.ShouldLoadFeature();
+	return spt_hud_feat.ShouldLoadFeature();
 }
 
 bool HopsHud::ShouldDraw()
@@ -472,7 +475,7 @@ void HopsHud::PrintStrafeCol(std::function<void(const ljstats::SegmentStats&, wc
 		}
 
 		// Leave space left for last line
-		if (y + fontTall * 2 > spt_hud.renderView->height)
+		if (y + fontTall * 2 > spt_hud_feat.renderView->height)
 		{
 			break;
 		}
@@ -488,21 +491,36 @@ void HopsHud::InitHooks() {}
 
 void HopsHud::LoadFeature()
 {
-	bool result = spt_hud.AddHudCallback(
-	    HudCallback("hops", std::bind(&HopsHud::DrawHopHud, this), std::bind(&HopsHud::ShouldDraw, this), false));
+	bool result = spt_hud_feat.AddHudDefaultGroup(
+	    HudCallback(std::bind(&HopsHud::DrawHopHud, this), std::bind(&HopsHud::ShouldDraw, this), false));
 
-	if (result && OngroundSignal.Works && JumpSignal.Works)
+	if (!result)
+		return;
+
+	if (JumpSignal.Works)
 	{
-		OngroundSignal.Connect(this, &HopsHud::OnGround);
-		JumpSignal.Connect(this, &HopsHud::Jump);
+		if (TickSignal.Works)
+		{
+			TickSignal.Connect(this, &HopsHud::OnTick);
+			InitConcommandBase(y_spt_jhud_velocity);
+		}
 
-		InitConcommandBase(y_spt_jhud_hops);
-		InitConcommandBase(y_spt_jhud_velocity);
-		InitConcommandBase(y_spt_jhud_x);
-		InitConcommandBase(y_spt_jhud_y);
+		if (OngroundSignal.Works)
+		{
+			OngroundSignal.Connect(this, &HopsHud::OnGround);
+			InitConcommandBase(y_spt_jhud_hops);
+		}
+		
+		if (TickSignal.Works || OngroundSignal.Works)
+		{
+			JumpSignal.Connect(this, &HopsHud::OnJump);
+			InitConcommandBase(y_spt_jhud_x);
+			InitConcommandBase(y_spt_jhud_y);
+		}
 	}
 
-	if (result && JumpSignal.Works && TickSignal.Works)
+	// ljstats
+	if (JumpSignal.Works && TickSignal.Works)
 	{
 		JumpSignal.Connect(ljstats::OnJump);
 		TickSignal.Connect(ljstats::OnTick);
@@ -528,7 +546,7 @@ void HopsHud::DrawHopHud()
 	swprintf_s(buffer, BUFFER_SIZE, fmt, value); \
 	DrawBuffer();
 
-	if (hopsFont == 0 && !spt_hud.GetFont(FONT_Trebuchet24, hopsFont))
+	if (hopsFont == 0 && !spt_hud_feat.GetFont(FONT_Trebuchet24, hopsFont))
 	{
 		return;
 	}
@@ -538,7 +556,7 @@ void HopsHud::DrawHopHud()
 	const Color white(255, 255, 255, 255);
 
 	auto surface = interfaces::surface;
-	auto renderView = spt_hud.renderView;
+	auto renderView = spt_hud_feat.renderView;
 
 	surface->DrawSetTextFont(hopsFont);
 	surface->DrawSetTextColor(white);
@@ -564,19 +582,14 @@ void HopsHud::DrawHopHud()
 
 	if (y_spt_jhud_velocity.GetBool())
 	{
-		static float prev_vel = 0;
-		float vel = spt_playerio.GetPlayerVelocity().Length2D();
-
-		if (fabs(vel - prev_vel) < 0.01)
+		if (fabs(currVel - prevVel) < 0.01)
 			surface->DrawSetTextColor(white);
-		else if (vel > prev_vel)
+		else if (currVel > prevVel)
 			surface->DrawSetTextColor(blue);
 		else
 			surface->DrawSetTextColor(orange);
 
-		prev_vel = vel;
-
-		swprintf_s(buffer, BUFFER_SIZE, L"%d", (int)vel);
+		swprintf_s(buffer, BUFFER_SIZE, L"%d", (int)currVel);
 		DrawBuffer();
 
 		surface->DrawSetTextColor(white);
@@ -645,7 +658,16 @@ void HopsHud::DrawHopHud()
 	}
 }
 
-void HopsHud::Jump()
+void HopsHud::OnTick()
+{
+	if (!y_spt_jhud_velocity.GetBool())
+		return;
+
+	prevVel = currVel;
+	currVel = spt_playerio.GetPlayerVelocity().Length2D();
+}
+
+void HopsHud::OnJump()
 {
 	if (!y_spt_jhud_hops.GetBool() && !y_spt_jhud_velocity.GetBool())
 		return;
@@ -667,7 +689,7 @@ void HopsHud::Jump()
 
 void HopsHud::OnGround(bool onground)
 {
-	if (!y_spt_jhud_hops.GetBool() && !y_spt_jhud_velocity.GetBool())
+	if (!y_spt_jhud_hops.GetBool())
 		return;
 
 	if (!onground)

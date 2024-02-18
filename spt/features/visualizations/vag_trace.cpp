@@ -46,8 +46,7 @@ static bool ShouldDrawForFreeExit()
 
 static matrix3x4_t tpRotateMat{{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, 0}}; // 180 rotation about z
 
-// tailLen, tailRad, tipLen, tipRad, numSubdivs
-#define ARROW_PARAMS 15, 1.5, 6, 3, 6
+#define ARROW_PARAMS (ArrowParams{6, 20.f, 1.5f})
 
 // visualizations for vertical angle glitches
 class VagTrace : public FeatureWrapper<VagTrace>
@@ -398,13 +397,13 @@ void VagTrace::RecomputeCache()
 		cache.possibleEntryMatsSimple.clear();
 		cache.possibleExitMatsSimple.clear();
 		// assume free portal is an axis aligned wall portal
-		for (float yaw = 0; yaw < 360; yaw += 90)
+		for (int yaw = 0; yaw < 360; yaw += 90)
 		{
 			addPossiblePortalMat(QAngle(0, yaw, 0), cache.possibleEntryMatsDetailed, true);
 			addPossiblePortalMat(QAngle(0, yaw, 0), cache.possibleExitMatsDetailed, false);
 		}
 		// assume free portal is floor or ceiling portal
-		for (float yaw = 0; yaw < 360; yaw += 20)
+		for (int yaw = 0; yaw < 360; yaw += 20)
 		{
 			addPossiblePortalMat(QAngle(90, yaw, 0), cache.possibleEntryMatsSimple, true);
 			addPossiblePortalMat(QAngle(90, yaw, 0), cache.possibleExitMatsSimple, false);
@@ -427,14 +426,14 @@ void VagTrace::RecomputeCache()
 		*/
 
 		int numValid = 0;
-		for (float yaw = 0; yaw < 360 && numValid < 2; yaw += 120)
-			if (CalcFreeEntryPortalPos(angToMat({90, yaw, 0}), cache.entryCeilingSetForTarget.v[numValid]))
+		for (int yaw = 0; yaw < 360 && numValid < 2; yaw += 120)
+			if (CalcFreeEntryPortalPos(angToMat({90, static_cast<float>(yaw), 0}), cache.entryCeilingSetForTarget.v[numValid]))
 				numValid++;
 		cache.entryCeilingSetForTarget.exists = numValid == 2;
 
 		numValid = 0;
-		for (float yaw = 0; yaw < 360 && numValid < 2; yaw += 120)
-			if (CalcFreeEntryPortalPos(angToMat({-90, yaw, 0}), cache.entryFloorSetForTarget.v[numValid]))
+		for (int yaw = 0; yaw < 360 && numValid < 2; yaw += 120)
+			if (CalcFreeEntryPortalPos(angToMat({-90, static_cast<float>(yaw), 0}), cache.entryFloorSetForTarget.v[numValid]))
 				numValid++;
 		cache.entryFloorSetForTarget.exists = numValid == 2;
 
@@ -475,7 +474,7 @@ bool VagTrace::CalcFreeEntryPortalPos(const matrix3x4_t& entryRotMat, Vector& en
 	*  O  - world to orange matrix
 	* [P] - the point we wish to vag (blue portal pos)
 	* [V] - the VAG target
-	* Everything here is known except for the position component of B. The VAG formula™ gives us:
+	* Everything here is known except for the position component of B. The VAG formulaâ„¢ gives us:
 	*    B * R * O{-1} * [P] = [V]
 	* => B * R * O{-1} * [B{pos only}] = [V]
 	* => B{rot only} * R * O{-1} * [B{pos only}] + [B{pos only}] = [V]

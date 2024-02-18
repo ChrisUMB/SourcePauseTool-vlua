@@ -5,6 +5,8 @@
 #define SPT_TRACE_PORTAL_ENABLED
 #endif
 
+#include "ent_props.hpp"
+
 #if defined(OE)
 #include "vector.h"
 #else
@@ -13,74 +15,95 @@
 #include "cmodel.h"
 
 class CBaseCombatWeapon;
+class IGameMovement;
+class ITraceFilter;
+#include "iserverunknown.h"
+#include "engine\IEngineTrace.h"
 
-typedef void(__cdecl* _UTIL_TraceRay)(const Ray_t& ray,
-                                      unsigned int mask,
-                                      const IHandleEntity* ignore,
-                                      int collisionGroup,
-                                      trace_t* ptr);
-typedef void(__cdecl* _TracePlayerBBoxForGround)(const Vector& start,
-                                                 const Vector& end,
-                                                 const Vector& mins,
-                                                 const Vector& maxs,
-                                                 IHandleEntity* player,
-                                                 unsigned int fMask,
-                                                 int collisionGroup,
-                                                 trace_t& pm);
-typedef void(__cdecl* _TracePlayerBBoxForGround2)(const Vector& start,
-                                                  const Vector& end,
-                                                  const Vector& mins,
-                                                  const Vector& maxs,
-                                                  IHandleEntity* player,
-                                                  unsigned int fMask,
-                                                  int collisionGroup,
-                                                  trace_t& pm);
-typedef void(__fastcall* _CGameMovement__TracePlayerBBox)(void* thisptr,
-                                                          int edx,
-                                                          const Vector& start,
-                                                          const Vector& end,
-                                                          unsigned int fMask,
-                                                          int collisionGroup,
-                                                          trace_t& pm);
-typedef void(__fastcall* _CPortalGameMovement__TracePlayerBBox)(void* thisptr,
-                                                                int edx,
-                                                                const Vector& start,
-                                                                const Vector& end,
-                                                                unsigned int fMask,
-                                                                int collisionGroup,
-                                                                trace_t& pm);
-typedef void(__fastcall* _SnapEyeAngles)(void* thisptr, int edx, const QAngle& viewAngles);
-typedef float(__fastcall* _FirePortal)(void* thisptr, int edx, bool bPortal2, Vector* pVector, bool bTest);
-typedef float(__fastcall* _TraceFirePortal)(void* thisptr,
-                                            int edx,
-                                            bool bPortal2,
-                                            const Vector& vTraceStart,
-                                            const Vector& vDirection,
-                                            trace_t& tr,
-                                            Vector& vFinalPosition,
-                                            QAngle& qFinalAngles,
-                                            int iPlacedBy,
-                                            bool bTest);
-typedef CBaseCombatWeapon*(__fastcall* _GetActiveWeapon)(void* thisptr);
-typedef const Vector&(__fastcall* _CGameMovement__GetPlayerMaxs)(void* thisptr, int edx);
-typedef const Vector&(__fastcall* _CGameMovement__GetPlayerMins)(void* thisptr, int edx);
+// Since we're hooking engine-side tracing functions, when this includes dispcoll_common.h we need it to use the
+// CUtlVector<T, CHunkMemory<T>> type to be accurate. This allows us to use the CDispCollTree class from the SDK.
+#pragma push_macro("ENGINE_DLL")
+#define ENGINE_DLL
+#include "SDK\cmodel_private.h"
+#pragma pop_macro("ENGINE_DLL")
+
+// for TraceLineWithWorldInfoServer()
+struct WorldHitInfo
+{
+	const CCollisionBSPData* bspData;
+
+	const cbrush_t* brush;
+	ICollideable* staticProp;
+	CDispCollTree* dispTree;
+
+	void Clear()
+	{
+		bspData = nullptr;
+		brush = nullptr;
+		staticProp = nullptr;
+		dispTree = nullptr;
+	}
+};
+
+template<bool server>
+struct TraceFilterIgnorePlayer : public CTraceFilter
+{
+	virtual bool ShouldHitEntity(IHandleEntity* pEntity, int contentsMask) override
+	{
+		return pEntity != spt_entprops.GetPlayer(server);
+	}
+};
 
 // Tracing related functionality
 class Tracing : public FeatureWrapper<Tracing>
 {
 public:
-	_UTIL_TraceRay ORIG_UTIL_TraceRay = nullptr;
-	_TracePlayerBBoxForGround ORIG_TracePlayerBBoxForGround = nullptr;
-	_TracePlayerBBoxForGround2 ORIG_TracePlayerBBoxForGround2 = nullptr;
-	_GetActiveWeapon ORIG_GetActiveWeapon = nullptr;
-	_TraceFirePortal ORIG_TraceFirePortal = nullptr;
+	DECL_MEMBER_CDECL(void,
+	                  UTIL_TraceRay,
+	                  const Ray_t& ray,
+	                  unsigned int mask,
+	                  const IHandleEntity* ignore,
+	                  int collisionGroup,
+	                  trace_t* ptr);
 
-	bool TraceClientRay(const Ray_t& ray,
-	                    unsigned int mask,
-	                    const IHandleEntity* ignore,
-	                    int collisionGroup,
-	                    trace_t* ptr);
+	DECL_MEMBER_CDECL(void,
+	                  TracePlayerBBoxForGround,
+	                  const Vector& start,
+	                  const Vector& end,
+	                  const Vector& mins,
+	                  const Vector& maxs,
+	                  IHandleEntity* player,
+	                  unsigned int fMask,
+	                  int collisionGroup,
+	                  trace_t& pm);
+
+	DECL_MEMBER_CDECL(void,
+	                  TracePlayerBBoxForGround2,
+	                  const Vector& start,
+	                  const Vector& end,
+	                  const Vector& mins,
+	                  const Vector& maxs,
+	                  IHandleEntity* player,
+	                  unsigned int fMask,
+	                  int collisionGroup,
+	                  trace_t& pm);
+
+	DECL_HOOK_THISCALL(CBaseCombatWeapon*, GetActiveWeapon, IServerUnknown*);
+
+	DECL_MEMBER_THISCALL(float,
+	                     TraceFirePortal,
+	                     CBaseCombatWeapon*,
+	                     bool bPortal2,
+	                     const Vector& vTraceStart,
+	                     const Vector& vDirection,
+	                     trace_t& tr,
+	                     Vector& vFinalPosition,
+	                     QAngle& qFinalAngles,
+	                     int iPlacedBy,
+	                     bool bTest);
+
 	bool CanTracePlayerBBox();
+
 	void TracePlayerBBox(const Vector& start,
 	                     const Vector& end,
 	                     const Vector& mins,
@@ -88,6 +111,13 @@ public:
 	                     unsigned int fMask,
 	                     int collisionGroup,
 	                     trace_t& pm);
+
+	// Traces a line, returns more detailed info if the world was hit. hitInfo.bspData is only guaranteed to be
+	// set if a brush or displacement was hit. If hooks aren't found this may return incorrect results.
+	WorldHitInfo TraceLineWithWorldInfoServer(const Ray_t& ray,
+	                                          unsigned int fMask,
+	                                          ITraceFilter* filter,
+	                                          trace_t& tr);
 
 #ifdef SPT_TRACE_PORTAL_ENABLED
 	CBaseCombatWeapon* GetActiveWeapon();
@@ -103,7 +133,7 @@ public:
 	                               bool isPortal2);
 
 	// returns the server-side filter instance which can be used for TraceFirePortal-like shenanigans
-	class ITraceFilter* GetPortalTraceFilter();
+	ITraceFilter* GetPortalTraceFilter();
 #endif
 
 protected:
@@ -116,17 +146,49 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	static const Vector& __fastcall HOOKED_CGameMovement__GetPlayerMaxs(void* thisptr, int edx);
-	static const Vector& __fastcall HOOKED_CGameMovement__GetPlayerMins(void* thisptr, int edx);
-
 	bool overrideMinMax = false;
 	Vector _mins;
 	Vector _maxs;
 
-	_CGameMovement__TracePlayerBBox ORIG_CGameMovement__TracePlayerBBox = nullptr;
-	_CPortalGameMovement__TracePlayerBBox ORIG_CPortalGameMovement__TracePlayerBBox = nullptr;
-	_CGameMovement__GetPlayerMins ORIG_CGameMovement__GetPlayerMins = nullptr;
-	_CGameMovement__GetPlayerMaxs ORIG_CGameMovement__GetPlayerMaxs = nullptr;
+	// for TraceLineWithWorldInfoServer()
+	struct
+	{
+		float bestFrac;
+		WorldHitInfo hitInfo;
+	} curTraceInfo;
+
+	DECL_MEMBER_THISCALL(void,
+	                     CGameMovement__TracePlayerBBox,
+	                     IGameMovement*,
+	                     const Vector& start,
+	                     const Vector& end,
+	                     unsigned int fMask,
+	                     int collisionGroup,
+	                     trace_t& pm);
+
+	DECL_MEMBER_THISCALL(void,
+	                     CPortalGameMovement__TracePlayerBBox,
+	                     IGameMovement*,
+	                     const Vector& start,
+	                     const Vector& end,
+	                     unsigned int fMask,
+	                     int collisionGroup,
+	                     trace_t& pm);
+
+	DECL_HOOK_THISCALL(const Vector&, CGameMovement__GetPlayerMins, IGameMovement*);
+	DECL_HOOK_THISCALL(const Vector&, CGameMovement__GetPlayerMaxs, IGameMovement*);
+
+	DECL_HOOK_FASTCALL(void,
+	                   CM_ClipBoxToBrush_1,
+	                   TraceInfo_t* __restrict pTraceInfo,
+	                   const cbrush_t* __restrict brush);
+
+	DECL_HOOK_FASTCALL(void,
+	                   CM_TraceToDispTree_1,
+	                   TraceInfo_t* pTraceInfo,
+	                   CDispCollTree* pDispTree,
+	                   float startFrac,
+	                   float endFrac);
 };
 
 extern Tracing spt_tracing;
