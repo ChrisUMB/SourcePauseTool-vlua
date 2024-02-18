@@ -19,6 +19,18 @@ LuaEntityLibrary lua_entity_library;
 
 LuaEntityLibrary::LuaEntityLibrary() : LuaLibrary("entity") {}
 
+void *LuaEntityLibrary::LuaCheckEntity(lua_State *L, int index) {
+    if (!LuaIsClass(L, index, "entity")) {
+        luaL_error(L, "entity expected");
+        return nullptr;
+    }
+
+    lua_getfield(L, index, "data");
+    void *entity_ptr = (void *) lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    return entity_ptr;
+}
+
 void LuaEntityLibrary::LuaPushEntity(lua_State *L, void *entity) {
     lua_newtable(L);
     lua_getglobal(L, "entity");
@@ -29,9 +41,10 @@ void LuaEntityLibrary::LuaPushEntity(lua_State *L, void *entity) {
 }
 
 void LuaEntityLibrary::Teleport(void *entity, const Vector *pos, const QAngle *ang, const Vector *vel) {
-    int *p_vtable = reinterpret_cast<int *>(entity);
-    (*(void (__thiscall **)(void *, const Vector *, const QAngle *, const Vector *)) (*p_vtable
-                                                                                      + 420))(entity, pos, ang, vel);
+    typedef void (__thiscall * EntityTeleport)(void *, const Vector *, const QAngle *, const Vector *);
+
+    int *p_vtable = (int*) entity;
+    ((EntityTeleport) (*p_vtable + 420))(entity, pos, ang, vel);
 }
 
 static int EntityFromID(lua_State *L) {
@@ -247,18 +260,6 @@ static const struct luaL_Reg entity_class[] = {{"_list",                   Entit
                                                {"get_collision_max",       EntityGetCollisionMax},
         //        {"teleport",    EntityTeleport},
                                                {nullptr,                   nullptr}};
-
-void *LuaEntityLibrary::LuaCheckEntity(lua_State *L, int index) {
-    if (!LuaIsClass(L, index, "entity")) {
-        luaL_error(L, "entity expected");
-        return nullptr;
-    }
-
-    lua_getfield(L, index, "data");
-    void *entity_ptr = (void *) lua_touserdata(L, -1);
-    lua_pop(L, 1);
-    return entity_ptr;
-}
 
 void LuaEntityLibrary::Load(lua_State *L) {
     lua_new_class(L, "entity", entity_class);

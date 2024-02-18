@@ -36,21 +36,14 @@ void LuaEventsLibrary::InvokeEvent(const std::string& event_name, const std::fun
 
 void LuaEventsLibrary::Load(lua_State* L)
 {
-	states.insert(L);
+	states.push_back(L);
 }
 
 void LuaEventsLibrary::Unload(lua_State* L)
 {
 	LuaLibrary::Unload(L);
-	states.erase(L);
+	states.erase(std::remove(states.begin(), states.end(), L), states.end());
 }
-
-/*
- *  ---@class entity_teleport_event_type : event_type<entity_teleport_event>
-    ---@field wait fun(self, count:number|nil):entity_teleport_event
-    ---@field listen fun(self, callback:fun(event:entity_teleport_event, cancel:fun())):fun()
-    ---@field next fun(self, callback:fun(event:entity_teleport_event)):fun()
- */
 
 #define EVENT_TYPE_LUA(name) \
     "---@class " #name "_event_type : event_type<" #name "_event>\n" \

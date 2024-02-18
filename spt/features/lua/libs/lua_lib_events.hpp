@@ -1,12 +1,12 @@
 #pragma once
 
 #include "../lua_feature.hpp"
-#include <set>
+#include <vector>
 
 class LuaEventsLibrary : public LuaLibrary
 {
 protected:
-	std::set<lua_State*> states;
+	std::vector<lua_State*> states;
 
 public:
 	explicit LuaEventsLibrary();

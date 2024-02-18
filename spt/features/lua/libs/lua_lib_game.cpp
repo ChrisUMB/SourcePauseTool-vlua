@@ -1,6 +1,7 @@
 #include "stdafx.hpp"
 #include "lua_lib_game.hpp"
 #include "interfaces.hpp"
+#include "../../demo.hpp"
 
 LuaGameLibrary lua_game_library;
 
@@ -31,11 +32,18 @@ static int GetGameDirectory(lua_State* L)
 	return 1;
 }
 
+static int IsPlayingDemo(lua_State* L)
+{
+    lua_pushboolean(L, spt_demostuff.Demo_IsPlayingBack());
+    return 1;
+}
+
 static const struct luaL_Reg game_class[] = {
     //        {"is_paused", IsGamePaused},
     {"get_client_tick", GetClientTick},
     {"get_server_tick", GetServerTick},
     {"get_directory", GetGameDirectory},
+    {"is_playing_demo", IsPlayingDemo},
     {nullptr, nullptr}};
 
 LuaGameLibrary::LuaGameLibrary() : LuaLibrary("game") {}
@@ -96,6 +104,10 @@ end
 
 ---@return string The game directory.
 function game.get_directory()
+end
+
+---@return bool Is the game playing a demo.
+function game.is_playing_demo()
 end
 
 ---@return thread|any The thread that is running the callback.
