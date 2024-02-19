@@ -2,6 +2,8 @@
 
 #include <chrono>
 
+#include "worldsize.h"
+
 #include "renderer\mesh_renderer.hpp"
 #include "spt\features\tracing.hpp"
 
@@ -106,6 +108,7 @@ protected:
 	virtual void LoadFeature() override;
 
 private:
+	bool placementInfoUpdateRequested = false;
 	ConVar* sv_portal_placement_never_fail = nullptr;
 
 	DECL_MEMBER_CDECL(bool,
@@ -248,6 +251,9 @@ void PortalPlacement::UpdatePlacementInfo()
 
 static void DrawPortal(MeshBuilderDelegate& mb, const PortalPlacement::PlacementInfo& info, color32 col)
 {
+	if (!info.tr.DidHit())
+		return;
+
 	const color32 failedColor = {255, 0, 0, 127};
 	const color32 noDrawColor = {0, 0, 0, 0};
 	const color32 fizzleColor = {100, 100, 100, 127};
@@ -259,7 +265,7 @@ static void DrawPortal(MeshBuilderDelegate& mb, const PortalPlacement::Placement
 	}
 	else if (info.placementResult <= 0.5f)
 	{
-		if (info.placementResult <= 0.5f && y_spt_draw_pp_failed.GetBool()
+		if (y_spt_draw_pp_failed.GetBool()
 		    && info.placementResult != PORTAL_PLACEMENT_SUCCESS_PASSTHROUGH_SURFACE
 		    && info.placementResult != PORTAL_PLACEMENT_SUCCESS_CLEANSER)
 		{
@@ -269,10 +275,6 @@ static void DrawPortal(MeshBuilderDelegate& mb, const PortalPlacement::Placement
 		{
 			portalColor = noDrawColor;
 		}
-	}
-	else if (info.fizzleAfterPlace)
-	{
-		portalColor = fizzleColor;
 	}
 	else
 	{
@@ -322,12 +324,14 @@ void PortalPlacement::OnMeshRenderSignal(MeshRendererDelegate& mr)
 		}
 	}
 
+	if (placementInfoUpdateRequested || y_spt_draw_pp.GetBool())
+	{
+		UpdatePlacementInfo();
+		placementInfoUpdateRequested = false;
+	}
+	
 	if (!y_spt_draw_pp.GetBool())
 		return;
-
-	// HUD callback didn't update placement info
-	if (!y_spt_hud_portal_placement.GetBool())
-		UpdatePlacementInfo();
 
 	// No portalgun
 	if (p1.placementResult == PORTAL_PLACEMENT_FAIL_NO_SERVER
@@ -413,7 +417,7 @@ void PortalPlacement::RunPpGridIteration(MeshRendererDelegate& mr)
 		trace_t tr;
 
 		Ray_t ray;
-		ray.Init(ppGrid.camPos, ppGrid.camPos + dir * 999'999'999);
+		ray.Init(ppGrid.camPos, ppGrid.camPos + dir * MAX_TRACE_LENGTH);
 		interfaces::engineTraceServer->TraceRay(ray, MASK_SHOT_PORTAL, spt_tracing.GetPortalTraceFilter(), &tr);
 		spherePos = tr.endpos;
 
@@ -425,7 +429,10 @@ void PortalPlacement::RunPpGridIteration(MeshRendererDelegate& mr)
 
 		const int PORTAL_PLACED_BY_PLAYER = 2;
 		float placementResult = spt_tracing.ORIG_TraceFirePortal(
-		    pgun, 0, bPortal2, ppGrid.camPos, dir, tr, placePos, placeAng, PORTAL_PLACED_BY_PLAYER, true);
+		    pgun, bPortal2, ppGrid.camPos, dir, tr, placePos, placeAng, PORTAL_PLACED_BY_PLAYER, true);
+
+		if (!tr.DidHit())
+			continue;
 
 		color32 c;
 
@@ -549,13 +556,12 @@ void PortalPlacement::LoadFeature()
 	{
 #ifdef SPT_HUD_ENABLED
 		AddHudCallback(
-		    "pp",
-		    []()
+		    "portal_placement",
+		    [](std::string args)
 		    {
-			    if (!y_spt_hud_portal_placement.GetBool())
-				    return;
+			    int mode = args == "" ? y_spt_hud_portal_placement.GetInt() : std::stoi(args);
+			    spt_pp.placementInfoUpdateRequested = true;
 
-			    spt_pp.UpdatePlacementInfo();
 			    float res1 = spt_pp.p1.placementResult;
 			    float res2 = spt_pp.p2.placementResult;
 
@@ -568,30 +574,30 @@ void PortalPlacement::LoadFeature()
 
 			    if (res1 == PORTAL_PLACEMENT_FAIL_NO_SERVER)
 			    {
-				    spt_hud.DrawTopHudElement(L"Portal: No server player");
+				    spt_hud_feat.DrawTopHudElement(L"Portal: No server player");
 			    }
 			    else if (res1 == PORTAL_PLACEMENT_FAIL_NO_WEAPON)
 			    {
-				    spt_hud.DrawTopHudElement(L"Portal: No portalgun");
+				    spt_hud_feat.DrawTopHudElement(L"Portal: No portalgun");
 			    }
-			    else if (y_spt_hud_portal_placement.GetInt() == 1)
+			    else if (mode == 0 || mode == 1)
 			    {
-				    spt_hud.DrawColorTopHudElement(blueTextColor, L"Portal1: %d", res1 > 0.5f);
-				    spt_hud.DrawColorTopHudElement(orangeTextColor, L"Portal2: %d", res2 > 0.5f);
+				    spt_hud_feat.DrawColorTopHudElement(blueTextColor, L"Portal1: %d", res1 > 0.5f);
+				    spt_hud_feat.DrawColorTopHudElement(orangeTextColor, L"Portal2: %d", res2 > 0.5f);
 			    }
-			    else if (y_spt_hud_portal_placement.GetInt() == 2)
+			    else if (mode == 2)
 			    {
-				    spt_hud.DrawColorTopHudElement(blueTextColor,
+				    spt_hud_feat.DrawColorTopHudElement(blueTextColor,
 				                                   L"Portal1: %s",
 				                                   PlacementResultToString(spt_pp.p1));
-				    spt_hud.DrawColorTopHudElement(orangeTextColor,
+				    spt_hud_feat.DrawColorTopHudElement(orangeTextColor,
 				                                   L"Portal2: %s",
 				                                   PlacementResultToString(spt_pp.p2));
 			    }
 			    else
 			    {
-				    spt_hud.DrawColorTopHudElement(blueTextColor, L"Portal1: %f", res1);
-				    spt_hud.DrawColorTopHudElement(orangeTextColor, L"Portal2: %f", res2);
+				    spt_hud_feat.DrawColorTopHudElement(blueTextColor, L"Portal1: %f", res1);
+				    spt_hud_feat.DrawColorTopHudElement(orangeTextColor, L"Portal2: %f", res2);
 			    }
 		    },
 		    y_spt_hud_portal_placement);

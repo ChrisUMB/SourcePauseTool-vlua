@@ -6,7 +6,7 @@
 #include "math.hpp"
 #include "ent_utils.hpp"
 #include "spt/sptlib-wrapper.hpp"
-#include "..\features\rng.hpp"
+#include "spt\features\game_fixes\rng.hpp"
 #include "..\spt-serverplugin.hpp"
 
 #undef max
@@ -72,6 +72,7 @@ namespace aim
 
 	ViewState::ViewState()
 	{
+		targetID = -1;
 		ticksLeft = 0;
 		state = NO_AIM;
 		timedChange = false;

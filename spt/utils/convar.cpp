@@ -16,16 +16,17 @@ int AutoCompleteList::AutoCompletionFunc(AUTOCOMPLETION_FUNCTION_PARAMS)
 {
 	bool hasDoubleQuote;
 	auto subStrings = SplitPartial(partial, hasDoubleQuote);
-	return AutoCompleteSuggest(subStrings.first, subStrings.second, hasDoubleQuote, commands);
+	return AutoCompleteSuggest(subStrings.first, subStrings.second, completions, hasDoubleQuote, commands);
 }
 
 int AutoCompleteList::AutoCompleteSuggest(const std::string& suggestionBase,
                                           const std::string& incompleteArgument,
+                                          const std::vector<std::string>& _completions,
                                           bool hasDoubleQuote,
                                           char commands[COMMAND_COMPLETION_MAXITEMS][COMMAND_COMPLETION_ITEM_LENGTH])
 {
 	int count = 0;
-	for (auto& item : completions)
+	for (const auto& item : _completions)
 	{
 		if (count == COMMAND_COMPLETION_MAXITEMS)
 			break;
@@ -45,7 +46,7 @@ int AutoCompleteList::AutoCompleteSuggest(const std::string& suggestionBase,
 std::pair<std::string, std::string> AutoCompleteList::SplitPartial(const char* partial, bool& hasDoubleQuote)
 {
 	std::string s(partial);
-	size_t pos = s.find(" ") + 1;
+	size_t pos = s.find(' ') + 1;
 	hasDoubleQuote = partial[pos] == '"';
 	if (hasDoubleQuote)
 		pos++;
@@ -76,7 +77,7 @@ int FileAutoCompleteList::AutoCompletionFunc(AUTOCOMPLETION_FUNCTION_PARAMS)
 	if (!fs::is_directory(dir, ec))
 		return 0;
 
-	bool shouldUpdate = (dir != prevPath || subStrings.second == "");
+	bool shouldUpdate = (dir != prevPath || subStrings.second.empty());
 	prevPath = dir;
 
 	if (shouldUpdate)
@@ -97,7 +98,7 @@ int FileAutoCompleteList::AutoCompletionFunc(AUTOCOMPLETION_FUNCTION_PARAMS)
 			}
 		}
 	}
-	return AutoCompleteSuggest(subStrings.first, subStrings.second, hasDoubleQuote, commands);
+	return AutoCompleteSuggest(subStrings.first, subStrings.second, completions, hasDoubleQuote, commands);
 }
 
 #ifdef OE

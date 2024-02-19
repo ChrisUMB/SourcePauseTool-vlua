@@ -70,9 +70,6 @@
     <ClCompile Include="spt\features\autojump.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\nosleep.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
     <ClCompile Include="spt\features\hud.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
@@ -80,9 +77,6 @@
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\tickrate.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\features\visual_fixes.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\dmomm.cpp">
@@ -107,12 +101,6 @@
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\timer.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\features\rng.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\features\vag.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\ent_props.cpp">
@@ -211,9 +199,6 @@
     <ClCompile Include="spt\features\camera.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
-    <ClCompile Include="spt\patterns_archive.cpp">
-      <Filter>spt</Filter>
-    </ClCompile>
     <ClCompile Include="spt\features\boog.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
@@ -253,9 +238,6 @@
     <ClCompile Include="spt\features\leafvis.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\multi_instance.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
     <ClCompile Include="spt\features\visualizations\draw_seams.cpp">
       <Filter>spt\features\visualizations</Filter>
     </ClCompile>
@@ -277,22 +259,10 @@
     <ClCompile Include="spt\features\visualizations\portal_placement.cpp">
       <Filter>spt\features\visualizations</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\bms_flashlight_fix.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
     <ClCompile Include="spt\features\afterticks.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\saveloads.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\features\noclip_nofix.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\features\free_oob.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\features\portal_nogroundsnap.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\updater.cpp">
@@ -301,10 +271,7 @@
     <ClCompile Include="spt\utils\stdafx.cpp">
       <Filter>spt\utils</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\hardlock.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\features\fastload.cpp">
+    <ClCompile Include="spt\features\movement_vars.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\visualizations\renderer\internal\create_collide.cpp">
@@ -331,50 +298,59 @@
     <ClCompile Include="thirdparty\x86.c">
       <Filter>thirdparty</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\lua_commands.cpp">
-      <Filter>spt\features\lua</Filter>
+    <ClCompile Include="spt\features\visualizations\draw_ent_collides.cpp">
+      <Filter>spt\features\visualizations</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\lua_feature.cpp">
-      <Filter>spt\features\lua</Filter>
+    <ClCompile Include="spt\features\visualizations\draw_world_collides.cpp">
+      <Filter>spt\features\visualizations</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\lua_util.cpp">
-      <Filter>spt\features\lua</Filter>
+    <ClCompile Include="spt\features\visualizations\map_overlay.cpp">
+      <Filter>spt\features\visualizations</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_console.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\bms_flashlight_fix.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_events.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\fastload.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_game.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\free_oob.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_input.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\hardlock.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_math.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\multi_instance.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_player.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\noclip_fixes.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_syscall.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\nosleep.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_entity.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\portal_nogroundsnap.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_memory.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\rng.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_portal.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\vag_crash.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_render.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\visual_fixes.cpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\lua\libs\lua_lib_camera.cpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClCompile Include="spt\features\game_fixes\snapshot_overflow.cpp">
+      <Filter>spt\features\game_fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\portalled_pause.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\con_notify.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\visualizations\oob_ents.cpp">
+      <Filter>spt\features\visualizations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -528,9 +504,6 @@
     <ClInclude Include="spt\features\tracing.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
-    <ClInclude Include="spt\features\rng.hpp">
-      <Filter>spt\features</Filter>
-    </ClInclude>
     <ClInclude Include="spt\utils\convar.hpp">
       <Filter>spt\utils</Filter>
     </ClInclude>
@@ -666,9 +639,6 @@
     <ClInclude Include="spt\features\afterticks.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
-    <ClInclude Include="spt\features\saveloads.hpp">
-      <Filter>spt\features</Filter>
-    </ClInclude>
     <ClInclude Include="thirdparty\curl\include\curl\curl.h">
       <Filter>thirdparty\curl\include\curl</Filter>
     </ClInclude>
@@ -738,62 +708,20 @@
     <ClInclude Include="spt\features\cvar.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
-    <ClInclude Include="thirdparty\LuaJIT\include\lauxlib.h">
-      <Filter>thirdparty\LuaJIT\include</Filter>
+    <ClInclude Include="SDK\cmodel_private.h">
+      <Filter>SDK</Filter>
     </ClInclude>
-    <ClInclude Include="thirdparty\LuaJIT\include\lua.h">
-      <Filter>thirdparty\LuaJIT\include</Filter>
+    <ClInclude Include="SDK\dispcoll_common.h">
+      <Filter>SDK</Filter>
     </ClInclude>
-    <ClInclude Include="thirdparty\LuaJIT\include\luaconf.h">
-      <Filter>thirdparty\LuaJIT\include</Filter>
+    <ClInclude Include="SDK\zone.h">
+      <Filter>SDK</Filter>
     </ClInclude>
-    <ClInclude Include="thirdparty\LuaJIT\include\lualib.h">
-      <Filter>thirdparty\LuaJIT\include</Filter>
+    <ClInclude Include="spt\features\game_fixes\rng.hpp">
+      <Filter>spt\features\game_fixes</Filter>
     </ClInclude>
-    <ClInclude Include="spt\features\lua\lua_commands.hpp">
-      <Filter>spt\features\lua</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\lua_feature.hpp">
-      <Filter>spt\features\lua</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\lua_util.hpp">
-      <Filter>spt\features\lua</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_console.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_events.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_game.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_input.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_math.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_player.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_syscall.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_entity.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_memory.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_portal.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_render.hpp">
-      <Filter>spt\features\lua\libs</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\features\lua\libs\lua_lib_camera.hpp">
-      <Filter>spt\features\lua\libs</Filter>
+    <ClInclude Include="patterns_archive.hpp">
+      <Filter>spt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -868,17 +796,8 @@
     <Filter Include="spt\features\visualizations\renderer\internal">
       <UniqueIdentifier>{09923d45-41e4-45c5-ad0e-cbfdea8b9be3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="thirdparty\LuaJIT">
-      <UniqueIdentifier>{0f76ddf7-9daa-478f-abfc-44dbc4930829}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="thirdparty\LuaJIT\include">
-      <UniqueIdentifier>{86bf8070-d80d-430a-9c8f-4f868c027236}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="spt\features\lua">
-      <UniqueIdentifier>{125142fb-0af6-49f3-b250-8c3ba265e3f9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="spt\features\lua\libs">
-      <UniqueIdentifier>{144e3123-b107-4c73-8185-0b153e389bc4}</UniqueIdentifier>
+    <Filter Include="spt\features\game_fixes">
+      <UniqueIdentifier>{2252b542-464d-4fe9-b7e5-fae8736791b5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

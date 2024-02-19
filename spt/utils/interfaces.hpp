@@ -17,6 +17,9 @@
 #include "vphysics_interface.h"
 #include "toolframework/itoolentity.h"
 #include "vstdlib/random.h"
+#include "engine\IStaticPropMgr.h"
+
+class IGameMovement;
 
 namespace interfaces
 {
@@ -32,7 +35,7 @@ namespace interfaces
 	extern IMaterialSystem* materialSystem;
 	extern IInputSystem* inputSystem;
 	extern ICvar* g_pCVar;
-	extern void* gm;
+	extern IGameMovement* gm;
 	extern IClientEntityList* entList;
 	extern IVModelInfo* modelInfo;
 	extern IBaseClientDLL* clientInterface;
@@ -41,4 +44,5 @@ namespace interfaces
 	extern IServerPluginHelpers* pluginHelpers;
 	extern IPhysicsCollision* physicsCollision;
     extern IServerTools* server_tools;
+	extern IStaticPropMgrServer* staticpropmgr;
 } // namespace interfaces
