@@ -70,32 +70,32 @@ static void MeshRender(MeshRendererDelegate& mr)
 		for (auto& meshEntry : data.offlineStaticMeshes)
 		{
 			OfflineStaticMesh* offlineMesh = meshEntry.second;
-			if (offlineMesh->appendFunctions.empty())
-			{
-				continue;
-			}
+            if (offlineMesh->appendFunctions.empty())
+            {
+                continue;
+            }
 
-			if (offlineMesh->needsRebuild)
-			{
-				if (offlineMesh->mesh.Valid())
-				{
-					offlineMesh->mesh.Destroy();
-				}
+            if (offlineMesh->needsRebuild)
+            {
+                if (offlineMesh->mesh.Valid())
+                {
+                    offlineMesh->mesh.Destroy();
+                }
 
-				// This totally copies the mesh and deletes the original, but maybe that's fine?
-				// The destructor supposedly deletes the mesh, but this is calling the destructor
-				// immediately. This doesn't make any sense.
-				offlineMesh->mesh = spt_meshBuilder.CreateStaticMesh(
-				    [&](MeshBuilderDelegate& builder)
-				    {
-					    for (auto& func : offlineMesh->appendFunctions)
-					    {
-						    func(builder);
-					    }
-				    });
-				offlineMesh->valid = true;
-				offlineMesh->needsRebuild = false;
-			}
+                // This totally copies the mesh and deletes the original, but maybe that's fine?
+                // The destructor supposedly deletes the mesh, but this is calling the destructor
+                // immediately. This doesn't make any sense.
+                offlineMesh->mesh = spt_meshBuilder.CreateStaticMesh(
+                    [&](MeshBuilderDelegate& builder)
+                    {
+                        for (auto& func : offlineMesh->appendFunctions)
+                        {
+                            func(builder);
+                        }
+                    });
+                offlineMesh->valid = true;
+                offlineMesh->needsRebuild = false;
+            }
 
 			if (!offlineMesh->valid || !offlineMesh->mesh.Valid())
 			{
