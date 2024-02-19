@@ -255,11 +255,11 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\orangebox\lib\common;SDK\orangebox\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\orangebox\lib\common;SDK\orangebox\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
