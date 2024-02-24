@@ -1,6 +1,8 @@
 #include "stdafx.hpp"
 #include "lua_lib_game.hpp"
 #include "interfaces.hpp"
+#include "lua_lib_math.hpp"
+#include "ent_utils.hpp"
 #include "../../demo.hpp"
 #include "spt/features/taspause.hpp"
 
@@ -81,6 +83,107 @@ static const luaL_Reg game_class[] = {
 	{"get_directory", GetGameDirectory},
 	{"is_playing_demo", IsPlayingDemo},
 	{nullptr, nullptr}};
+static int Trace(lua_State *L) {
+    // Usage: game.trace(pos: vec3, angle: vec3, mask: number, filter: string[]|nil)
+    if (!LuaMathLibrary::LuaIsVector3D(L, 1)) {
+        return luaL_error(L, "game.trace: argument 1 is not a vector (vec3) (expected ray start position)");
+    }
+
+    if (!LuaMathLibrary::LuaIsAngle(L, 2)) {
+        return luaL_error(L, "game.trace: argument 2 is not an angle (vec3) (expected ray direction)");
+    }
+
+    if (!lua_isnumber(L, 3)) {
+        return luaL_error(L, "game.trace: argument 3 is not a number (expected mask)");
+    }
+
+    if (lua_gettop(L) >= 4 && !lua_istable(L, 4) && !lua_isnil(L, 4)) {
+        return luaL_error(L, "game.trace: argument 4 is not a table or nil (expected filter)");
+    }
+
+    Vector start = LuaMathLibrary::LuaGetVector3D(L, 1);
+    QAngle angle = LuaMathLibrary::LuaGetAngle(L, 2);
+    int mask = lua_tointeger(L, 3);
+    int filter_raw[4];
+    CTraceFilter* filter = reinterpret_cast<CTraceFilter*>(filter_raw);
+
+    auto server_dll = (DWORD)GetModuleHandle("server.dll");
+    //235D10
+    typedef void* (__thiscall *CTraceFilterSimpleClassnameList_t)(void*, void*, int);
+    auto CTraceFilterSimpleClassnameList = (CTraceFilterSimpleClassnameList_t)(server_dll + 0x235D10);
+    CTraceFilterSimpleClassnameList(filter, nullptr, COLLISION_GROUP_NONE);
+
+    //235D40
+    typedef void (__thiscall *AddClassnameToIgnore_t)(void*, const char*);
+    auto AddClassnameToIgnore = (AddClassnameToIgnore_t)(server_dll + 0x235D40);
+    if(lua_istable(L, 4)) {
+        lua_pushnil(L);
+        while(lua_next(L, 4) != 0) {
+            if(lua_isstring(L, -1)) {
+                AddClassnameToIgnore(filter, lua_tostring(L, -1));
+            }
+            lua_pop(L, 1);
+        }
+    } else {
+        AddClassnameToIgnore(filter, "prop_physics");
+        AddClassnameToIgnore(filter, "func_physbox" );
+        AddClassnameToIgnore(filter, "npc_portal_turret_floor" );
+        AddClassnameToIgnore(filter, "prop_energy_ball" );
+        AddClassnameToIgnore(filter, "npc_security_camera" );
+        AddClassnameToIgnore(filter, "player" );
+        AddClassnameToIgnore(filter, "simple_physics_prop" );
+        AddClassnameToIgnore(filter, "simple_physics_brush" );
+        AddClassnameToIgnore(filter, "prop_ragdoll" );
+        AddClassnameToIgnore(filter, "prop_glados_core" );
+        AddClassnameToIgnore(filter, "prop_portal" );
+    }
+
+    Vector forward;
+    AngleVectors(angle, &forward);
+    Vector end = start + forward * 8192.0f;
+
+    Ray_t ray;
+    ray.Init(start, end);
+
+    trace_t tr;
+    interfaces::engineTraceServer->TraceRay(
+            ray,
+            mask,
+            filter,
+            &tr
+    );
+
+//    if(!tr.DidHit()) {
+//        lua_pushnil(L);
+//        return 1;
+//    }
+
+    // Result is a table of
+    // {endPos: vec3, normal: vec3, entityID: number}
+
+    lua_newtable(L);
+    LuaMathLibrary::LuaPushVector3D(L, tr.endpos);
+    lua_setfield(L, -2, "endPos");
+    LuaMathLibrary::LuaPushVector3D(L, tr.plane.normal);
+    lua_setfield(L, -2, "normal");
+    int entityIndex = tr.m_pEnt != nullptr ? utils::GetIndex(tr.m_pEnt) : -1;
+    if(entityIndex == -1) {
+        lua_pushnil(L);
+    } else {
+        lua_pushinteger(L, entityIndex);
+    }
+    lua_setfield(L, -2, "entityID");
+    return 1;
+}
+
+static const struct luaL_Reg game_class[] = {
+    //        {"is_paused", IsGamePaused},
+    {"get_client_tick", GetClientTick},
+    {"get_server_tick", GetServerTick},
+    {"get_directory", GetGameDirectory},
+    {"is_playing_demo", IsPlayingDemo},
+//    {"trace", Trace},
+    {nullptr, nullptr}};
 
 LuaGameLibrary::LuaGameLibrary() : LuaLibrary("game")
 {
@@ -156,6 +259,20 @@ end
 
 ---@return bool Is the game playing a demo.
 function game.is_playing_demo()
+end
+
+---@class trace
+---@field endPos vec3 The end position of the trace.
+---@field normal vec3 The normal of the trace.
+---@field entityID number The entity ID of the trace or nil if no entity was hit.
+local trace = {}
+
+---@param pos vec3 The start position of the ray.
+---@param angle vec3 The direction of the ray.
+---@param mask number The mask to use for the trace.
+---@param filter string[]|nil The list of entities to ignore.
+---@return trace|nil The result of the trace.
+function game.trace(pos, angle, mask, filter)
 end
 
 ---@return thread|any The thread that is running the callback.

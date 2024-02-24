@@ -68,7 +68,7 @@ namespace interfaces
 	IServerPluginHelpers* pluginHelpers = nullptr;
 	IPhysicsCollision* physicsCollision = nullptr;
 	IStaticPropMgrServer* staticpropmgr = nullptr;
-	IServerTools* server_tools = nullptr;
+    IServerTools* server_tools = nullptr;
 } // namespace interfaces
 
 ConVar* _viewmodel_fov = nullptr;
