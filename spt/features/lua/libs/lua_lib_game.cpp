@@ -3,6 +3,7 @@
 #include "interfaces.hpp"
 #include "lua_lib_math.hpp"
 #include "ent_utils.hpp"
+#include "../../demo.hpp"
 
 LuaGameLibrary lua_game_library;
 
@@ -31,6 +32,12 @@ static int GetGameDirectory(lua_State* L)
 {
 	lua_pushstring(L, interfaces::engine->GetGameDirectory());
 	return 1;
+}
+
+static int IsPlayingDemo(lua_State* L)
+{
+    lua_pushboolean(L, spt_demostuff.Demo_IsPlayingBack());
+    return 1;
 }
 
 static int Trace(lua_State *L) {
@@ -131,6 +138,7 @@ static const struct luaL_Reg game_class[] = {
     {"get_client_tick", GetClientTick},
     {"get_server_tick", GetServerTick},
     {"get_directory", GetGameDirectory},
+    {"is_playing_demo", IsPlayingDemo},
 //    {"trace", Trace},
     {nullptr, nullptr}};
 
@@ -192,6 +200,10 @@ end
 
 ---@return string The game directory.
 function game.get_directory()
+end
+
+---@return bool Is the game playing a demo.
+function game.is_playing_demo()
 end
 
 ---@class trace

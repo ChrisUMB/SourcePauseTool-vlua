@@ -123,7 +123,7 @@ static int PortalGetMatrix(lua_State* L)
 {
 	auto portal_ent = LuaCheckPortalEntity(L, 1);
 	static int offset = spt_entprops.GetFieldOffset("CProp_Portal", "m_matrixThisToLinked", true);
-	auto matrix = reinterpret_cast<VMatrix*>(reinterpret_cast<uintptr_t>(portal_ent) + offset);
+	auto matrix = (VMatrix*)((uintptr_t)portal_ent + offset);
 	if (!matrix)
 	{
 		lua_pushnil(L);

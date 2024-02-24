@@ -15,6 +15,7 @@ public:
 	void StartAutorecord();
 	void StopAutorecord();
 
+    void** pDemoplayer = nullptr;
 	DECL_HOOK_CDECL(void, Stop);
 
 protected:
@@ -29,14 +30,15 @@ private:
 	int GetTotalTicks_Offset = 0;
 	int IsPlayingBack_Offset = 0;
 	int IsPlaybackPaused_Offset = 0;
-	void** pDemoplayer = nullptr;
 	int currentAutoRecordDemoNumber = 1;
 	int m_nDemoNumber_Offset = 0;
 	int m_bRecording_Offset = 0;
 	bool isAutoRecordingDemo = false;
 
 	DECL_HOOK_THISCALL(void, StopRecording, void*);
-	DECL_HOOK_THISCALL(bool, CDemoPlayer__StartPlayback, void*, const char* filename, bool as_time_demo);
+	DECL_HOOK_THISCALL(bool, CDemoPlayer__StartPlayback, void*, const char*, bool);
+	DECL_HOOK_THISCALL(void, CDemoPlayer__StopPlayback, void*);
+	DECL_HOOK_THISCALL(void, CDemoActionManager__Update, void*, bool, int, float);
 	DECL_HOOK_THISCALL(const char*, CDemoFile__ReadConsoleCommand, void*);
 	uintptr_t ORIG_Record = 0;
 	void OnFrame();

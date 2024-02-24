@@ -222,7 +222,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\orangebox\common;SDK\orangebox\public;SDK\orangebox\public\tier0;SDK\orangebox\public\tier1;SDK\orangebox\game\server;SDK\orangebox\game\client;SDK\orangebox\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>thirdparty\LuaJIT\include;spt\utils;thirdparty\curl\include;.;SDK\orangebox\common;SDK\orangebox\public;SDK\orangebox\public\tier0;SDK\orangebox\public\tier1;SDK\orangebox\game\server;SDK\orangebox\game\client;SDK\orangebox\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SSDK2007;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions);TARGET_NAME="$(TargetName).dll"</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -255,11 +255,11 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\orangebox\lib\common;SDK\orangebox\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\orangebox\lib\common;SDK\orangebox\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -522,7 +522,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\orangebox\common;SDK\orangebox\public;SDK\orangebox\public\tier0;SDK\orangebox\public\tier1;SDK\orangebox\game\server;SDK\orangebox\game\client;SDK\orangebox\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>thirdparty\LuaJIT\include;spt\utils;thirdparty\curl\include;.;SDK\orangebox\common;SDK\orangebox\public;SDK\orangebox\public\tier0;SDK\orangebox\public\tier1;SDK\orangebox\game\server;SDK\orangebox\game\client;SDK\orangebox\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SSDK2007;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions);TARGET_NAME="$(TargetName).dll"</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -557,11 +557,11 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib;lua51.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>thirdparty\curl\lib;SDK\orangebox\lib\common;SDK\orangebox\lib\public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>thirdparty\LuaJIT;thirdparty\curl\lib;SDK\orangebox\lib\common;SDK\orangebox\lib\public</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmtd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -1205,6 +1205,22 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClCompile Include="spt\features\ipc-spt.cpp" />
     <ClCompile Include="spt\features\isg.cpp" />
     <ClCompile Include="spt\features\leafvis.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_camera.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_console.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_entity.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_events.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_filesystem.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_game.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_input.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_math.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_memory.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_player.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_portal.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_render.cpp" />
+    <ClCompile Include="spt\features\lua\libs\lua_lib_system.cpp" />
+    <ClCompile Include="spt\features\lua\lua_commands.cpp" />
+    <ClCompile Include="spt\features\lua\lua_feature.cpp" />
+    <ClCompile Include="spt\features\lua\lua_util.cpp" />
     <ClCompile Include="spt\features\movement_vars.cpp" />
     <ClCompile Include="spt\features\overlay.cpp" />
     <ClCompile Include="spt\features\pause.cpp" />
@@ -1370,6 +1386,7 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <Library Include="..\..\lib\public\mathlib.lib" />
     <Library Include="..\..\lib\public\tier0.lib" />
     <Library Include="..\..\lib\public\tier1.lib" />
+    <Library Include="thirdparty\LuaJIT\lua51.lib" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h" />
@@ -1421,6 +1438,22 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClInclude Include="spt\features\game_fixes\rng.hpp" />
     <ClInclude Include="spt\features\generic.hpp" />
     <ClInclude Include="spt\features\hud.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_camera.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_console.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_entity.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_events.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_filesystem.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_game.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_input.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_math.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_memory.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_player.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_portal.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_render.hpp" />
+    <ClInclude Include="spt\features\lua\libs\lua_lib_system.hpp" />
+    <ClInclude Include="spt\features\lua\lua_commands.hpp" />
+    <ClInclude Include="spt\features\lua\lua_feature.hpp" />
+    <ClInclude Include="spt\features\lua\lua_util.hpp" />
     <ClInclude Include="spt\features\overlay.hpp" />
     <ClInclude Include="spt\features\playerio.hpp" />
     <ClInclude Include="spt\features\property_getter.hpp" />
@@ -1491,6 +1524,11 @@ copy "$(TargetPath)" "$(IntDir)..\builds\$(TargetFileName)"</Command>
     <ClInclude Include="thirdparty\Delegate.h" />
     <ClInclude Include="thirdparty\json.hpp" />
     <ClInclude Include="thirdparty\kmp-cpp.hpp" />
+    <ClInclude Include="thirdparty\LuaJIT\include\lauxlib.h" />
+    <ClInclude Include="thirdparty\LuaJIT\include\lua.h" />
+    <ClInclude Include="thirdparty\LuaJIT\include\lua.hpp" />
+    <ClInclude Include="thirdparty\LuaJIT\include\luaconf.h" />
+    <ClInclude Include="thirdparty\LuaJIT\include\lualib.h" />
     <ClInclude Include="thirdparty\md5.hpp" />
     <ClInclude Include="thirdparty\Signal.h" />
     <ClInclude Include="thirdparty\x86.h" />

@@ -11,8 +11,9 @@
 
 LuaPlayerLibrary lua_player_library;
 
-// Fix angles to between -180 and 180 degrees
-#define FIX_ANGLE(x) ((x) > 180 ? (x)-360 : (x) < -180 ? (x) + 360 : (x))
+static inline float FixAngle(float x) {
+    return x > 180 ? x-360 : x < -180 ? x + 360 : x;
+}
 
 static void ResetLocals(edict_t *) {
     lua_player_library.local_angle_offset = QAngle(0.0f, 0.0f, 0.0f);
@@ -47,7 +48,7 @@ static int PlayerSetPos(lua_State *L) {
 
 static int PlayerGetAng(lua_State *L) {
     QAngle ang;
-    EngineGetViewAngles(reinterpret_cast<float *>(&ang));
+    EngineGetViewAngles(&ang.x);
     LuaMathLibrary::LuaPushAngle(L, ang);
     return 1;
 }
@@ -58,7 +59,7 @@ static int PlayerSetAng(lua_State *L) {
     }
 
     QAngle ang = LuaMathLibrary::LuaGetAngle(L, 1);
-    EngineSetViewAngles(reinterpret_cast<float *>(&ang));
+    EngineSetViewAngles(&ang.x);
     return 0;
 }
 
@@ -84,27 +85,26 @@ static int PlayerGetEyePos(lua_State *L) {
 
 static int PlayerTeleport(lua_State *L) {
     Vector pos;
-    Vector *p_pos = &pos;
     QAngle ang;
-    QAngle *p_ang = &ang;
     Vector vel;
-    Vector *p_vel = &vel;
+
+    Vector *p_pos = nullptr;
+    QAngle *p_ang = nullptr;
+    Vector *p_vel = nullptr;
+
     if (LuaMathLibrary::LuaIsVector3D(L, 1)) {
         pos = LuaMathLibrary::LuaGetVector3D(L, 1);
-    } else {
-        p_pos = nullptr;
+        p_pos = &pos;
     }
 
     if (LuaMathLibrary::LuaIsAngle(L, 2)) {
         ang = LuaMathLibrary::LuaGetAngle(L, 2);
-    } else {
-        p_ang = nullptr;
+        p_ang = &ang;
     }
 
     if (LuaMathLibrary::LuaIsVector3D(L, 3)) {
         vel = LuaMathLibrary::LuaGetVector3D(L, 3);
-    } else {
-        p_vel = nullptr;
+        p_vel = &vel;
     }
 
     PlayerTeleport(p_pos, p_ang, p_vel);
@@ -118,11 +118,11 @@ static int PlayerIsGrounded(lua_State *L) {
 
 static int PlayerGetLocalAng(lua_State *L) {
     QAngle ang;
-    EngineGetViewAngles(reinterpret_cast<float *>(&ang));
+    EngineGetViewAngles(&ang.x);
 
-    ang.x = FIX_ANGLE(ang.x - lua_player_library.local_angle_offset.x);
-    ang.y = FIX_ANGLE(ang.y - lua_player_library.local_angle_offset.y);
-    ang.z = FIX_ANGLE(ang.z - lua_player_library.local_angle_offset.z);
+    ang.x = FixAngle(ang.x - lua_player_library.local_angle_offset.x);
+    ang.y = FixAngle(ang.y - lua_player_library.local_angle_offset.y);
+    ang.z = FixAngle(ang.z - lua_player_library.local_angle_offset.z);
 
     LuaMathLibrary::LuaPushAngle(L, ang);
     return 1;
@@ -134,10 +134,10 @@ static int PlayerSetLocalAng(lua_State *L) {
     }
 
     QAngle ang = LuaMathLibrary::LuaGetAngle(L, 1);
-    ang.x = FIX_ANGLE(ang.x + lua_player_library.local_angle_offset.x);
-    ang.y = FIX_ANGLE(ang.y + lua_player_library.local_angle_offset.y);
-    ang.z = FIX_ANGLE(ang.z + lua_player_library.local_angle_offset.z);
-    EngineSetViewAngles(reinterpret_cast<float *>(&ang));
+    ang.x = FixAngle(ang.x + lua_player_library.local_angle_offset.x);
+    ang.y = FixAngle(ang.y + lua_player_library.local_angle_offset.y);
+    ang.z = FixAngle(ang.z + lua_player_library.local_angle_offset.z);
+    EngineSetViewAngles(&ang.x);
     return 0;
 }
 
@@ -373,7 +373,7 @@ void LuaPlayerLibrary::UpdateLocals(const Vector &old_pos,
     local_position_origin = new_pos;
     local_position_offset = new_offset;
 
-    local_angle_offset.x = FIX_ANGLE(new_ang.x - old_ang.x + local_angle_offset.x);
-    local_angle_offset.y = FIX_ANGLE(new_ang.y - old_ang.y + local_angle_offset.y);
-    local_angle_offset.z = FIX_ANGLE(new_ang.z - old_ang.z + local_angle_offset.z);
+    local_angle_offset.x = FixAngle(new_ang.x - old_ang.x + local_angle_offset.x);
+    local_angle_offset.y = FixAngle(new_ang.y - old_ang.y + local_angle_offset.y);
+    local_angle_offset.z = FixAngle(new_ang.z - old_ang.z + local_angle_offset.z);
 }

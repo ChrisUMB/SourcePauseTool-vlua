@@ -2,14 +2,14 @@
 
 #include "../lua_feature.hpp"
 
-class LuaSyscallLibrary : public LuaLibrary
+class LuaSystemLibrary : public LuaLibrary
 {
 public:
-	explicit LuaSyscallLibrary();
+	explicit LuaSystemLibrary();
 
 	void Load(lua_State* L) override;
 
 	const std::string& GetLuaSource() override;
 };
 
-extern LuaSyscallLibrary lua_syscall_library;
+extern LuaSystemLibrary lua_system_library;
