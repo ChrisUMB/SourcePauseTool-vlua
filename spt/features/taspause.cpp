@@ -1,33 +1,13 @@
 #include "stdafx.hpp"
-#include "..\feature.hpp"
+#include "taspause.hpp"
 #include "convar.hpp"
 #include "..\utils\game_detection.hpp"
 
 typedef void(__cdecl* _Host_AccumulateTime)(float dt);
 ConVar tas_pause("tas_pause", "0", 0, "Does a pause where you can look around when the game is paused.\n");
 
-class TASPause : public FeatureWrapper<TASPause>
-{
-public:
-protected:
-	virtual bool ShouldLoadFeature() override;
 
-	virtual void InitHooks() override;
-
-	virtual void LoadFeature() override;
-
-	virtual void UnloadFeature() override;
-
-private:
-	float* pHost_Frametime = nullptr;
-	float* pHost_Realtime = nullptr;
-	uintptr_t ORIG__Host_RunFrame = 0;
-	_Host_AccumulateTime ORIG_Host_AccumulateTime = nullptr;
-
-	static void __cdecl HOOKED_Host_AccumulateTime(float dt);
-};
-
-static TASPause spt_taspause;
+TASPause spt_taspause;
 
 bool TASPause::ShouldLoadFeature()
 {

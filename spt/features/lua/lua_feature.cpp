@@ -24,12 +24,12 @@
 #include "spt/utils/game_detection.hpp"
 #include "libs/lua_lib_camera.hpp"
 #include "demofile/demoformat.h"
+#include "spt/features/taspause.hpp"
 
 namespace fs = std::filesystem;
 
-extern ConVar tas_pause;
-
 LuaFeature spt_lua;
+extern ConVar tas_pause;
 
 bool LuaFeature::ShouldLoadFeature()
 {
@@ -59,20 +59,32 @@ void LuaFeature::LoadFeature()
 		RegisterLibrary(&lua_portal_library);
 	}
 
-	void (*tick)() = []()
+	if (SetPausedSignal.Works)
 	{
-		if (!tas_pause.GetBool())
+		void (*set_paused)(void*, bool) = [](void*, const bool is_paused)
 		{
-			lua_events_library.InvokeEvent("tick",
-			                               [](lua_State* L)
+			lua_events_library.InvokeEvent("set_paused",
+			                               [&](lua_State* L)
 			                               {
 				                               lua_newtable(L);
+				                               lua_pushboolean(L, is_paused);
+				                               lua_setfield(L, -2, "is_paused");
 			                               });
-		}
+		};
+
+		SetPausedSignal.Connect(set_paused);
+	}
+
+	void (*tick)() = []()
+	{
+		lua_events_library.InvokeEvent("tick",
+		                               [](lua_State* L)
+		                               {
+			                               lua_newtable(L);
+		                               });
 	};
 
-	// TickSignal.Connect(tick);
-	AfterFramesSignal.Connect(tick);
+	TickSignal.Connect(tick);
 
 	void (*level_init)(const char*) = [](char const* map)
 	{
@@ -224,6 +236,15 @@ void LuaFeature::LoadFeature()
 			                               {
 				                               lua_newtable(L);
 			                               });
+
+			// if (spt_taspause.GetHostFrametime() != 0)
+			// {
+			// 	lua_events_library.InvokeEvent("tas_tick",
+			// 	                               [](lua_State* L)
+			// 	                               {
+			// 		                               lua_newtable(L);
+			// 	                               });
+			// }
 		};
 
 		AfterFramesSignal.Connect(after_frames);

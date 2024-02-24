@@ -2,6 +2,7 @@
 #include "lua_lib_game.hpp"
 #include "interfaces.hpp"
 #include "../../demo.hpp"
+#include "spt/features/taspause.hpp"
 
 LuaGameLibrary lua_game_library;
 
@@ -17,14 +18,34 @@ static int GetServerTick(lua_State* L)
 	return 1;
 }
 
-//static int IsGamePaused(lua_State *L) {
-//
-//
-//
-//    lua_pushboolean(L, *((int *) (modules::engine.base + 0x53050C)) !=
-//                       2); // checking if it's anything aside from active, consider it paused.
-//    return 1;
-//}
+extern ConVar tas_pause;
+
+static bool IsPaused()
+{
+	const auto engDLL = reinterpret_cast<DWORD>(GetModuleHandle("engine.dll"));
+	const int server_state = *reinterpret_cast<int*>(engDLL + 0x53050C);
+	const int client_state = *reinterpret_cast<int*>(engDLL + 0x3D1D80);
+	const int host_state = *reinterpret_cast<int*>(engDLL + 0x3954C4);
+	return server_state != 2 || client_state != 6 || host_state != 4;
+}
+
+static int IsPaused(lua_State* L)
+{
+	lua_pushboolean(L, IsPaused());
+	return 1;
+}
+
+static int IsSimulating(lua_State* L)
+{
+	lua_pushboolean(L, !IsPaused() && spt_taspause.GetHostFrametime() != 0);
+	return 1;
+}
+
+static int IsTasPaused(lua_State* L)
+{
+	lua_pushboolean(L, tas_pause.GetBool());
+	return 1;
+}
 
 static int GetGameDirectory(lua_State* L)
 {
@@ -34,19 +55,36 @@ static int GetGameDirectory(lua_State* L)
 
 static int IsPlayingDemo(lua_State* L)
 {
-    lua_pushboolean(L, spt_demostuff.Demo_IsPlayingBack());
-    return 1;
+	lua_pushboolean(L, spt_demostuff.Demo_IsPlayingBack());
+	return 1;
 }
 
-static const struct luaL_Reg game_class[] = {
-    //        {"is_paused", IsGamePaused},
-    {"get_client_tick", GetClientTick},
-    {"get_server_tick", GetServerTick},
-    {"get_directory", GetGameDirectory},
-    {"is_playing_demo", IsPlayingDemo},
-    {nullptr, nullptr}};
+static int GetEngineState(lua_State* L)
+{
+	auto eng = reinterpret_cast<DWORD>(GetModuleHandle("engine.dll")) + 0x36E69C;
+	eng = *(DWORD *)eng;
 
-LuaGameLibrary::LuaGameLibrary() : LuaLibrary("game") {}
+	typedef int (__thiscall *GetState_t)(void *);
+	const auto GetState = reinterpret_cast<GetState_t>((*(int **)eng)[4]);
+	lua_pushinteger(L, GetState((void*)eng));
+
+	return 1;
+}
+
+static const luaL_Reg game_class[] = {
+	{"is_paused", IsPaused},
+	{"is_simulating", IsSimulating},
+	{"get_engine_state", GetEngineState},
+	{"is_tas_paused", IsTasPaused},
+	{"get_client_tick", GetClientTick},
+	{"get_server_tick", GetServerTick},
+	{"get_directory", GetGameDirectory},
+	{"is_playing_demo", IsPlayingDemo},
+	{nullptr, nullptr}};
+
+LuaGameLibrary::LuaGameLibrary() : LuaLibrary("game")
+{
+}
 
 void LuaGameLibrary::Load(lua_State* L)
 {
@@ -90,8 +128,18 @@ function game.unpause()
     console.exec("unpause")
 end
 
----@return boolean Is the game paused.
+---@return int state Current engine state of the game.
+function game.get_engine_state()
+end
+
+---@return boolean is_paused Is the game paused.
+--- Returns true if the game is paused, including being in the main menu, false otherwise.
 function game.is_paused()
+end
+
+---@return boolean is_simulating Is the game simulating.
+--- Returns true if the game is simulating, false otherwise. Importantly, this will return false when tas_pause is enabled.
+function game.is_simulating()
 end
 
 ---@return number The current client tick.

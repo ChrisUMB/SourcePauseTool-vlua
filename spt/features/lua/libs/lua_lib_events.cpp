@@ -82,6 +82,11 @@ events = {
    )" EVENT_TYPE_LUA(after_frames) R"(
    after_frames = new_event_type(),
 
+    --- Event that is called on after frames signal, but only if tas_pause is not set
+    ---@class tas_tick_event : event
+   )" EVENT_TYPE_LUA(tas_tick) R"(
+   tas_tick = new_event_type(),
+
     ---@class render_event : event
     )" EVENT_TYPE_LUA(render) R"(
     render = new_event_type(),
