@@ -22,24 +22,15 @@ static int GetServerTick(lua_State* L)
 
 extern ConVar tas_pause;
 
-static bool IsPaused()
-{
-	const auto engDLL = reinterpret_cast<DWORD>(GetModuleHandle("engine.dll"));
-	const int server_state = *reinterpret_cast<int*>(engDLL + 0x53050C);
-	const int client_state = *reinterpret_cast<int*>(engDLL + 0x3D1D80);
-	const int host_state = *reinterpret_cast<int*>(engDLL + 0x3954C4);
-	return server_state != 2 || client_state != 6 || host_state != 4;
-}
-
 static int IsPaused(lua_State* L)
 {
-	lua_pushboolean(L, IsPaused());
+	lua_pushboolean(L, IsGamePaused());
 	return 1;
 }
 
 static int IsSimulating(lua_State* L)
 {
-	lua_pushboolean(L, !IsPaused() && spt_taspause.GetHostFrametime() != 0);
+	lua_pushboolean(L, IsGameSimulating());
 	return 1;
 }
 
@@ -73,16 +64,6 @@ static int GetEngineState(lua_State* L)
 	return 1;
 }
 
-static const luaL_Reg game_class[] = {
-	{"is_paused", IsPaused},
-	{"is_simulating", IsSimulating},
-	{"get_engine_state", GetEngineState},
-	{"is_tas_paused", IsTasPaused},
-	{"get_client_tick", GetClientTick},
-	{"get_server_tick", GetServerTick},
-	{"get_directory", GetGameDirectory},
-	{"is_playing_demo", IsPlayingDemo},
-	{nullptr, nullptr}};
 static int Trace(lua_State *L) {
     // Usage: game.trace(pos: vec3, angle: vec3, mask: number, filter: string[]|nil)
     if (!LuaMathLibrary::LuaIsVector3D(L, 1)) {
@@ -176,14 +157,18 @@ static int Trace(lua_State *L) {
     return 1;
 }
 
-static const struct luaL_Reg game_class[] = {
-    //        {"is_paused", IsGamePaused},
-    {"get_client_tick", GetClientTick},
-    {"get_server_tick", GetServerTick},
-    {"get_directory", GetGameDirectory},
-    {"is_playing_demo", IsPlayingDemo},
-//    {"trace", Trace},
-    {nullptr, nullptr}};
+
+static const luaL_Reg game_class[] = {
+	{"is_paused", IsPaused},
+	{"is_simulating", IsSimulating},
+	{"get_engine_state", GetEngineState},
+	{"is_tas_paused", IsTasPaused},
+	{"get_client_tick", GetClientTick},
+	{"get_server_tick", GetServerTick},
+	{"get_directory", GetGameDirectory},
+	{"is_playing_demo", IsPlayingDemo},
+	{"trace", Trace},
+	{nullptr, nullptr}};
 
 LuaGameLibrary::LuaGameLibrary() : LuaLibrary("game")
 {

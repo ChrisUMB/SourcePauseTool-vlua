@@ -20,9 +20,7 @@
 #include "lua_commands.hpp"
 #include "lua_util.hpp"
 #include "signals.hpp"
-#include "spt/sptlib-wrapper.hpp"
 #include "spt/utils/game_detection.hpp"
-#include "libs/lua_lib_camera.hpp"
 #include "demofile/demoformat.h"
 #include "spt/features/taspause.hpp"
 
@@ -58,33 +56,6 @@ void LuaFeature::LoadFeature()
 	{
 		RegisterLibrary(&lua_portal_library);
 	}
-
-	if (SetPausedSignal.Works)
-	{
-		void (*set_paused)(void*, bool) = [](void*, const bool is_paused)
-		{
-			lua_events_library.InvokeEvent("set_paused",
-			                               [&](lua_State* L)
-			                               {
-				                               lua_newtable(L);
-				                               lua_pushboolean(L, is_paused);
-				                               lua_setfield(L, -2, "is_paused");
-			                               });
-		};
-
-		SetPausedSignal.Connect(set_paused);
-	}
-
-	void (*tick)() = []()
-	{
-		lua_events_library.InvokeEvent("tick",
-		                               [](lua_State* L)
-		                               {
-			                               lua_newtable(L);
-		                               });
-	};
-
-	TickSignal.Connect(tick);
 
 	void (*level_init)(const char*) = [](char const* map)
 	{
@@ -225,29 +196,6 @@ void LuaFeature::LoadFeature()
 		};
 
 		DemoUpdateSignal.Connect(demo_stop_playback);
-	}
-
-	if (AfterFramesSignal.Works)
-	{
-		void (*after_frames)() = []()
-		{
-			lua_events_library.InvokeEvent("after_frames",
-			                               [](lua_State* L)
-			                               {
-				                               lua_newtable(L);
-			                               });
-
-			// if (spt_taspause.GetHostFrametime() != 0)
-			// {
-			// 	lua_events_library.InvokeEvent("tas_tick",
-			// 	                               [](lua_State* L)
-			// 	                               {
-			// 		                               lua_newtable(L);
-			// 	                               });
-			// }
-		};
-
-		AfterFramesSignal.Connect(after_frames);
 	}
 }
 
@@ -455,8 +403,10 @@ namespace patterns
 	PATTERNS(TriggerStartTouch, "5135", "55 8B 6C 24 08 56 8B F1 8B 06 8B 90");
 	PATTERNS(GetPortalCallQueue, "5135", "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3");
 
-    PATTERNS(NET_RunFrame, "5135", "DD 44 24 04 DD 05 ?? ?? ?? ?? D8 E9 D9 C9 DD 1D ?? ?? ?? ?? D9 E8 D9 C9 DB F1 77 0C DD D9 D9 EE DB F1 76 04 DD D9 EB 02 DD D8 A1 ?? ?? ?? ?? D8 48 2C DC 05 ?? ?? ?? ?? DD 1D ?? ?? ?? ?? E8");
-
+	PATTERNS(NET_RunFrame,
+	         "5135",
+	         "DD 44 24 04 DD 05 ?? ?? ?? ?? D8 E9 D9 C9 DD 1D ?? ?? ?? ?? D9 E8 D9 C9 DB F1 77 0C DD D9 D9 EE DB F1 76 04 DD D9 EB 02 DD D8 A1 ?? ?? ?? ?? D8 48 2C DC 05 ?? ?? ?? ?? DD 1D ?? ?? ?? ?? E8")
+	;
 } // namespace patterns
 
 void LuaFeature::InitHooks()
@@ -466,7 +416,7 @@ void LuaFeature::InitHooks()
 	HOOK_FUNCTION(server, TeleportTouchingEntity);
 	HOOK_FUNCTION(server, PortalNewLocation);
 	HOOK_FUNCTION(server, TriggerStartTouch);
-    HOOK_FUNCTION(engine, NET_RunFrame);
+	HOOK_FUNCTION(engine, NET_RunFrame);
 }
 
 void LuaFeature::HOOKED_TriggerStartTouch(void* thisptr, int _edx, void* other)
@@ -538,8 +488,6 @@ void __fastcall LuaFeature::HOOKED_TeleportTouchingEntity(void* thisptr, int _ed
 		return;
 	}
 
-	int hammer_id = (int)((uintptr_t)other + spt_entprops.GetFieldOffset("CBaseEntity", "m_iHammerID", true));
-
 	Vector* p_pos =
 		(Vector*)((uintptr_t)other + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
 
@@ -599,10 +547,51 @@ void __fastcall LuaFeature::HOOKED_TeleportTouchingEntity(void* thisptr, int _ed
 	}
 }
 
-int LuaFeature::HOOKED_NET_RunFrame(double time) {
-    lua_events_library.InvokeEvent("net_runframe", [](lua_State* L) {
-        lua_newtable(L);
-    });
+int LuaFeature::HOOKED_NET_RunFrame(double time)
+{
+	lua_events_library.InvokeEvent("tick",
+	                               [](lua_State* L)
+	                               {
+		                               lua_newtable(L);
+	                               });
 
-    spt_lua.ORIG_NET_RunFrame(time);
+	if (IsGameSimulating())
+	{
+		lua_events_library.InvokeEvent("sim_tick",
+		                               [](lua_State* L)
+		                               {
+			                               lua_newtable(L);
+		                               });
+	}
+
+	spt_lua.ORIG_NET_RunFrame(time);
+}
+
+ServerState GetServerState()
+{
+	const auto engDLL = reinterpret_cast<DWORD>(GetModuleHandle("engine.dll"));
+	return *reinterpret_cast<ServerState*>(engDLL + 0x53050C);
+}
+
+ClientSignonState GetClientState()
+{
+	const auto engDLL = reinterpret_cast<DWORD>(GetModuleHandle("engine.dll"));
+	return *reinterpret_cast<ClientSignonState*>(engDLL + 0x3D1D80);
+}
+
+HostState GetHostState()
+{
+	const auto engDLL = reinterpret_cast<DWORD>(GetModuleHandle("engine.dll"));
+	return *reinterpret_cast<HostState*>(engDLL + 0x3954C4);
+}
+
+bool IsGamePaused()
+{
+	return GetServerState() != ServerState::ACTIVE || GetClientState() != ClientSignonState::FULL || GetHostState()
+	       != HostState::RUN;
+}
+
+bool IsGameSimulating()
+{
+	return !IsGamePaused() && spt_taspause.GetHostFrametime() != 0;
 }

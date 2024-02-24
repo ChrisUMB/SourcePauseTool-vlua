@@ -69,23 +69,14 @@ end
 ---@class events
 events = {
     ---@class tick_event : event
-    ---@field tick number The tick number
+    ---Any time the engine ticks, this will occur even in the main menu.
     )" EVENT_TYPE_LUA(tick) R"(
     tick = new_event_type(),
 
-    ---@class frame_event : event
-    ---@field delta number The delta time since the last frame
-    )" EVENT_TYPE_LUA(frame) R"(
-    frame = new_event_type(),
-
-    ---@class after_frames_event : event
-   )" EVENT_TYPE_LUA(after_frames) R"(
-   after_frames = new_event_type(),
-
-    --- Event that is called on after frames signal, but only if tas_pause is not set
-    ---@class tas_tick_event : event
-   )" EVENT_TYPE_LUA(tas_tick) R"(
-   tas_tick = new_event_type(),
+    ---@class tick_event : event
+    ---Any time the engine ticks and is simulating, this will only occur in-game and in a map, but not while paused (including tas_pause).
+    )" EVENT_TYPE_LUA(sim_tick) R"(
+    sim_tick = new_event_type(),
 
     ---@class render_event : event
     )" EVENT_TYPE_LUA(render) R"(

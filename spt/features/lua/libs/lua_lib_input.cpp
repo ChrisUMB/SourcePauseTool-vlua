@@ -27,7 +27,7 @@ function input_key:hold(ticks)
 
     if ticks then
         game.async(function()
-            events.tick:wait(ticks)
+            events.sim_tick:wait(ticks)
             self:release()
         end)
     end
@@ -38,7 +38,7 @@ function input_key:tap()
     self:hold()
 
     game.async(function()
-        events.tick:wait()
+        events.sim_tick:wait()
         self:release()
     end)
 end
