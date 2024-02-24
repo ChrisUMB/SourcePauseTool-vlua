@@ -1,9 +1,11 @@
 #include "stdafx.hpp"
 #include "lua_lib_entity.hpp"
+
 #include "interfaces.hpp"
 #include "ent_utils.hpp"
 #include "../../ent_props.hpp"
 #include "lua_lib_math.hpp"
+#include "spt/features/playerio.hpp"
 
 LuaEntityLibrary lua_entity_library;
 
@@ -44,10 +46,44 @@ void LuaEntityLibrary::LuaPushEntity(lua_State* L, void* entity)
 	lua_setfield(L, -2, "data");
 }
 
-void LuaEntityLibrary::Teleport(void *entity, const Vector *pos, const QAngle *ang, const Vector *vel) {
-	int *p_vtable = reinterpret_cast<int *>(entity);
-	(*(void (__thiscall **)(void *, const Vector *, const QAngle *, const Vector *)) (*p_vtable
-											  + 420))(entity, pos, ang, vel);
+void LuaEntityLibrary::Teleport(void* entity, const Vector* pos, const QAngle* ang, const Vector* vel)
+{
+	int* p_vtable = reinterpret_cast<int*>(entity);
+	(*(void (__thiscall **)(void*, const Vector*, const QAngle*, const Vector*))(*p_vtable
+		+ 420))(entity, pos, ang, vel);
+}
+
+static int EntityCreate(lua_State* L)
+{
+	// auto name = luaL_checkstring(L, 1);
+
+	const auto ent = interfaces::server_tools->CreateEntityByName("prop_physics");
+	auto* pEntity = (CBaseEntity*)ent;
+
+	auto server_dll = (DWORD)GetModuleHandle("server.dll");
+
+	// typedef void (*PrecacheModel_t)(void *, const char*);
+	// ((PrecacheModel_t)(server_dll + 0xE6A50))(pEntity, "models/props/metal_box.mdl");
+
+	typedef void (__thiscall *SetModel_t)(void *, const char*);
+	((SetModel_t)(server_dll + 0xD5590))(pEntity, "models/props/metal_box.mdl");
+
+	int m_iName_off = spt_entprops.GetFieldOffset("CBaseEntity", "m_iName", true);
+	*(string_t*) ((uintptr_t) pEntity + m_iName_off) = MAKE_STRING("box");
+
+	int m_spawnflags_off = spt_entprops.GetFieldOffset("CBaseEntity", "m_spawnflags", true);
+	*(int*) ((uintptr_t) pEntity + m_spawnflags_off) = 0x000100;
+
+	// pEntity->Precache();
+
+
+
+	typedef void (__cdecl *DispatchSpawn_t)(void*);
+	((DispatchSpawn_t)(server_dll + 0x2307F0))(pEntity);
+
+	const Vector v = spt_playerio.m_vecAbsOrigin.GetValue();
+	LuaEntityLibrary::Teleport(pEntity, &v, nullptr, nullptr);
+	return 0;
 }
 
 static int EntityFromID(lua_State* L)
@@ -273,6 +309,7 @@ static int EntityGetCollisionMax(lua_State* L)
 }
 
 static const struct luaL_Reg entity_class[] = {{"_list", EntityList},
+                                               {"create", EntityCreate},
                                                {"from_id", EntityFromID},
                                                {"from_hammer_id", EntityFromHammerID},
                                                {"get_id", EntityGetID},

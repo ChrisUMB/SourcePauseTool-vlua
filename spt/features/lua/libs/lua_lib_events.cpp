@@ -78,6 +78,10 @@ events = {
     )" EVENT_TYPE_LUA(frame) R"(
     frame = new_event_type(),
 
+    ---@class after_frames_event : event
+   )" EVENT_TYPE_LUA(after_frames) R"(
+   after_frames = new_event_type(),
+
     ---@class render_event : event
     )" EVENT_TYPE_LUA(render) R"(
     render = new_event_type(),

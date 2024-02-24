@@ -27,6 +27,8 @@
 
 namespace fs = std::filesystem;
 
+extern ConVar tas_pause;
+
 LuaFeature spt_lua;
 
 bool LuaFeature::ShouldLoadFeature()
@@ -59,18 +61,18 @@ void LuaFeature::LoadFeature()
 
 	void (*tick)() = []()
 	{
-		static int ticks = 0;
-
-		lua_events_library.InvokeEvent("tick",
-		                               [](lua_State* L)
-		                               {
-			                               lua_newtable(L);
-			                               lua_pushinteger(L, ++ticks);
-			                               lua_setfield(L, -2, "tick");
-		                               });
+		if (!tas_pause.GetBool())
+		{
+			lua_events_library.InvokeEvent("tick",
+			                               [](lua_State* L)
+			                               {
+				                               lua_newtable(L);
+			                               });
+		}
 	};
 
-	TickSignal.Connect(tick);
+	// TickSignal.Connect(tick);
+	AfterFramesSignal.Connect(tick);
 
 	void (*level_init)(const char*) = [](char const* map)
 	{
@@ -86,9 +88,29 @@ void LuaFeature::LoadFeature()
 	LevelInitSignal.Connect(level_init);
 
 	void (*client_active)(edict_t*) = [](edict_t* entity)
-	{ lua_events_library.InvokeEvent("client_active", [](lua_State* L) { lua_newtable(L); }); };
+	{
+		lua_events_library.InvokeEvent("client_active",
+		                               [](lua_State* L)
+		                               {
+			                               lua_newtable(L);
+		                               });
+	};
 
 	ClientActiveSignal.Connect(client_active);
+
+	if (JumpSignal.Works)
+	{
+		void (*jump)() = []()
+		{
+			lua_events_library.InvokeEvent("player_jump",
+			                               [](lua_State* L)
+			                               {
+				                               lua_newtable(L);
+			                               });
+		};
+
+		JumpSignal.Connect(jump);
+	}
 
 	if (OngroundSignal.Works)
 	{
@@ -99,13 +121,19 @@ void LuaFeature::LoadFeature()
 			if (was_on_ground && !has_ground_entity)
 			{
 				lua_events_library.InvokeEvent("player_ungrounded",
-				                               [](lua_State* L) { lua_newtable(L); });
+				                               [](lua_State* L)
+				                               {
+					                               lua_newtable(L);
+				                               });
 			}
 
 			if (!was_on_ground && has_ground_entity)
 			{
 				lua_events_library.InvokeEvent("player_grounded",
-				                               [](lua_State* L) { lua_newtable(L); });
+				                               [](lua_State* L)
+				                               {
+					                               lua_newtable(L);
+				                               });
 			}
 
 			was_on_ground = has_ground_entity;
@@ -117,7 +145,7 @@ void LuaFeature::LoadFeature()
 	if (DemoStartPlaybackSignal.Works)
 	{
 		void (*demo_start_playback)(const char*, bool as_time_demo) =
-		    [](const char* filename, bool as_time_demo)
+			[](const char* filename, bool as_time_demo)
 		{
 			lua_events_library.InvokeEvent("demo_start",
 			                               [&](lua_State* L)
@@ -127,7 +155,7 @@ void LuaFeature::LoadFeature()
 				                               void** demoplayer = spt_demostuff.pDemoplayer;
 				                               int* demo_file = ((int*)*demoplayer) + 1;
 				                               demoheader_t demo_header =
-				                                   *(demoheader_t*)(demo_file + 65);
+					                               *(demoheader_t*)(demo_file + 65);
 
 				                               lua_pushstring(L, filename);
 				                               lua_setfield(L, -2, "file_name");
@@ -158,7 +186,13 @@ void LuaFeature::LoadFeature()
 	if (DemoStopPlaybackSignal.Works)
 	{
 		void (*demo_stop_playback)() = []()
-		{ lua_events_library.InvokeEvent("demo_stop", [](lua_State* L) { lua_newtable(L); }); };
+		{
+			lua_events_library.InvokeEvent("demo_stop",
+			                               [](lua_State* L)
+			                               {
+				                               lua_newtable(L);
+			                               });
+		};
 
 		DemoStopPlaybackSignal.Connect(demo_stop_playback);
 	}
@@ -180,9 +214,25 @@ void LuaFeature::LoadFeature()
 
 		DemoUpdateSignal.Connect(demo_stop_playback);
 	}
+
+	if (AfterFramesSignal.Works)
+	{
+		void (*after_frames)() = []()
+		{
+			lua_events_library.InvokeEvent("after_frames",
+			                               [](lua_State* L)
+			                               {
+				                               lua_newtable(L);
+			                               });
+		};
+
+		AfterFramesSignal.Connect(after_frames);
+	}
 }
 
-void LuaFeature::UnloadFeature() {}
+void LuaFeature::UnloadFeature()
+{
+}
 
 void LuaFeature::InitDirectory()
 {
@@ -353,9 +403,13 @@ void LuaFeature::UnloadLibraries(lua_State* L)
 	}
 }
 
-LuaLibrary::LuaLibrary(std::string name) : name(std::move(name)) {}
+LuaLibrary::LuaLibrary(std::string name) : name(std::move(name))
+{
+}
 
-void LuaLibrary::Load(lua_State* L) {}
+void LuaLibrary::Load(lua_State* L)
+{
+}
 
 void LuaLibrary::Unload(lua_State* L)
 {
@@ -379,7 +433,6 @@ namespace patterns
 	         "83 EC 2C 53 55 56 8B F1 57"); //8D 8E ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B 06 8B 90");
 	PATTERNS(TriggerStartTouch, "5135", "55 8B 6C 24 08 56 8B F1 8B 06 8B 90");
 	PATTERNS(GetPortalCallQueue, "5135", "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3");
-
 } // namespace patterns
 
 void LuaFeature::InitHooks()
@@ -424,10 +477,10 @@ void LuaFeature::HOOKED_TriggerStartTouch(void* thisptr, int _edx, void* other)
 void __fastcall LuaFeature::HOOKED_PortalNewLocation(void* thisptr, int _edx, Vector& origin, QAngle& angles)
 {
 	Vector* p_pos =
-	    (Vector*)((uintptr_t)thisptr + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
+		(Vector*)((uintptr_t)thisptr + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
 
 	QAngle* p_ang =
-	    (QAngle*)((uintptr_t)thisptr + spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
+		(QAngle*)((uintptr_t)thisptr + spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
 
 	Vector& old_pos = *p_pos;
 	QAngle& old_ang = *p_ang;
@@ -463,10 +516,10 @@ void __fastcall LuaFeature::HOOKED_TeleportTouchingEntity(void* thisptr, int _ed
 	int hammer_id = (int)((uintptr_t)other + spt_entprops.GetFieldOffset("CBaseEntity", "m_iHammerID", true));
 
 	Vector* p_pos =
-	    (Vector*)((uintptr_t)other + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
+		(Vector*)((uintptr_t)other + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
 
 	Vector* p_rot =
-	    (Vector*)((uintptr_t)other + spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
+		(Vector*)((uintptr_t)other + spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
 
 	QAngle* p_ang = (QAngle*)((uintptr_t)other + spt_entprops.GetFieldOffset("CBaseEntity", "m_angRotation", true));
 
