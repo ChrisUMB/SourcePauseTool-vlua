@@ -7,6 +7,7 @@
 #include "spt/features/generic.hpp"
 #include "interfaces.hpp"
 #include "signals.hpp"
+#include "portal_utils.hpp"
 
 LuaPlayerLibrary lua_player_library;
 
@@ -160,9 +161,72 @@ static int PlayerGetLocalPosOrigin(lua_State *L) {
     return 1;
 }
 
-//static int PlayerTrace(lua_State *L) {
-//
-//}
+static int PlayerGetSGPos(lua_State *L) {
+    Vector pos;
+    QAngle ang;
+    calculateSGPosition(pos, ang);
+    LuaMathLibrary::LuaPushVector3D(L, pos);
+    return 1;
+}
+
+static int PlayerGetSGAng(lua_State *L) {
+    Vector pos;
+    QAngle ang;
+    calculateSGPosition(pos, ang);
+    LuaMathLibrary::LuaPushAngle(L, ang);
+    return 1;
+}
+
+static int PlayerTrace(lua_State *L) {
+    QAngle eyeAngles;
+    EngineGetViewAngles(reinterpret_cast<float *>(&eyeAngles));
+
+    Vector eyePosition = spt_generic.GetCameraOrigin();
+//    Vector eyePosition;
+//    calculateSGPosition(eyePosition, eyeAngles);
+
+    Vector forward;
+    AngleVectors(eyeAngles, &forward);
+
+    Vector start = eyePosition;// + forward * 24.0f;
+    Vector end = start + forward * 8192.0f;
+    Ray_t ray;
+    ray.Init(start, end);
+
+    auto server_dll = (DWORD)GetModuleHandle("server.dll");
+    int data[4];
+    //235D10
+    typedef void* (__thiscall *CTraceFilterSimpleClassnameList_t)(void*, void*, int);
+    auto CTraceFilterSimpleClassnameList = (CTraceFilterSimpleClassnameList_t)(server_dll + 0x235D10);
+    CTraceFilterSimpleClassnameList(data, nullptr, COLLISION_GROUP_NONE);
+
+    //235D40
+    typedef void (__thiscall *AddClassnameToIgnore_t)(void*, const char*);
+    auto AddClassnameToIgnore = (AddClassnameToIgnore_t)(server_dll + 0x235D40);
+    AddClassnameToIgnore(data, "prop_physics");
+    AddClassnameToIgnore(data, "func_physbox" );
+    AddClassnameToIgnore(data, "npc_portal_turret_floor" );
+    AddClassnameToIgnore(data, "prop_energy_ball" );
+    AddClassnameToIgnore(data, "npc_security_camera" );
+    AddClassnameToIgnore(data, "player" );
+    AddClassnameToIgnore(data, "simple_physics_prop" );
+    AddClassnameToIgnore(data, "simple_physics_brush" );
+    AddClassnameToIgnore(data, "prop_ragdoll" );
+    AddClassnameToIgnore(data, "prop_glados_core" );
+    AddClassnameToIgnore(data, "prop_portal" );
+
+//    int clonesFilter[100];
+//    clonesFilter[0] = 0x5E91A8;
+//    clonesFilter[1] = reinterpret_cast<int>(data);
+
+    trace_t tr;
+    interfaces::engineTraceServer->TraceRay(ray, MASK_SHOT_PORTAL, reinterpret_cast<ITraceFilter*>(data), &tr);
+//    interfaces::engineTraceClient->TraceRay(ray, MASK_SHOT_PORTAL, nullptr, &tr);
+//    interfaces::engineTraceClient->TraceRay(ray, (CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW), nullptr, &tr);
+
+    LuaMathLibrary::LuaPushVector3D(L, tr.endpos);
+    return 1;
+}
 
 static const struct luaL_Reg player_class[] = {
         {"get_pos",              PlayerGetPos},
@@ -172,6 +236,8 @@ static const struct luaL_Reg player_class[] = {
         {"get_vel",              PlayerGetVel},
         {"set_vel",              PlayerSetVel},
         {"get_eye_pos",          PlayerGetEyePos},
+        {"get_sg_pos",           PlayerGetSGPos},
+        {"get_sg_ang",           PlayerGetSGAng},
 
         {"get_local_ang",        PlayerGetLocalAng},
         {"_set_local_ang",       PlayerSetLocalAng},
@@ -181,7 +247,7 @@ static const struct luaL_Reg player_class[] = {
         {"get_local_pos_origin", PlayerGetLocalPosOrigin},
         {"teleport",             PlayerTeleport},
         {"is_grounded",          PlayerIsGrounded},
-        //        {"trace",       PlayerTrace},
+        {"trace",           PlayerTrace},
         {nullptr,                nullptr}
 };
 
