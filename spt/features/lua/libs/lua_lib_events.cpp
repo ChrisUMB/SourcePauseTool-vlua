@@ -171,6 +171,9 @@ events = {
     )" EVENT_TYPE_LUA(demo_stop) R"(
     demo_stop = new_event_type(),
 
+    ---@class net_runframe_event : event
+    )" EVENT_TYPE_LUA(net_runframe) R"(
+    net_runframe = new_event_type(),
 }
 
 local listeners = {}

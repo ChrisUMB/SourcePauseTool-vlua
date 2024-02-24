@@ -454,6 +454,9 @@ namespace patterns
 	         "83 EC 2C 53 55 56 8B F1 57"); //8D 8E ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B 06 8B 90");
 	PATTERNS(TriggerStartTouch, "5135", "55 8B 6C 24 08 56 8B F1 8B 06 8B 90");
 	PATTERNS(GetPortalCallQueue, "5135", "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3");
+
+    PATTERNS(NET_RunFrame, "5135", "DD 44 24 04 DD 05 ?? ?? ?? ?? D8 E9 D9 C9 DD 1D ?? ?? ?? ?? D9 E8 D9 C9 DB F1 77 0C DD D9 D9 EE DB F1 76 04 DD D9 EB 02 DD D8 A1 ?? ?? ?? ?? D8 48 2C DC 05 ?? ?? ?? ?? DD 1D ?? ?? ?? ?? E8");
+
 } // namespace patterns
 
 void LuaFeature::InitHooks()
@@ -463,6 +466,7 @@ void LuaFeature::InitHooks()
 	HOOK_FUNCTION(server, TeleportTouchingEntity);
 	HOOK_FUNCTION(server, PortalNewLocation);
 	HOOK_FUNCTION(server, TriggerStartTouch);
+    HOOK_FUNCTION(engine, NET_RunFrame);
 }
 
 void LuaFeature::HOOKED_TriggerStartTouch(void* thisptr, int _edx, void* other)
@@ -593,4 +597,12 @@ void __fastcall LuaFeature::HOOKED_TeleportTouchingEntity(void* thisptr, int _ed
 	{
 		lua_events_library.InvokeEvent("player_teleport", event_invocation);
 	}
+}
+
+int LuaFeature::HOOKED_NET_RunFrame(double time) {
+    lua_events_library.InvokeEvent("net_runframe", [](lua_State* L) {
+        lua_newtable(L);
+    });
+
+    spt_lua.ORIG_NET_RunFrame(time);
 }
