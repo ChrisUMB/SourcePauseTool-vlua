@@ -21,8 +21,6 @@ static int GetServerTick(lua_State* L)
 
 //static int IsGamePaused(lua_State *L) {
 //
-//
-//
 //    lua_pushboolean(L, *((int *) (modules::engine.base + 0x53050C)) !=
 //                       2); // checking if it's anything aside from active, consider it paused.
 //    return 1;

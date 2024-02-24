@@ -69,6 +69,10 @@ private:
 
 	using _GetPortalCallQueue = bool (*)();
 	_GetPortalCallQueue ORIG_GetPortalCallQueue = nullptr;
+
+    using _NET_RunFrame = int(__cdecl*)(double);
+    _NET_RunFrame ORIG_NET_RunFrame = nullptr;
+    static int __cdecl HOOKED_NET_RunFrame(double time);
 };
 
 extern LuaFeature spt_lua;
