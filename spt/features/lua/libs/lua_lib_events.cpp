@@ -82,6 +82,10 @@ events = {
     )" EVENT_TYPE_LUA(render) R"(
     render = new_event_type(),
 
+    ---@class hud_event : event
+    )" EVENT_TYPE_LUA(hud) R"(
+    hud = new_event_type(),
+
     ---@class level_init_event : event
     ---@field map_name string The name of the map
     )" EVENT_TYPE_LUA(level_init) R"(

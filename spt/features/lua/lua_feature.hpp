@@ -73,6 +73,10 @@ private:
 	using _NET_RunFrame = int(__cdecl*)(double);
 	_NET_RunFrame ORIG_NET_RunFrame = nullptr;
 	static int __cdecl HOOKED_NET_RunFrame(double time);
+
+    using _ClientDLL_FrameStageNotify = void(*)(int);
+    _ClientDLL_FrameStageNotify ORIG_ClientDLL_FrameStageNotify = nullptr;
+    static void HOOKED_ClientDLL_FrameStageNotify(int stage);
 };
 
 extern LuaFeature spt_lua;
