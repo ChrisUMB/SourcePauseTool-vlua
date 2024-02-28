@@ -17,12 +17,13 @@
 #include "libs/lua_lib_system.hpp"
 #include "libs/lua_lib_filesystem.hpp"
 #include "libs/lua_lib_portal.hpp"
+#include "libs/lua_lib_hud.hpp"
+#include "libs/lua_lib_camera.hpp"
 #include "lua_commands.hpp"
 #include "lua_util.hpp"
 #include "signals.hpp"
 #include "spt/sptlib-wrapper.hpp"
 #include "spt/utils/game_detection.hpp"
-#include "libs/lua_lib_camera.hpp"
 #include "demofile/demoformat.h"
 
 namespace fs = std::filesystem;
@@ -50,6 +51,8 @@ void LuaFeature::LoadFeature()
 	RegisterLibrary(&lua_player_library);
 	RegisterLibrary(&lua_entity_library);
 	RegisterLibrary(&lua_render_library);
+	RegisterLibrary(&lua_hud_library);
+    lua_hud_library.Init();
 	//    RegisterLibrary(&lua_camera_library);
 
 	if (utils::DoesGameLookLikePortal())
@@ -381,6 +384,7 @@ namespace patterns
 	PATTERNS(GetPortalCallQueue, "5135", "33 C0 39 05 ?? ?? ?? ?? 0F 9E C0 83 E8 01 25 ?? ?? ?? ?? C3");
 
     PATTERNS(NET_RunFrame, "5135", "DD 44 24 04 DD 05 ?? ?? ?? ?? D8 E9 D9 C9 DD 1D ?? ?? ?? ?? D9 E8 D9 C9 DB F1 77 0C DD D9 D9 EE DB F1 76 04 DD D9 EB 02 DD D8 A1 ?? ?? ?? ?? D8 48 2C DC 05 ?? ?? ?? ?? DD 1D ?? ?? ?? ?? E8");
+    PATTERNS(ClientDLL_FrameStageNotify, "5135", "8B 0D ?? ?? ?? ?? 85 C9 74 0F 8B 01 8B 54")
 
 } // namespace patterns
 
@@ -392,6 +396,7 @@ void LuaFeature::InitHooks()
 	HOOK_FUNCTION(server, PortalNewLocation);
 	HOOK_FUNCTION(server, TriggerStartTouch);
     HOOK_FUNCTION(engine, NET_RunFrame);
+    HOOK_FUNCTION(engine, ClientDLL_FrameStageNotify);
 }
 
 void LuaFeature::HOOKED_TriggerStartTouch(void* thisptr, int _edx, void* other)
@@ -530,4 +535,57 @@ int LuaFeature::HOOKED_NET_RunFrame(double time) {
     });
 
     spt_lua.ORIG_NET_RunFrame(time);
+}
+
+void LuaFeature::HOOKED_ClientDLL_FrameStageNotify(int stage) {
+    if(stage != 6) {
+        spt_lua.ORIG_ClientDLL_FrameStageNotify(stage);
+        return;
+    }
+
+    static int lastWidth = 0;
+    static int lastHeight = 0;
+    static uint8_t* pImage = nullptr;
+
+    auto engine_dll = (DWORD)GetModuleHandle("engine.dll");
+    //3B2A18
+    auto pCVideoMode = *(DWORD**)(engine_dll + 0x3B2A18);
+    auto pCVideoModeVTable = *(DWORD**)pCVideoMode;
+
+    // 56 -> GetModeWidth()
+    // 60 -> GetModeHeight()
+    // 108 -> ReadScreenPixels()
+    typedef int(__thiscall* pCVideoMode_GetModeWidth_t)(void*);
+    typedef int(__thiscall* pCVideoMode_GetModeHeight_t)(void*);
+    typedef void(__thiscall* pCVideoMode_ReadScreenPixels_t)(void*, int, int, int, int, void*, int);
+
+    auto pCVideoMode_GetModeWidth = (pCVideoMode_GetModeWidth_t)pCVideoModeVTable[14];
+    auto pCVideoMode_GetModeHeight = (pCVideoMode_GetModeHeight_t)pCVideoModeVTable[15];
+    auto pCVideoMode_ReadScreenPixels = (pCVideoMode_ReadScreenPixels_t)pCVideoModeVTable[27];
+
+    auto width = pCVideoMode_GetModeWidth(pCVideoMode);
+    auto height = pCVideoMode_GetModeHeight(pCVideoMode);
+
+    if(pImage == nullptr || lastWidth != width || lastHeight != height) {
+        delete[] pImage;
+        pImage = new uint8_t[width * height * 4];
+        lastWidth = width;
+        lastHeight = height;
+    }
+
+//    auto* pImage = new uint8_t[width * height * 3];
+//    pCVideoMode_ReadScreenPixels(pCVideoMode, 0, 0, width, height, pImage, 2 /* IMAGE_FORMAT_RGB888 */);
+    pCVideoMode_ReadScreenPixels(pCVideoMode, 0, 0, width, height, pImage, 12 /* IMAGE_FORMAT_BGRA8888 */);
+    ImageFormat backBufferFormat = interfaces::materialSystem->GetBackBufferFormat();
+    ConMsg("ReadScreenPixels: %d %d %d (%d)\n", pImage[0], pImage[1], pImage[2], backBufferFormat);
+//    delete[] pImage;
+
+    spt_lua.ORIG_ClientDLL_FrameStageNotify(stage);
+//    lua_State *state = spt_lua.global_state;
+//    lua_pushinteger(state, pImage[0]);
+//    lua_setglobal(state, "pixel_r");
+//    lua_pushinteger(state, pImage[1]);
+//    lua_setglobal(state, "pixel_g");
+//    lua_pushinteger(state, pImage[2]);
+//    lua_setglobal(state, "pixel_b");
 }
