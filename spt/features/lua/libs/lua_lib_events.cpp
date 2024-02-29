@@ -178,7 +178,7 @@ local function create_new_scope(name)
         scopes[name] = nil
     end
 
-    local scope = {name = name, listeners = {}}
+    local scope = {name = name, listeners = {}, cache_listeners = {}}
     local meta = {
         __index = function(_, key)
             local scoped_event_type = {}
@@ -217,18 +217,22 @@ function event_type.call(self, event)
 
     if self.scope.name == "global" then
         for _, s in pairs(scopes) do
+            s.cache_listeners[self.id] = s.listeners[self.id]
+            s.listeners[self.id] = {}
+        end
+        for _, s in pairs(scopes) do
             if s.name ~= "global" then
                 s[self.name]:call(event)
             end
         end
     end
 
-    local event_listeners = self.scope.listeners[self.id]
+    local event_listeners = self.scope.cache_listeners[self.id]
     if not event_listeners then
         return
     end
 
-    self.scope.listeners[self.id] = {}
+    self.scope.cache_listeners[self.id] = {}
 
     for _, l in pairs(event_listeners) do
         local s, e = pcall(function()
