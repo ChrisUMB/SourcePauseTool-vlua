@@ -71,7 +71,7 @@ local event_scope = {
     )" EVENT_TYPE_LUA(tick) R"(
     tick = new_event_type(),
 
-    ---@class tick_event : event
+    ---@class sim_tick_event : event
     ---Any time the engine ticks and is simulating, this will only occur in-game and in a map, but not while paused (including tas_pause).
     )" EVENT_TYPE_LUA(sim_tick) R"(
     sim_tick = new_event_type(),
@@ -164,9 +164,9 @@ local event_scope = {
     )" EVENT_TYPE_LUA(demo_stop) R"(
     demo_stop = new_event_type(),
 
-    ---@class net_runframe_event : event
-    )" EVENT_TYPE_LUA(net_runframe) R"(
-    net_runframe = new_event_type(),
+    ---@class lua_reset_event : event
+    )" EVENT_TYPE_LUA(lua_reset) R"(
+    lua_reset = new_event_type(),
 }
 
 local scopes = {}

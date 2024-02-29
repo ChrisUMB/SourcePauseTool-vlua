@@ -104,6 +104,8 @@ ConCommand spt_lua_run_command =
 
 ConCommand spt_lua_reset_command = ConCommand(
     "spt_lua_reset",
-    [](const CCommand& args) { spt_lua.ResetLuaState(); },
+    [](const CCommand& args) {
+        spt_lua.ResetLuaState();
+    },
     "Resets the lua state.",
     0);

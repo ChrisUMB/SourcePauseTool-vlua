@@ -215,6 +215,10 @@ void LuaFeature::ResetLuaState() {
         return;
     }
 
+    lua_events_library.InvokeEvent("lua_reset", [](lua_State* L) {
+        lua_newtable(L);
+    });
+
     UnloadLibraries(global_state);
     lua_close(global_state);
     global_state = nullptr;
