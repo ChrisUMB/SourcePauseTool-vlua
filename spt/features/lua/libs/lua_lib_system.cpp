@@ -5,7 +5,7 @@
 
 LuaSystemLibrary lua_system_library;
 
-static int System(lua_State* L) {
+static int SystemExec(lua_State* L) {
     // Get the string from the function invocation
     const char* command = luaL_checkstring(L, 1);
 
@@ -95,15 +95,51 @@ static int System(lua_State* L) {
     return 1;
 }
 
+static int SystemSetClipboard(lua_State* L) {
+    const char* str = luaL_checkstring(L, 1);
+    if (OpenClipboard(nullptr)) {
+        EmptyClipboard();
+        if (const HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, strlen(str) + 1)) {
+            memcpy(GlobalLock(hg), str, strlen(str) + 1);
+            GlobalUnlock(hg);
+            SetClipboardData(CF_TEXT, hg);
+        }
+        CloseClipboard();
+    }
+    return 0;
+}
+
+static int SystemGetClipboard(lua_State* L) {
+    if (OpenClipboard(nullptr)) {
+        if (const HANDLE hglb = GetClipboardData(CF_TEXT)) {
+            if (const auto lptstr = static_cast<const char*>(GlobalLock(hglb))) {
+                lua_pushstring(L, lptstr);
+            }
+            GlobalUnlock(hglb);
+        }
+        CloseClipboard();
+    }
+    return 1;
+}
+
+static constexpr luaL_Reg system_class[] = {
+    {"exec", SystemExec},
+    {"set_clipboard", SystemSetClipboard},
+    {"get_clipboard", SystemGetClipboard},
+    {nullptr, nullptr}
+};
+
 LuaSystemLibrary::LuaSystemLibrary() : LuaLibrary("system") {}
 
 void LuaSystemLibrary::Load(lua_State* L) {
-    lua_pushcfunction(L, System);
-    lua_setglobal(L, "system");
+    luaL_register(L, "system", system_class);
+    lua_pop(L, 1);
 }
 
 const std::string& LuaSystemLibrary::GetLuaSource() {
-    static std::string sources = R"""(
+    static std::string sources = R"""(---@meta
+---@class system
+system = {}
 ---@class system_result
 ---@field exit_code number Exit code of the command.
 ---@field output string Output of the command.
@@ -111,7 +147,15 @@ const std::string& LuaSystemLibrary::GetLuaSource() {
 
 ---@param command string Command to execute in the shell.
 ---@return system_result Result of the command.
-function system(command)
+function system.exec(command)
+end
+
+---@param str string String to set the clipboard to.
+function system.set_clipboard(str)
+end
+
+---@return string String in the clipboard.
+function system.get_clipboard()
 end
 )""";
 
