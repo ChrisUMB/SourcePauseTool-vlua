@@ -52,15 +52,20 @@ const std::string& LuaEventsLibrary::GetLuaSource() {
 
 ---@generic T : event
 ---@class event_type<T>
+---@field name string The name of the event
 local event_type = {}
 event_type.__index = event_type
 
+local event_id = 0
+
 function new_event_type()
-    return setmetatable({}, event_type)
+    local id = event_id
+    event_id = event_id + 1
+    return setmetatable({id = id}, event_type)
 end
 
----@class events
-events = {
+---@class event_scope
+local event_scope = {
     ---@class tick_event : event
     ---Any time the engine ticks, this will occur even in the main menu.
     )" EVENT_TYPE_LUA(tick) R"(
@@ -164,7 +169,43 @@ events = {
     net_runframe = new_event_type(),
 }
 
-local listeners = {}
+local scopes = {}
+
+---@return event_scope
+local function create_new_scope(name)
+    local existing = scopes[name]
+    if existing ~= nil then
+        scopes[name] = nil
+    end
+
+    local scope = {name = name, listeners = {}}
+    local meta = {
+        __index = function(_, key)
+            local scoped_event_type = {}
+            scoped_event_type.scope = scope
+            scoped_event_type.name = key
+            setmetatable(scoped_event_type, {__index = event_scope[key]})
+            return scoped_event_type
+        end
+    }
+    scopes[name] = scope
+
+    setmetatable(scope, meta)
+    return scope
+end
+
+---@class events : event_scope
+---@field scope fun(name:string):event_scope
+events = create_new_scope("global")
+events.scope = function(name)
+    if name == "global" then
+        return events
+    end
+
+    return create_new_scope(name)
+end
+
+--local listeners = {}
 
 ---@generic T : event
 ---@param self event_type<T>
@@ -174,12 +215,20 @@ function event_type.call(self, event)
         event = {}
     end
 
-    local event_listeners = listeners[self]
+    if self.scope.name == "global" then
+        for _, s in pairs(scopes) do
+            if s.name ~= "global" then
+                s[self.name]:call(event)
+            end
+        end
+    end
+
+    local event_listeners = self.scope.listeners[self.id]
     if not event_listeners then
         return
     end
 
-    listeners[self] = {}
+    self.scope.listeners[self.id] = {}
 
     for _, l in pairs(event_listeners) do
         local s, e = pcall(function()
@@ -196,13 +245,13 @@ end
 ---@param self event_type<T>
 ---@param callback fun(event:T) The callback to call when the event is fired
 function event_type.next(self, callback)
-    local others = listeners[self] or {}
+    local others = self.scope.listeners[self.id] or {}
     local result = {
         event = self,
         callback = callback
     }
     table.insert(others, result)
-    listeners[self] = others
+    self.scope.listeners[self.id] = others
 end
 
 ---@generic T : event
