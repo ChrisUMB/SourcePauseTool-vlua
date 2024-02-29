@@ -8,63 +8,55 @@
 
 LuaGameLibrary lua_game_library;
 
-static int GetClientTick(lua_State* L)
-{
-	lua_pushinteger(L, interfaces::engine_tool->ClientTick());
-	return 1;
+static int GetClientTick(lua_State* L) {
+    lua_pushinteger(L, interfaces::engine_tool->ClientTick());
+    return 1;
 }
 
-static int GetServerTick(lua_State* L)
-{
-	lua_pushinteger(L, interfaces::engine_tool->ServerTick());
-	return 1;
+static int GetServerTick(lua_State* L) {
+    lua_pushinteger(L, interfaces::engine_tool->ServerTick());
+    return 1;
 }
 
 extern ConVar tas_pause;
 
-static int IsPaused(lua_State* L)
-{
-	lua_pushboolean(L, IsGamePaused());
-	return 1;
+static int IsPaused(lua_State* L) {
+    lua_pushboolean(L, IsGamePaused());
+    return 1;
 }
 
-static int IsSimulating(lua_State* L)
-{
-	lua_pushboolean(L, IsGameSimulating());
-	return 1;
+static int IsSimulating(lua_State* L) {
+    lua_pushboolean(L, IsGameSimulating());
+    return 1;
 }
 
-static int IsTasPaused(lua_State* L)
-{
-	lua_pushboolean(L, tas_pause.GetBool());
-	return 1;
+static int IsTasPaused(lua_State* L) {
+    lua_pushboolean(L, tas_pause.GetBool());
+    return 1;
 }
 
-static int GetGameDirectory(lua_State* L)
-{
-	lua_pushstring(L, interfaces::engine->GetGameDirectory());
-	return 1;
+static int GetGameDirectory(lua_State* L) {
+    lua_pushstring(L, interfaces::engine->GetGameDirectory());
+    return 1;
 }
 
-static int IsPlayingDemo(lua_State* L)
-{
-	lua_pushboolean(L, spt_demostuff.Demo_IsPlayingBack());
-	return 1;
+static int IsPlayingDemo(lua_State* L) {
+    lua_pushboolean(L, spt_demostuff.Demo_IsPlayingBack());
+    return 1;
 }
 
-static int GetEngineState(lua_State* L)
-{
-	auto eng = reinterpret_cast<DWORD>(GetModuleHandle("engine.dll")) + 0x36E69C;
-	eng = *(DWORD *)eng;
+static int GetEngineState(lua_State* L) {
+    auto eng = reinterpret_cast<DWORD>(GetModuleHandle("engine.dll")) + 0x36E69C;
+    eng = *(DWORD*)eng;
 
-	typedef int (__thiscall *GetState_t)(void *);
-	const auto GetState = reinterpret_cast<GetState_t>((*(int **)eng)[4]);
-	lua_pushinteger(L, GetState((void*)eng));
+    typedef int (__thiscall *GetState_t)(void*);
+    const auto GetState = reinterpret_cast<GetState_t>((*(int**)eng)[4]);
+    lua_pushinteger(L, GetState((void*)eng));
 
-	return 1;
+    return 1;
 }
 
-static int Trace(lua_State *L) {
+static int Trace(lua_State* L) {
     // Usage: game.trace(pos: vec3, angle: vec3, mask: number, filter: string[]|nil)
     if (!LuaMathLibrary::LuaIsVector3D(L, 1)) {
         return luaL_error(L, "game.trace: argument 1 is not a vector (vec3) (expected ray start position)");
@@ -97,26 +89,26 @@ static int Trace(lua_State *L) {
     //235D40
     typedef void (__thiscall *AddClassnameToIgnore_t)(void*, const char*);
     auto AddClassnameToIgnore = (AddClassnameToIgnore_t)(server_dll + 0x235D40);
-    if(lua_istable(L, 4)) {
+    if (lua_istable(L, 4)) {
         lua_pushnil(L);
-        while(lua_next(L, 4) != 0) {
-            if(lua_isstring(L, -1)) {
+        while (lua_next(L, 4) != 0) {
+            if (lua_isstring(L, -1)) {
                 AddClassnameToIgnore(filter, lua_tostring(L, -1));
             }
             lua_pop(L, 1);
         }
     } else {
         AddClassnameToIgnore(filter, "prop_physics");
-        AddClassnameToIgnore(filter, "func_physbox" );
-        AddClassnameToIgnore(filter, "npc_portal_turret_floor" );
-        AddClassnameToIgnore(filter, "prop_energy_ball" );
-        AddClassnameToIgnore(filter, "npc_security_camera" );
-        AddClassnameToIgnore(filter, "player" );
-        AddClassnameToIgnore(filter, "simple_physics_prop" );
-        AddClassnameToIgnore(filter, "simple_physics_brush" );
-        AddClassnameToIgnore(filter, "prop_ragdoll" );
-        AddClassnameToIgnore(filter, "prop_glados_core" );
-        AddClassnameToIgnore(filter, "prop_portal" );
+        AddClassnameToIgnore(filter, "func_physbox");
+        AddClassnameToIgnore(filter, "npc_portal_turret_floor");
+        AddClassnameToIgnore(filter, "prop_energy_ball");
+        AddClassnameToIgnore(filter, "npc_security_camera");
+        AddClassnameToIgnore(filter, "player");
+        AddClassnameToIgnore(filter, "simple_physics_prop");
+        AddClassnameToIgnore(filter, "simple_physics_brush");
+        AddClassnameToIgnore(filter, "prop_ragdoll");
+        AddClassnameToIgnore(filter, "prop_glados_core");
+        AddClassnameToIgnore(filter, "prop_portal");
     }
 
     Vector forward;
@@ -128,16 +120,16 @@ static int Trace(lua_State *L) {
 
     trace_t tr;
     interfaces::engineTraceServer->TraceRay(
-            ray,
-            mask,
-            filter,
-            &tr
+        ray,
+        mask,
+        filter,
+        &tr
     );
 
-//    if(!tr.DidHit()) {
-//        lua_pushnil(L);
-//        return 1;
-//    }
+    //    if(!tr.DidHit()) {
+    //        lua_pushnil(L);
+    //        return 1;
+    //    }
 
     // Result is a table of
     // {endPos: vec3, normal: vec3, entityID: number}
@@ -148,7 +140,7 @@ static int Trace(lua_State *L) {
     LuaMathLibrary::LuaPushVector3D(L, tr.plane.normal);
     lua_setfield(L, -2, "normal");
     int entityIndex = tr.m_pEnt != nullptr ? utils::GetIndex(tr.m_pEnt) : -1;
-    if(entityIndex == -1) {
+    if (entityIndex == -1) {
         lua_pushnil(L);
     } else {
         lua_pushinteger(L, entityIndex);
@@ -159,30 +151,27 @@ static int Trace(lua_State *L) {
 
 
 static const luaL_Reg game_class[] = {
-	{"is_paused", IsPaused},
-	{"is_simulating", IsSimulating},
-	{"get_engine_state", GetEngineState},
-	{"is_tas_paused", IsTasPaused},
-	{"get_client_tick", GetClientTick},
-	{"get_server_tick", GetServerTick},
-	{"get_directory", GetGameDirectory},
-	{"is_playing_demo", IsPlayingDemo},
-	{"trace", Trace},
-	{nullptr, nullptr}};
+    {"is_paused", IsPaused},
+    {"is_simulating", IsSimulating},
+    {"get_engine_state", GetEngineState},
+    {"is_tas_paused", IsTasPaused},
+    {"get_client_tick", GetClientTick},
+    {"get_server_tick", GetServerTick},
+    {"get_directory", GetGameDirectory},
+    {"is_playing_demo", IsPlayingDemo},
+    {"trace", Trace},
+    {nullptr, nullptr}
+};
 
-LuaGameLibrary::LuaGameLibrary() : LuaLibrary("game")
-{
+LuaGameLibrary::LuaGameLibrary() : LuaLibrary("game") {}
+
+void LuaGameLibrary::Load(lua_State* L) {
+    luaL_register(L, "game", game_class);
+    lua_pop(L, 1);
 }
 
-void LuaGameLibrary::Load(lua_State* L)
-{
-	luaL_register(L, "game", game_class);
-	lua_pop(L, 1);
-}
-
-const std::string& LuaGameLibrary::GetLuaSource()
-{
-	static std::string sources = R"""(---@meta
+const std::string& LuaGameLibrary::GetLuaSource() {
+    static std::string sources = R"""(---@meta
 ---@class game
 game = {}
 
@@ -267,5 +256,5 @@ function game.async(callback)
 end
 )""";
 
-	return sources;
+    return sources;
 }

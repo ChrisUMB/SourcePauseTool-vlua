@@ -2,8 +2,7 @@
 
 #include "../lua_feature.hpp"
 
-class LuaHudLibrary : public LuaLibrary
-{
+class LuaHudLibrary : public LuaLibrary {
 public:
     explicit LuaHudLibrary();
 

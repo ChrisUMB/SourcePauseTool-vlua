@@ -17,219 +17,194 @@ void LuaMathLibrary::Load(lua_State* L) {}
 	lua_pushnumber(L, source); \
 	lua_setfield(L, -2, name);
 
-void LuaMathLibrary::LuaPushVector2D(lua_State* L, const Vector2D& vector)
-{
-	lua_newtable(L);
-	LUA_SET(vector.x, "x")
-	LUA_SET(vector.y, "y")
-	lua_getglobal(L, "vec2");
-	lua_setmetatable(L, -2);
+void LuaMathLibrary::LuaPushVector2D(lua_State* L, const Vector2D& vector) {
+    lua_newtable(L);
+    LUA_SET(vector.x, "x")
+    LUA_SET(vector.y, "y")
+    lua_getglobal(L, "vec2");
+    lua_setmetatable(L, -2);
 }
 
-Vector2D LuaMathLibrary::LuaGetVector2D(lua_State* L, int index)
-{
-	if (!LuaCheckClass(L, index, "vec2"))
-	{
-		Warning("Lua Error: LuaGetVector2D invoked without checking\n");
-		return {0, 0};
-	}
+Vector2D LuaMathLibrary::LuaGetVector2D(lua_State* L, int index) {
+    if (!LuaCheckClass(L, index, "vec2")) {
+        Warning("Lua Error: LuaGetVector2D invoked without checking\n");
+        return {0, 0};
+    }
 
-	Vector2D result;
-	LUA_GET(result.x, "x")
-	LUA_GET(result.y, "y")
-	return result;
+    Vector2D result;
+    LUA_GET(result.x, "x")
+    LUA_GET(result.y, "y")
+    return result;
 }
 
-bool LuaMathLibrary::LuaIsVector2D(lua_State* L, int index)
-{
-	return LuaIsClass(L, index, "vec2");
+bool LuaMathLibrary::LuaIsVector2D(lua_State* L, int index) {
+    return LuaIsClass(L, index, "vec2");
 }
 
-void LuaMathLibrary::LuaPushVector3D(lua_State* L, const Vector& vector)
-{
-	lua_newtable(L);
-	LUA_SET(vector.x, "x")
-	LUA_SET(vector.y, "y")
-	LUA_SET(vector.z, "z")
-	lua_getglobal(L, "vec3");
-	lua_setmetatable(L, -2);
+void LuaMathLibrary::LuaPushVector3D(lua_State* L, const Vector& vector) {
+    lua_newtable(L);
+    LUA_SET(vector.x, "x")
+    LUA_SET(vector.y, "y")
+    LUA_SET(vector.z, "z")
+    lua_getglobal(L, "vec3");
+    lua_setmetatable(L, -2);
 }
 
-Vector LuaMathLibrary::LuaGetVector3D(lua_State* L, int index)
-{
-	if (!LuaCheckClass(L, index, "vec3"))
-	{
-		Warning("Lua Error: LuaGetVector3D invoked without checking\n");
-		return {0, 0, 0};
-	}
+Vector LuaMathLibrary::LuaGetVector3D(lua_State* L, int index) {
+    if (!LuaCheckClass(L, index, "vec3")) {
+        Warning("Lua Error: LuaGetVector3D invoked without checking\n");
+        return {0, 0, 0};
+    }
 
-	Vector result;
-	LUA_GET(result.x, "x")
-	LUA_GET(result.y, "y")
-	LUA_GET(result.z, "z")
-	return result;
+    Vector result;
+    LUA_GET(result.x, "x")
+    LUA_GET(result.y, "y")
+    LUA_GET(result.z, "z")
+    return result;
 }
 
-bool LuaMathLibrary::LuaIsVector3D(lua_State* L, int index)
-{
-	return LuaIsClass(L, index, "vec3");
+bool LuaMathLibrary::LuaIsVector3D(lua_State* L, int index) {
+    return LuaIsClass(L, index, "vec3");
 }
 
-void LuaMathLibrary::LuaPushVector4D(lua_State* L, const Vector4D& vector)
-{
-	lua_newtable(L);
-	LUA_SET(vector.x, "x")
-	LUA_SET(vector.y, "y")
-	LUA_SET(vector.z, "z")
-	LUA_SET(vector.w, "w")
-	lua_getglobal(L, "vec4");
-	lua_setmetatable(L, -2);
+void LuaMathLibrary::LuaPushVector4D(lua_State* L, const Vector4D& vector) {
+    lua_newtable(L);
+    LUA_SET(vector.x, "x")
+    LUA_SET(vector.y, "y")
+    LUA_SET(vector.z, "z")
+    LUA_SET(vector.w, "w")
+    lua_getglobal(L, "vec4");
+    lua_setmetatable(L, -2);
 }
 
-bool LuaMathLibrary::LuaIsVector4D(lua_State* L, int index)
-{
-	return LuaIsClass(L, index, "vec4");
+bool LuaMathLibrary::LuaIsVector4D(lua_State* L, int index) {
+    return LuaIsClass(L, index, "vec4");
 }
 
-Vector4D LuaMathLibrary::LuaGetVector4D(lua_State* L, int index)
-{
-	if (!LuaCheckClass(L, index, "vec4"))
-	{
-		Warning("Lua Error: LuaGetVector4D invoked without checking\n");
-		return {0, 0, 0, 0};
-	}
+Vector4D LuaMathLibrary::LuaGetVector4D(lua_State* L, int index) {
+    if (!LuaCheckClass(L, index, "vec4")) {
+        Warning("Lua Error: LuaGetVector4D invoked without checking\n");
+        return {0, 0, 0, 0};
+    }
 
-	Vector4D result;
-	LUA_GET(result.x, "x")
-	LUA_GET(result.y, "y")
-	LUA_GET(result.z, "z")
-	LUA_GET(result.w, "w")
-	return result;
+    Vector4D result;
+    LUA_GET(result.x, "x")
+    LUA_GET(result.y, "y")
+    LUA_GET(result.z, "z")
+    LUA_GET(result.w, "w")
+    return result;
 }
 
-void LuaMathLibrary::LuaPushQuaternion(lua_State* L, const Quaternion& quaternion)
-{
-	lua_newtable(L);
-	LUA_SET(quaternion.x, "x")
-	LUA_SET(quaternion.y, "y")
-	LUA_SET(quaternion.z, "z")
-	LUA_SET(quaternion.w, "w")
-	lua_getglobal(L, "quat");
-	lua_setmetatable(L, -2);
+void LuaMathLibrary::LuaPushQuaternion(lua_State* L, const Quaternion& quaternion) {
+    lua_newtable(L);
+    LUA_SET(quaternion.x, "x")
+    LUA_SET(quaternion.y, "y")
+    LUA_SET(quaternion.z, "z")
+    LUA_SET(quaternion.w, "w")
+    lua_getglobal(L, "quat");
+    lua_setmetatable(L, -2);
 }
 
-Quaternion LuaMathLibrary::LuaGetQuaternion(lua_State* L, int index)
-{
-	if (!LuaCheckClass(L, index, "quat"))
-	{
-		Warning("Lua Error: LuaGetQuaternion invoked without checking\n");
-		return {0, 0, 0, 0};
-	}
+Quaternion LuaMathLibrary::LuaGetQuaternion(lua_State* L, int index) {
+    if (!LuaCheckClass(L, index, "quat")) {
+        Warning("Lua Error: LuaGetQuaternion invoked without checking\n");
+        return {0, 0, 0, 0};
+    }
 
-	Quaternion result;
-	LUA_GET(result.x, "x")
-	LUA_GET(result.y, "y")
-	LUA_GET(result.z, "z")
-	LUA_GET(result.w, "w")
-	return result;
+    Quaternion result;
+    LUA_GET(result.x, "x")
+    LUA_GET(result.y, "y")
+    LUA_GET(result.z, "z")
+    LUA_GET(result.w, "w")
+    return result;
 }
 
-bool LuaMathLibrary::LuaIsQuaternion(lua_State* L, int index)
-{
-	return LuaIsClass(L, index, "quat");
+bool LuaMathLibrary::LuaIsQuaternion(lua_State* L, int index) {
+    return LuaIsClass(L, index, "quat");
 }
 
-void LuaMathLibrary::LuaPushMatrix(lua_State* L, const VMatrix& matrix)
-{
-	lua_newtable(L);
+void LuaMathLibrary::LuaPushMatrix(lua_State* L, const VMatrix& matrix) {
+    lua_newtable(L);
 
-	// this is intentionally transposed
-	LUA_SET(matrix[0][0], "m00")
-	LUA_SET(matrix[1][0], "m01")
-	LUA_SET(matrix[2][0], "m02")
-	LUA_SET(matrix[3][0], "m03")
-	LUA_SET(matrix[0][1], "m10")
-	LUA_SET(matrix[1][1], "m11")
-	LUA_SET(matrix[2][1], "m12")
-	LUA_SET(matrix[3][1], "m13")
-	LUA_SET(matrix[0][2], "m20")
-	LUA_SET(matrix[1][2], "m21")
-	LUA_SET(matrix[2][2], "m22")
-	LUA_SET(matrix[3][2], "m23")
-	LUA_SET(matrix[0][3], "m30")
-	LUA_SET(matrix[1][3], "m31")
-	LUA_SET(matrix[2][3], "m32")
-	LUA_SET(matrix[3][3], "m33")
-	lua_getglobal(L, "mat4");
-	lua_setmetatable(L, -2);
+    // this is intentionally transposed
+    LUA_SET(matrix[0][0], "m00")
+    LUA_SET(matrix[1][0], "m01")
+    LUA_SET(matrix[2][0], "m02")
+    LUA_SET(matrix[3][0], "m03")
+    LUA_SET(matrix[0][1], "m10")
+    LUA_SET(matrix[1][1], "m11")
+    LUA_SET(matrix[2][1], "m12")
+    LUA_SET(matrix[3][1], "m13")
+    LUA_SET(matrix[0][2], "m20")
+    LUA_SET(matrix[1][2], "m21")
+    LUA_SET(matrix[2][2], "m22")
+    LUA_SET(matrix[3][2], "m23")
+    LUA_SET(matrix[0][3], "m30")
+    LUA_SET(matrix[1][3], "m31")
+    LUA_SET(matrix[2][3], "m32")
+    LUA_SET(matrix[3][3], "m33")
+    lua_getglobal(L, "mat4");
+    lua_setmetatable(L, -2);
 }
 
-VMatrix LuaMathLibrary::LuaGetMatrix(lua_State* L, int index)
-{
-	if (!LuaCheckClass(L, index, "mat4"))
-	{
-		Warning("Lua Error: LuaGetMatrix invoked without checking\n");
-		return VMatrix();
-	}
+VMatrix LuaMathLibrary::LuaGetMatrix(lua_State* L, int index) {
+    if (!LuaCheckClass(L, index, "mat4")) {
+        Warning("Lua Error: LuaGetMatrix invoked without checking\n");
+        return VMatrix();
+    }
 
-	VMatrix result;
-	LUA_GET(result[0][0], "m00")
-	LUA_GET(result[0][1], "m01")
-	LUA_GET(result[0][2], "m02")
-	LUA_GET(result[0][3], "m03")
-	LUA_GET(result[1][0], "m10")
-	LUA_GET(result[1][1], "m11")
-	LUA_GET(result[1][2], "m12")
-	LUA_GET(result[1][3], "m13")
-	LUA_GET(result[2][0], "m20")
-	LUA_GET(result[2][1], "m21")
-	LUA_GET(result[2][2], "m22")
-	LUA_GET(result[2][3], "m23")
-	LUA_GET(result[3][0], "m30")
-	LUA_GET(result[3][1], "m31")
-	LUA_GET(result[3][2], "m32")
-	LUA_GET(result[3][3], "m33")
-	return result;
+    VMatrix result;
+    LUA_GET(result[0][0], "m00")
+    LUA_GET(result[0][1], "m01")
+    LUA_GET(result[0][2], "m02")
+    LUA_GET(result[0][3], "m03")
+    LUA_GET(result[1][0], "m10")
+    LUA_GET(result[1][1], "m11")
+    LUA_GET(result[1][2], "m12")
+    LUA_GET(result[1][3], "m13")
+    LUA_GET(result[2][0], "m20")
+    LUA_GET(result[2][1], "m21")
+    LUA_GET(result[2][2], "m22")
+    LUA_GET(result[2][3], "m23")
+    LUA_GET(result[3][0], "m30")
+    LUA_GET(result[3][1], "m31")
+    LUA_GET(result[3][2], "m32")
+    LUA_GET(result[3][3], "m33")
+    return result;
 }
 
-bool LuaMathLibrary::LuaIsMatrix(lua_State* L, int index)
-{
-	return LuaIsClass(L, index, "mat4");
+bool LuaMathLibrary::LuaIsMatrix(lua_State* L, int index) {
+    return LuaIsClass(L, index, "mat4");
 }
 
-void LuaMathLibrary::LuaPushAngle(lua_State* L, const QAngle& angle)
-{
-	lua_newtable(L);
-	LUA_SET(angle.x, "x")
-	LUA_SET(angle.y, "y")
-	LUA_SET(angle.z, "z")
-	lua_getglobal(L, "vec3");
-	lua_setmetatable(L, -2);
+void LuaMathLibrary::LuaPushAngle(lua_State* L, const QAngle& angle) {
+    lua_newtable(L);
+    LUA_SET(angle.x, "x")
+    LUA_SET(angle.y, "y")
+    LUA_SET(angle.z, "z")
+    lua_getglobal(L, "vec3");
+    lua_setmetatable(L, -2);
 }
 
-QAngle LuaMathLibrary::LuaGetAngle(lua_State* L, int index)
-{
-	if (!LuaCheckClass(L, index, "vec3"))
-	{
-		Warning("Lua Error: LuaGetAngle invoked without checking\n");
-		return {0, 0, 0};
-	}
+QAngle LuaMathLibrary::LuaGetAngle(lua_State* L, int index) {
+    if (!LuaCheckClass(L, index, "vec3")) {
+        Warning("Lua Error: LuaGetAngle invoked without checking\n");
+        return {0, 0, 0};
+    }
 
-	QAngle result;
-	LUA_GET(result.x, "x")
-	LUA_GET(result.y, "y")
-	LUA_GET(result.z, "z")
-	return result;
+    QAngle result;
+    LUA_GET(result.x, "x")
+    LUA_GET(result.y, "y")
+    LUA_GET(result.z, "z")
+    return result;
 }
 
-bool LuaMathLibrary::LuaIsAngle(lua_State* L, int index)
-{
-	return LuaIsClass(L, index, "vec3");
+bool LuaMathLibrary::LuaIsAngle(lua_State* L, int index) {
+    return LuaIsClass(L, index, "vec3");
 }
 
-const std::string& LuaMathLibrary::GetLuaSource()
-{
-	static const std::string sources = R"(---@meta
+const std::string& LuaMathLibrary::GetLuaSource() {
+    static const std::string sources = R"(---@meta
 function table.shallow_copy(t)
     local t2 = {}
     for k, v in pairs(t) do
@@ -254,7 +229,7 @@ if not unpack then
     unpack = table.unpack
 end
 )"
-	                                   R"(
+        R"(
 ---@class vec2 2D vector, XY
 ---@operator call:vec2
 ---@operator unm:vec2
@@ -544,7 +519,7 @@ end
 setmetatable(vec2, vec2)
 
 )"
-	                                   R"(
+        R"(
 ---@class vec3 3D vector, XYZ
 ---@operator call:vec3
 ---@operator unm:vec3
@@ -841,7 +816,7 @@ end
 setmetatable(vec3, vec3)
 
 )"
-	                                   R"(
+        R"(
 ---@class vec4 4D vector, XYZW
 ---@operator call:vec4
 ---@operator unm:vec4
@@ -1147,7 +1122,7 @@ end
 
 setmetatable(vec4, vec4)
 )"
-	                                   R"(
+        R"(
 ---@class axis
 ---@field positive_y vec3
 ---@field negative_y vec3
@@ -1190,7 +1165,7 @@ end
 
 setmetatable(axis, axis)
 )"
-	                                   R"(
+        R"(
 ---@class quat Quaternion, XYZW
 ---@operator call:quat
 ---@field x number X component of the quaternion.
@@ -1650,7 +1625,7 @@ end
 
 setmetatable(quat, quat)
 )"
-	                                   R"(
+        R"(
 ---@class mat4
 ---@operator call:mat4
 ---@field m00 number
@@ -2033,5 +2008,5 @@ end
 setmetatable(mat4, mat4)
 )";
 
-	return sources;
+    return sources;
 }

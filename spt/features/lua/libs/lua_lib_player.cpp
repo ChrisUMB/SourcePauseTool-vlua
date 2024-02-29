@@ -12,10 +12,10 @@
 LuaPlayerLibrary lua_player_library;
 
 static inline float FixAngle(float x) {
-    return x > 180 ? x-360 : x < -180 ? x + 360 : x;
+    return x > 180 ? x - 360 : x < -180 ? x + 360 : x;
 }
 
-static void ResetLocals(edict_t *) {
+static void ResetLocals(edict_t*) {
     lua_player_library.local_angle_offset = QAngle(0.0f, 0.0f, 0.0f);
     lua_player_library.local_position_origin = Vector(0.0f, 0.0f, 0.0f);
     lua_player_library.local_position_offset = Vector(0.0f, 0.0f, 0.0f);
@@ -27,33 +27,33 @@ LuaPlayerLibrary::LuaPlayerLibrary() : LuaLibrary("player") {
     this->local_position_offset = Vector(0.0f, 0.0f, 0.0f);
 }
 
-static void PlayerTeleport(const Vector *pos, const QAngle *ang, const Vector *vel) {
+static void PlayerTeleport(const Vector* pos, const QAngle* ang, const Vector* vel) {
     LuaEntityLibrary::Teleport(spt_entprops.GetPlayer(true), pos, ang, vel);
 }
 
-static int PlayerGetPos(lua_State *L) {
+static int PlayerGetPos(lua_State* L) {
     LuaMathLibrary::LuaPushVector3D(L, spt_playerio.m_vecAbsOrigin.GetValue());
     return 1;
 }
 
-static int PlayerSetPos(lua_State *L) {
+static int PlayerSetPos(lua_State* L) {
     if (!LuaMathLibrary::LuaIsVector3D(L, 1)) {
         return luaL_error(L, "player.set_pos: argument is not a vector");
     }
 
-    const Vector &pos = LuaMathLibrary::LuaGetVector3D(L, 1);
+    const Vector& pos = LuaMathLibrary::LuaGetVector3D(L, 1);
     PlayerTeleport(&pos, nullptr, nullptr);
     return 0;
 }
 
-static int PlayerGetAng(lua_State *L) {
+static int PlayerGetAng(lua_State* L) {
     QAngle ang;
     EngineGetViewAngles(&ang.x);
     LuaMathLibrary::LuaPushAngle(L, ang);
     return 1;
 }
 
-static int PlayerSetAng(lua_State *L) {
+static int PlayerSetAng(lua_State* L) {
     if (!LuaMathLibrary::LuaIsAngle(L, 1)) {
         return luaL_error(L, "player.set_ang: argument is not a vector");
     }
@@ -63,34 +63,34 @@ static int PlayerSetAng(lua_State *L) {
     return 0;
 }
 
-static int PlayerGetVel(lua_State *L) {
+static int PlayerGetVel(lua_State* L) {
     LuaMathLibrary::LuaPushVector3D(L, spt_playerio.m_vecAbsVelocity.GetValue());
     return 1;
 }
 
-static int PlayerSetVel(lua_State *L) {
+static int PlayerSetVel(lua_State* L) {
     if (!LuaMathLibrary::LuaIsVector3D(L, 1)) {
         return luaL_error(L, "player.set_vel: argument is not a vector");
     }
 
-    const Vector &vel = LuaMathLibrary::LuaGetVector3D(L, 1);
+    const Vector& vel = LuaMathLibrary::LuaGetVector3D(L, 1);
     PlayerTeleport(nullptr, nullptr, &vel);
     return 0;
 }
 
-static int PlayerGetEyePos(lua_State *L) {
+static int PlayerGetEyePos(lua_State* L) {
     LuaMathLibrary::LuaPushVector3D(L, spt_generic.GetCameraOrigin());
     return 1;
 }
 
-static int PlayerTeleport(lua_State *L) {
+static int PlayerTeleport(lua_State* L) {
     Vector pos;
     QAngle ang;
     Vector vel;
 
-    Vector *p_pos = nullptr;
-    QAngle *p_ang = nullptr;
-    Vector *p_vel = nullptr;
+    Vector* p_pos = nullptr;
+    QAngle* p_ang = nullptr;
+    Vector* p_vel = nullptr;
 
     if (LuaMathLibrary::LuaIsVector3D(L, 1)) {
         pos = LuaMathLibrary::LuaGetVector3D(L, 1);
@@ -111,12 +111,12 @@ static int PlayerTeleport(lua_State *L) {
     return 0;
 }
 
-static int PlayerIsGrounded(lua_State *L) {
+static int PlayerIsGrounded(lua_State* L) {
     lua_pushboolean(L, spt_playerio.IsGroundEntitySet());
     return 1;
 }
 
-static int PlayerGetLocalAng(lua_State *L) {
+static int PlayerGetLocalAng(lua_State* L) {
     QAngle ang;
     EngineGetViewAngles(&ang.x);
 
@@ -128,7 +128,7 @@ static int PlayerGetLocalAng(lua_State *L) {
     return 1;
 }
 
-static int PlayerSetLocalAng(lua_State *L) {
+static int PlayerSetLocalAng(lua_State* L) {
     if (!LuaMathLibrary::LuaIsAngle(L, 1)) {
         return luaL_error(L, "player.set_local_ang: argument is not a vector");
     }
@@ -141,27 +141,27 @@ static int PlayerSetLocalAng(lua_State *L) {
     return 0;
 }
 
-static int PlayerGetLocalAngOffset(lua_State *L) {
+static int PlayerGetLocalAngOffset(lua_State* L) {
     LuaMathLibrary::LuaPushAngle(L, lua_player_library.local_angle_offset);
     return 1;
 }
 
-static int PlayerGetLocalPos(lua_State *L) {
+static int PlayerGetLocalPos(lua_State* L) {
     LuaMathLibrary::LuaPushVector3D(L, lua_player_library.AsLocalPosition(spt_playerio.m_vecAbsOrigin.GetValue()));
     return 1;
 }
 
-static int PlayerGetLocalPosOffset(lua_State *L) {
+static int PlayerGetLocalPosOffset(lua_State* L) {
     LuaMathLibrary::LuaPushVector3D(L, lua_player_library.local_position_offset);
     return 1;
 }
 
-static int PlayerGetLocalPosOrigin(lua_State *L) {
+static int PlayerGetLocalPosOrigin(lua_State* L) {
     LuaMathLibrary::LuaPushVector3D(L, lua_player_library.local_position_origin);
     return 1;
 }
 
-static int PlayerGetSGPos(lua_State *L) {
+static int PlayerGetSGPos(lua_State* L) {
     Vector pos;
     QAngle ang;
     calculateSGPosition(pos, ang);
@@ -169,7 +169,7 @@ static int PlayerGetSGPos(lua_State *L) {
     return 1;
 }
 
-static int PlayerGetSGAng(lua_State *L) {
+static int PlayerGetSGAng(lua_State* L) {
     Vector pos;
     QAngle ang;
     calculateSGPosition(pos, ang);
@@ -177,18 +177,18 @@ static int PlayerGetSGAng(lua_State *L) {
     return 1;
 }
 
-static int PlayerTrace(lua_State *L) {
+static int PlayerTrace(lua_State* L) {
     QAngle eyeAngles;
-    EngineGetViewAngles(reinterpret_cast<float *>(&eyeAngles));
+    EngineGetViewAngles(reinterpret_cast<float*>(&eyeAngles));
 
     Vector eyePosition = spt_generic.GetCameraOrigin();
-//    Vector eyePosition;
-//    calculateSGPosition(eyePosition, eyeAngles);
+    //    Vector eyePosition;
+    //    calculateSGPosition(eyePosition, eyeAngles);
 
     Vector forward;
     AngleVectors(eyeAngles, &forward);
 
-    Vector start = eyePosition;// + forward * 24.0f;
+    Vector start = eyePosition; // + forward * 24.0f;
     Vector end = start + forward * 8192.0f;
     Ray_t ray;
     ray.Init(start, end);
@@ -204,54 +204,54 @@ static int PlayerTrace(lua_State *L) {
     typedef void (__thiscall *AddClassnameToIgnore_t)(void*, const char*);
     auto AddClassnameToIgnore = (AddClassnameToIgnore_t)(server_dll + 0x235D40);
     AddClassnameToIgnore(data, "prop_physics");
-    AddClassnameToIgnore(data, "func_physbox" );
-    AddClassnameToIgnore(data, "npc_portal_turret_floor" );
-    AddClassnameToIgnore(data, "prop_energy_ball" );
-    AddClassnameToIgnore(data, "npc_security_camera" );
-    AddClassnameToIgnore(data, "player" );
-    AddClassnameToIgnore(data, "simple_physics_prop" );
-    AddClassnameToIgnore(data, "simple_physics_brush" );
-    AddClassnameToIgnore(data, "prop_ragdoll" );
-    AddClassnameToIgnore(data, "prop_glados_core" );
-    AddClassnameToIgnore(data, "prop_portal" );
+    AddClassnameToIgnore(data, "func_physbox");
+    AddClassnameToIgnore(data, "npc_portal_turret_floor");
+    AddClassnameToIgnore(data, "prop_energy_ball");
+    AddClassnameToIgnore(data, "npc_security_camera");
+    AddClassnameToIgnore(data, "player");
+    AddClassnameToIgnore(data, "simple_physics_prop");
+    AddClassnameToIgnore(data, "simple_physics_brush");
+    AddClassnameToIgnore(data, "prop_ragdoll");
+    AddClassnameToIgnore(data, "prop_glados_core");
+    AddClassnameToIgnore(data, "prop_portal");
 
-//    int clonesFilter[100];
-//    clonesFilter[0] = 0x5E91A8;
-//    clonesFilter[1] = reinterpret_cast<int>(data);
+    //    int clonesFilter[100];
+    //    clonesFilter[0] = 0x5E91A8;
+    //    clonesFilter[1] = reinterpret_cast<int>(data);
 
     trace_t tr;
     interfaces::engineTraceServer->TraceRay(ray, MASK_SHOT_PORTAL, reinterpret_cast<ITraceFilter*>(data), &tr);
-//    interfaces::engineTraceClient->TraceRay(ray, MASK_SHOT_PORTAL, nullptr, &tr);
-//    interfaces::engineTraceClient->TraceRay(ray, (CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW), nullptr, &tr);
+    //    interfaces::engineTraceClient->TraceRay(ray, MASK_SHOT_PORTAL, nullptr, &tr);
+    //    interfaces::engineTraceClient->TraceRay(ray, (CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_WINDOW), nullptr, &tr);
 
     LuaMathLibrary::LuaPushVector3D(L, tr.endpos);
     return 1;
 }
 
 static const struct luaL_Reg player_class[] = {
-        {"get_pos",              PlayerGetPos},
-        {"set_pos",              PlayerSetPos},
-        {"get_ang",              PlayerGetAng},
-        {"_set_ang",             PlayerSetAng},
-        {"get_vel",              PlayerGetVel},
-        {"set_vel",              PlayerSetVel},
-        {"get_eye_pos",          PlayerGetEyePos},
-        {"get_sg_pos",           PlayerGetSGPos},
-        {"get_sg_ang",           PlayerGetSGAng},
+    {"get_pos", PlayerGetPos},
+    {"set_pos", PlayerSetPos},
+    {"get_ang", PlayerGetAng},
+    {"_set_ang", PlayerSetAng},
+    {"get_vel", PlayerGetVel},
+    {"set_vel", PlayerSetVel},
+    {"get_eye_pos", PlayerGetEyePos},
+    {"get_sg_pos", PlayerGetSGPos},
+    {"get_sg_ang", PlayerGetSGAng},
 
-        {"get_local_ang",        PlayerGetLocalAng},
-        {"_set_local_ang",       PlayerSetLocalAng},
-        {"get_local_ang_offset", PlayerGetLocalAngOffset},
-        {"get_local_pos",        PlayerGetLocalPos},
-        {"get_local_pos_offset", PlayerGetLocalPosOffset},
-        {"get_local_pos_origin", PlayerGetLocalPosOrigin},
-        {"teleport",             PlayerTeleport},
-        {"is_grounded",          PlayerIsGrounded},
-        {"trace",           PlayerTrace},
-        {nullptr,                nullptr}
+    {"get_local_ang", PlayerGetLocalAng},
+    {"_set_local_ang", PlayerSetLocalAng},
+    {"get_local_ang_offset", PlayerGetLocalAngOffset},
+    {"get_local_pos", PlayerGetLocalPos},
+    {"get_local_pos_offset", PlayerGetLocalPosOffset},
+    {"get_local_pos_origin", PlayerGetLocalPosOrigin},
+    {"teleport", PlayerTeleport},
+    {"is_grounded", PlayerIsGrounded},
+    {"trace", PlayerTrace},
+    {nullptr, nullptr}
 };
 
-void LuaPlayerLibrary::Load(lua_State *L) {
+void LuaPlayerLibrary::Load(lua_State* L) {
     static bool first_load = true;
     if (first_load) {
         ClientActiveSignal.Connect(ResetLocals);
@@ -262,7 +262,7 @@ void LuaPlayerLibrary::Load(lua_State *L) {
     lua_pop(L, 1);
 }
 
-const std::string &LuaPlayerLibrary::GetLuaSource() {
+const std::string& LuaPlayerLibrary::GetLuaSource() {
     static std::string sources = R"""(
 ---@class player
 player = {}
@@ -356,7 +356,7 @@ end
     return sources;
 }
 
-Vector LuaPlayerLibrary::AsLocalPosition(const Vector &position) {
+Vector LuaPlayerLibrary::AsLocalPosition(const Vector& position) {
     Vector forward, right, up;
     AngleVectors(local_angle_offset, &forward, &right, &up);
 
@@ -365,10 +365,10 @@ Vector LuaPlayerLibrary::AsLocalPosition(const Vector &position) {
     return local_pos + local_position_offset;
 }
 
-void LuaPlayerLibrary::UpdateLocals(const Vector &old_pos,
-                                    const QAngle &old_ang,
-                                    const Vector &new_pos,
-                                    const QAngle &new_ang) {
+void LuaPlayerLibrary::UpdateLocals(const Vector& old_pos,
+                                    const QAngle& old_ang,
+                                    const Vector& new_pos,
+                                    const QAngle& new_ang) {
     Vector new_offset = AsLocalPosition(old_pos);
     local_position_origin = new_pos;
     local_position_offset = new_offset;

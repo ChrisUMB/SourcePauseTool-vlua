@@ -3,11 +3,10 @@
 #include "lua.hpp"
 #include <filesystem>
 
-struct file_path_t
-{
-	std::string path;   // The full path
-	std::string prefix; // Everything before the last `/` or `\`
-	std::string suffix; // Everything after the last `/` or `\`
+struct file_path_t {
+    std::string path; // The full path
+    std::string prefix; // Everything before the last `/` or `\`
+    std::string suffix; // Everything after the last `/` or `\`
 };
 
 void lua_string_format(lua_State* L);

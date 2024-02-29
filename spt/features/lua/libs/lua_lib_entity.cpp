@@ -18,325 +18,291 @@ LuaEntityLibrary lua_entity_library;
     }                   \
     do {} while(0)
 
-LuaEntityLibrary::LuaEntityLibrary() : LuaLibrary("entity")
-{
+LuaEntityLibrary::LuaEntityLibrary() : LuaLibrary("entity") {}
+
+void* LuaEntityLibrary::LuaCheckEntity(lua_State* L, int index) {
+    if (!LuaIsClass(L, index, "entity")) {
+        luaL_error(L, "entity expected");
+        return nullptr;
+    }
+
+    lua_getfield(L, index, "data");
+    void* entity_ptr = (void*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    return entity_ptr;
 }
 
-void* LuaEntityLibrary::LuaCheckEntity(lua_State* L, int index)
-{
-	if (!LuaIsClass(L, index, "entity"))
-	{
-		luaL_error(L, "entity expected");
-		return nullptr;
-	}
+void LuaEntityLibrary::LuaPushEntity(lua_State* L, void* entity) {
+    lua_newtable(L);
+    lua_getglobal(L, "entity");
+    lua_setmetatable(L, -2);
 
-	lua_getfield(L, index, "data");
-	void* entity_ptr = (void*)lua_touserdata(L, -1);
-	lua_pop(L, 1);
-	return entity_ptr;
+    lua_pushlightuserdata(L, entity);
+    lua_setfield(L, -2, "data");
 }
 
-void LuaEntityLibrary::LuaPushEntity(lua_State* L, void* entity)
-{
-	lua_newtable(L);
-	lua_getglobal(L, "entity");
-	lua_setmetatable(L, -2);
-
-	lua_pushlightuserdata(L, entity);
-	lua_setfield(L, -2, "data");
+void LuaEntityLibrary::Teleport(void* entity, const Vector* pos, const QAngle* ang, const Vector* vel) {
+    int* p_vtable = reinterpret_cast<int*>(entity);
+    (*(void (__thiscall **)(void*, const Vector*, const QAngle*, const Vector*))(*p_vtable
+        + 420))(entity, pos, ang, vel);
 }
 
-void LuaEntityLibrary::Teleport(void* entity, const Vector* pos, const QAngle* ang, const Vector* vel)
-{
-	int* p_vtable = reinterpret_cast<int*>(entity);
-	(*(void (__thiscall **)(void*, const Vector*, const QAngle*, const Vector*))(*p_vtable
-		+ 420))(entity, pos, ang, vel);
+static int EntityCreate(lua_State* L) {
+    // auto name = luaL_checkstring(L, 1);
+
+    const auto ent = interfaces::server_tools->CreateEntityByName("prop_physics");
+    auto* pEntity = (CBaseEntity*)ent;
+
+    auto server_dll = (DWORD)GetModuleHandle("server.dll");
+
+    // typedef void (*PrecacheModel_t)(void *, const char*);
+    // ((PrecacheModel_t)(server_dll + 0xE6A50))(pEntity, "models/props/metal_box.mdl");
+
+    typedef void (__thiscall *SetModel_t)(void*, const char*);
+    ((SetModel_t)(server_dll + 0xD5590))(pEntity, "models/props/metal_box.mdl");
+
+    int m_iName_off = spt_entprops.GetFieldOffset("CBaseEntity", "m_iName", true);
+    *(string_t*)((uintptr_t)pEntity + m_iName_off) = MAKE_STRING("box");
+
+    int m_spawnflags_off = spt_entprops.GetFieldOffset("CBaseEntity", "m_spawnflags", true);
+    *(int*)((uintptr_t)pEntity + m_spawnflags_off) = 0x000100;
+
+    // pEntity->Precache();
+
+
+    typedef void (__cdecl *DispatchSpawn_t)(void*);
+    ((DispatchSpawn_t)(server_dll + 0x2307F0))(pEntity);
+
+    const Vector v = spt_playerio.m_vecAbsOrigin.GetValue();
+    LuaEntityLibrary::Teleport(pEntity, &v, nullptr, nullptr);
+    return 0;
 }
 
-static int EntityCreate(lua_State* L)
-{
-	// auto name = luaL_checkstring(L, 1);
+static int EntityFromID(lua_State* L) {
+    int id = luaL_checkinteger(L, 1);
 
-	const auto ent = interfaces::server_tools->CreateEntityByName("prop_physics");
-	auto* pEntity = (CBaseEntity*)ent;
+    void* entity = interfaces::server_tools->GetIServerEntity(interfaces::entList->GetClientEntity(id));
 
-	auto server_dll = (DWORD)GetModuleHandle("server.dll");
+    if (entity == nullptr) {
+        lua_pushnil(L);
+        return 1;
+    }
 
-	// typedef void (*PrecacheModel_t)(void *, const char*);
-	// ((PrecacheModel_t)(server_dll + 0xE6A50))(pEntity, "models/props/metal_box.mdl");
-
-	typedef void (__thiscall *SetModel_t)(void *, const char*);
-	((SetModel_t)(server_dll + 0xD5590))(pEntity, "models/props/metal_box.mdl");
-
-	int m_iName_off = spt_entprops.GetFieldOffset("CBaseEntity", "m_iName", true);
-	*(string_t*) ((uintptr_t) pEntity + m_iName_off) = MAKE_STRING("box");
-
-	int m_spawnflags_off = spt_entprops.GetFieldOffset("CBaseEntity", "m_spawnflags", true);
-	*(int*) ((uintptr_t) pEntity + m_spawnflags_off) = 0x000100;
-
-	// pEntity->Precache();
-
-
-
-	typedef void (__cdecl *DispatchSpawn_t)(void*);
-	((DispatchSpawn_t)(server_dll + 0x2307F0))(pEntity);
-
-	const Vector v = spt_playerio.m_vecAbsOrigin.GetValue();
-	LuaEntityLibrary::Teleport(pEntity, &v, nullptr, nullptr);
-	return 0;
+    LuaEntityLibrary::LuaPushEntity(L, entity);
+    return 1;
 }
 
-static int EntityFromID(lua_State* L)
-{
-	int id = luaL_checkinteger(L, 1);
+static int EntityFromHammerID(lua_State* L) {
+    int hammer_id = luaL_checkinteger(L, 1);
+    void* entity = interfaces::server_tools->FindEntityByHammerID(hammer_id);
 
-	void* entity = interfaces::server_tools->GetIServerEntity(interfaces::entList->GetClientEntity(id));
+    if (entity == nullptr) {
+        lua_pushnil(L);
+        return 1;
+    }
 
-	if (entity == nullptr)
-	{
-		lua_pushnil(L);
-		return 1;
-	}
-
-	LuaEntityLibrary::LuaPushEntity(L, entity);
-	return 1;
+    LuaEntityLibrary::LuaPushEntity(L, entity);
+    return 1;
 }
 
-static int EntityFromHammerID(lua_State* L)
-{
-	int hammer_id = luaL_checkinteger(L, 1);
-	void* entity = interfaces::server_tools->FindEntityByHammerID(hammer_id);
+static int EntityList(lua_State* L) {
+    lua_newtable(L);
 
-	if (entity == nullptr)
-	{
-		lua_pushnil(L);
-		return 1;
-	}
+    int i = 1;
+    for (int j = 0; j < MAX_EDICTS; ++j) {
+        void* entity = interfaces::server_tools->GetIServerEntity(interfaces::entList->GetClientEntity(j));
 
-	LuaEntityLibrary::LuaPushEntity(L, entity);
-	return 1;
+        if (entity == nullptr) {
+            continue;
+        }
+
+        lua_pushinteger(L, i++);
+        LuaEntityLibrary::LuaPushEntity(L, entity);
+        lua_settable(L, -3);
+    }
+
+    return 1;
 }
 
-static int EntityList(lua_State* L)
-{
-	lua_newtable(L);
-
-	int i = 1;
-	for (int j = 0; j < MAX_EDICTS; ++j)
-	{
-		void* entity = interfaces::server_tools->GetIServerEntity(interfaces::entList->GetClientEntity(j));
-
-		if (entity == nullptr)
-		{
-			continue;
-		}
-
-		lua_pushinteger(L, i++);
-		LuaEntityLibrary::LuaPushEntity(L, entity);
-		lua_settable(L, -3);
-	}
-
-	return 1;
+static int EntityGetID(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
+    lua_pushinteger(L, utils::GetIndex(entity));
+    return 1;
 }
 
-static int EntityGetID(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
-	lua_pushinteger(L, utils::GetIndex(entity));
-	return 1;
+static int EntityGetHammerID(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
+    int* p_hammerID = (int*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_iHammerID", true));
+    lua_pushinteger(L, *p_hammerID);
+    return 1;
 }
 
-static int EntityGetHammerID(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
-	int* p_hammerID = (int*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_iHammerID", true));
-	lua_pushinteger(L, *p_hammerID);
-	return 1;
+static int EntityGetClassName(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
+
+    string_t* p_name =
+        (string_t*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_iClassname", true));
+
+    // From what I can tell, class name should never be null
+    //    if(p_name == nullptr || *p_name == NULL_STRING) {
+    //        lua_pushnil(L);
+    //        return 1;
+    //    }
+
+    lua_pushstring(L, p_name->ToCStr());
+    return 1;
 }
 
-static int EntityGetClassName(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
-
-	string_t* p_name =
-		(string_t*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_iClassname", true));
-
-	// From what I can tell, class name should never be null
-	//    if(p_name == nullptr || *p_name == NULL_STRING) {
-	//        lua_pushnil(L);
-	//        return 1;
-	//    }
-
-	lua_pushstring(L, p_name->ToCStr());
-	return 1;
+static int EntityGetInternalClassName(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
+    lua_pushstring(L, interfaces::entList->GetClientEntity(utils::GetIndex(entity))->GetClientClass()->GetName());
+    return 1;
 }
 
-static int EntityGetInternalClassName(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
-	lua_pushstring(L, interfaces::entList->GetClientEntity(utils::GetIndex(entity))->GetClientClass()->GetName());
-	return 1;
+static int EntityGetModelName(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
+
+    string_t* p_mdl_name = (string_t*)((uintptr_t)entity +
+        spt_entprops.GetFieldOffset("CBaseEntity", "m_ModelName", true));
+
+    if (p_mdl_name == nullptr || *p_mdl_name == NULL_STRING) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_pushstring(L, p_mdl_name->ToCStr());
+    return 1;
 }
 
-static int EntityGetModelName(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static int EntityGetName(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
 
-	string_t* p_mdl_name = (string_t*)((uintptr_t)entity +
-	                                   spt_entprops.GetFieldOffset("CBaseEntity", "m_ModelName", true));
+    string_t* p_name =
+        (string_t*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_iName", true));
 
-	if (p_mdl_name == nullptr || *p_mdl_name == NULL_STRING)
-	{
-		lua_pushnil(L);
-		return 1;
-	}
+    if (p_name == nullptr || *p_name == NULL_STRING) {
+        lua_pushnil(L);
+        return 1;
+    }
 
-	lua_pushstring(L, p_mdl_name->ToCStr());
-	return 1;
+    lua_pushstring(L, p_name->ToCStr());
+    return 1;
 }
 
-static int EntityGetName(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static int EntityGetPos(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
 
-	string_t* p_name =
-		(string_t*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_iName", true));
+    Vector* p_pos =
+        (Vector*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
 
-	if (p_name == nullptr || *p_name == NULL_STRING)
-	{
-		lua_pushnil(L);
-		return 1;
-	}
-
-	lua_pushstring(L, p_name->ToCStr());
-	return 1;
+    LuaMathLibrary::LuaPushVector3D(L, *p_pos);
+    return 1;
 }
 
-static int EntityGetPos(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static int EntitySetPos(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
 
-	Vector* p_pos =
-		(Vector*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsOrigin", true));
+    if (!LuaMathLibrary::LuaIsVector3D(L, 2)) {
+        return luaL_error(L, "entity.set_pos: argument is not a vector");
+    }
 
-	LuaMathLibrary::LuaPushVector3D(L, *p_pos);
-	return 1;
+    Vector pos = LuaMathLibrary::LuaGetVector3D(L, 2);
+    LuaEntityLibrary::Teleport(entity, &pos, nullptr, nullptr);
+    return 0;
 }
 
-static int EntitySetPos(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static int EntityGetRot(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
 
-	if (!LuaMathLibrary::LuaIsVector3D(L, 2))
-	{
-		return luaL_error(L, "entity.set_pos: argument is not a vector");
-	}
-
-	Vector pos = LuaMathLibrary::LuaGetVector3D(L, 2);
-	LuaEntityLibrary::Teleport(entity, &pos, nullptr, nullptr);
-	return 0;
+    Vector* p_rot =
+        (Vector*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
+    LuaMathLibrary::LuaPushVector3D(L, *p_rot);
+    return 1;
 }
 
-static int EntityGetRot(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static int EntitySetRot(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
 
-	Vector* p_rot =
-		(Vector*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_angAbsRotation", true));
-	LuaMathLibrary::LuaPushVector3D(L, *p_rot);
-	return 1;
+    if (!LuaMathLibrary::LuaIsAngle(L, 2)) {
+        return luaL_error(L, "entity.set_rot: argument is not an angle");
+    }
+
+    QAngle ang = LuaMathLibrary::LuaGetAngle(L, 2);
+    LuaEntityLibrary::Teleport(entity, nullptr, &ang, nullptr);
+    return 0;
 }
 
-static int EntitySetRot(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static int EntityGetVel(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
 
-	if (!LuaMathLibrary::LuaIsAngle(L, 2))
-	{
-		return luaL_error(L, "entity.set_rot: argument is not an angle");
-	}
+    Vector* p_vel =
+        (Vector*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsVelocity", true));
 
-	QAngle ang = LuaMathLibrary::LuaGetAngle(L, 2);
-	LuaEntityLibrary::Teleport(entity, nullptr, &ang, nullptr);
-	return 0;
+    LuaMathLibrary::LuaPushVector3D(L, *p_vel);
+    return 1;
 }
 
-static int EntityGetVel(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static int EntitySetVel(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
 
-	Vector* p_vel =
-		(Vector*)((uintptr_t)entity + spt_entprops.GetFieldOffset("CBaseEntity", "m_vecAbsVelocity", true));
+    if (!LuaMathLibrary::LuaIsVector3D(L, 2)) {
+        return luaL_error(L, "entity.set_vel: argument is not a vector");
+    }
 
-	LuaMathLibrary::LuaPushVector3D(L, *p_vel);
-	return 1;
+    Vector vel = LuaMathLibrary::LuaGetVector3D(L, 2);
+    LuaEntityLibrary::Teleport(entity, nullptr, nullptr, &vel);
+    return 0;
 }
 
-static int EntitySetVel(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static int EntityGetCollisionMin(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
 
-	if (!LuaMathLibrary::LuaIsVector3D(L, 2))
-	{
-		return luaL_error(L, "entity.set_vel: argument is not a vector");
-	}
+    Vector* p_mins =
+        (Vector*)((uintptr_t)entity + spt_entprops.
+            GetFieldOffset("CBaseEntity", "m_Collision.m_vecMins", true));
 
-	Vector vel = LuaMathLibrary::LuaGetVector3D(L, 2);
-	LuaEntityLibrary::Teleport(entity, nullptr, nullptr, &vel);
-	return 0;
+    LuaMathLibrary::LuaPushVector3D(L, *p_mins);
 }
 
-static int EntityGetCollisionMin(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static int EntityGetCollisionMax(lua_State* L) {
+    void* entity = LUA_GET_ENTITY();
 
-	Vector* p_mins =
-		(Vector*)((uintptr_t)entity + spt_entprops.
-		          GetFieldOffset("CBaseEntity", "m_Collision.m_vecMins", true));
+    Vector* p_maxs =
+        (Vector*)((uintptr_t)entity + spt_entprops.
+            GetFieldOffset("CBaseEntity", "m_Collision.m_vecMaxs", true));
 
-	LuaMathLibrary::LuaPushVector3D(L, *p_mins);
+    LuaMathLibrary::LuaPushVector3D(L, *p_maxs);
 }
 
-static int EntityGetCollisionMax(lua_State* L)
-{
-	void* entity = LUA_GET_ENTITY();
+static const struct luaL_Reg entity_class[] = {
+    {"_list", EntityList},
+    {"create", EntityCreate},
+    {"from_id", EntityFromID},
+    {"from_hammer_id", EntityFromHammerID},
+    {"get_id", EntityGetID},
+    {"get_hammer_id", EntityGetHammerID},
+    {"get_class_name", EntityGetClassName},
+    {"get_internal_class_name", EntityGetInternalClassName},
+    {"get_model_name", EntityGetModelName},
+    {"get_name", EntityGetName},
+    {"get_pos", EntityGetPos},
+    {"set_pos", EntitySetPos},
+    {"get_rot", EntityGetRot},
+    {"set_rot", EntitySetRot},
+    {"get_vel", EntityGetVel},
+    {"set_vel", EntitySetVel},
+    {"get_collision_min", EntityGetCollisionMin},
+    {"get_collision_max", EntityGetCollisionMax},
+    //        {"teleport",    EntityTeleport},
+    {nullptr, nullptr}
+};
 
-	Vector* p_maxs =
-		(Vector*)((uintptr_t)entity + spt_entprops.
-		          GetFieldOffset("CBaseEntity", "m_Collision.m_vecMaxs", true));
-
-	LuaMathLibrary::LuaPushVector3D(L, *p_maxs);
+void LuaEntityLibrary::Load(lua_State* L) {
+    lua_new_class(L, "entity", entity_class);
 }
 
-static const struct luaL_Reg entity_class[] = {{"_list", EntityList},
-                                               {"create", EntityCreate},
-                                               {"from_id", EntityFromID},
-                                               {"from_hammer_id", EntityFromHammerID},
-                                               {"get_id", EntityGetID},
-                                               {"get_hammer_id", EntityGetHammerID},
-                                               {"get_class_name", EntityGetClassName},
-                                               {"get_internal_class_name", EntityGetInternalClassName},
-                                               {"get_model_name", EntityGetModelName},
-                                               {"get_name", EntityGetName},
-                                               {"get_pos", EntityGetPos},
-                                               {"set_pos", EntitySetPos},
-                                               {"get_rot", EntityGetRot},
-                                               {"set_rot", EntitySetRot},
-                                               {"get_vel", EntityGetVel},
-                                               {"set_vel", EntitySetVel},
-                                               {"get_collision_min", EntityGetCollisionMin},
-                                               {"get_collision_max", EntityGetCollisionMax},
-                                               //        {"teleport",    EntityTeleport},
-                                               {nullptr, nullptr}};
-
-void LuaEntityLibrary::Load(lua_State* L)
-{
-	lua_new_class(L, "entity", entity_class);
-}
-
-const std::string& LuaEntityLibrary::GetLuaSource()
-{
-	static const std::string sources = R"(---@meta
+const std::string& LuaEntityLibrary::GetLuaSource() {
+    static const std::string sources = R"(---@meta
 ---@class entity
 entity = {}
 
@@ -448,5 +414,5 @@ function entity:get_collision_max()
 end
 )";
 
-	return sources;
+    return sources;
 }

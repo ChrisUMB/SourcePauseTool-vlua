@@ -8,7 +8,7 @@ LuaCameraLibrary lua_camera_library;
 
 LuaCameraLibrary::LuaCameraLibrary() : LuaLibrary("camera") {}
 
-static int SetControl(lua_State *L) {
+static int SetControl(lua_State* L) {
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "camera.set_control: takes 1 argument");
     }
@@ -22,7 +22,7 @@ static int SetControl(lua_State *L) {
     return 1;
 }
 
-static int SetPos(lua_State *L) {
+static int SetPos(lua_State* L) {
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "camera.set_pos: takes 1 argument");
     }
@@ -42,7 +42,7 @@ static int SetPos(lua_State *L) {
     return 1;
 }
 
-static int SetAng(lua_State *L) {
+static int SetAng(lua_State* L) {
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "camera.set_ang: takes 1 argument");
     }
@@ -62,7 +62,7 @@ static int SetAng(lua_State *L) {
     return 1;
 }
 
-static int AddKeyframe(lua_State *L) {
+static int AddKeyframe(lua_State* L) {
     if (lua_gettop(L) < 3) {
         return luaL_error(L, "camera.add_keyframe: takes 4 arguments");
     }
@@ -97,13 +97,13 @@ static int AddKeyframe(lua_State *L) {
     return 1;
 }
 
-static int ClearKeyframes(lua_State *L) {
+static int ClearKeyframes(lua_State* L) {
     auto command = std::format("spt_cam_path_clear");
     interfaces::engine->ClientCmd(command.c_str());
     return 1;
 }
 
-static int SetInterp(lua_State *L) {
+static int SetInterp(lua_State* L) {
     if (lua_gettop(L) != 1) {
         return luaL_error(L, "camera.set_interp: takes 1 argument");
     }
@@ -120,23 +120,22 @@ static int SetInterp(lua_State *L) {
 }
 
 static const struct luaL_Reg camera_class[] = {
-        {"set_control",     SetControl},
-        {"set_pos",         SetPos},
-        {"set_ang",         SetAng},
-        {"add_keyframe",    AddKeyframe},
-        {"clear_keyframes", ClearKeyframes},
-        {"set_interp",      SetInterp},
-        {nullptr,           nullptr}
+    {"set_control", SetControl},
+    {"set_pos", SetPos},
+    {"set_ang", SetAng},
+    {"add_keyframe", AddKeyframe},
+    {"clear_keyframes", ClearKeyframes},
+    {"set_interp", SetInterp},
+    {nullptr, nullptr}
 };
 
-void LuaCameraLibrary::Load(lua_State *L) {
+void LuaCameraLibrary::Load(lua_State* L) {
     lua_new_class(L, "camera", camera_class);
 }
 
-void LuaCameraLibrary::Unload(lua_State *L) {}
+void LuaCameraLibrary::Unload(lua_State* L) {}
 
-const std::string &LuaCameraLibrary::GetLuaSource() {
-
+const std::string& LuaCameraLibrary::GetLuaSource() {
     static std::string sources = R"""(---@meta
 ---@class camera
 camera = {}

@@ -9,7 +9,7 @@ LuaFileSystemLibrary lua_filesystem_library;
 
 LuaFileSystemLibrary::LuaFileSystemLibrary() : LuaLibrary("filesystem") {}
 
-fs::path CheckPath(lua_State *L, int index) {
+fs::path CheckPath(lua_State* L, int index) {
     if (!LuaIsClass(L, index, "fs.path")) {
         luaL_error(L, "Expected path");
     }
@@ -18,7 +18,7 @@ fs::path CheckPath(lua_State *L, int index) {
     return fs::path(luaL_checkstring(L, -1));
 }
 
-static const char *TryGetPath(lua_State *L, int index) {
+static const char* TryGetPath(lua_State* L, int index) {
     if (!LuaIsClass(L, index, "fs.path")) {
         return luaL_checkstring(L, index);
     }
@@ -28,13 +28,13 @@ static const char *TryGetPath(lua_State *L, int index) {
     return luaL_checkstring(L, -1);
 }
 
-static int PathFileName(lua_State *L) {
+static int PathFileName(lua_State* L) {
     fs::path p = CheckPath(L, 1);
     lua_pushstring(L, p.filename().string().c_str());
     return 1;
 }
 
-static int PathExtension(lua_State *L) {
+static int PathExtension(lua_State* L) {
     if (!LuaIsClass(L, 1, "fs.path")) {
         return luaL_error(L, "path:extension(): takes 1 argument");
     }
@@ -46,7 +46,7 @@ static int PathExtension(lua_State *L) {
     return 1;
 }
 
-static int PathParentPath(lua_State *L) {
+static int PathParentPath(lua_State* L) {
     if (!LuaIsClass(L, 1, "fs.path")) {
         return luaL_error(L, "path:parent_path(): takes 1 argument");
     }
@@ -58,7 +58,7 @@ static int PathParentPath(lua_State *L) {
     return 1;
 }
 
-static int PathIsDirectory(lua_State *L) {
+static int PathIsDirectory(lua_State* L) {
     if (!LuaIsClass(L, 1, "fs.path")) {
         return luaL_error(L, "path:is_directory(): takes 1 argument");
     }
@@ -71,36 +71,36 @@ static int PathIsDirectory(lua_State *L) {
 }
 
 static const struct luaL_Reg filesystem_path_class[] = {
-        {"file_name",    PathFileName},
-        {"extension",    PathExtension},
-        {"parent_path",  PathParentPath},
-        {"is_directory", PathIsDirectory},
-        {nullptr,        nullptr}
+    {"file_name", PathFileName},
+    {"extension", PathExtension},
+    {"parent_path", PathParentPath},
+    {"is_directory", PathIsDirectory},
+    {nullptr, nullptr}
 };
 
-std::fstream *CheckFile(lua_State *L, int index) {
+std::fstream* CheckFile(lua_State* L, int index) {
     if (!LuaIsClass(L, index, "fs.file")) {
         luaL_error(L, "Expected file");
     }
 
     lua_getfield(L, index, "file");
-    return static_cast<std::fstream *>(lua_touserdata(L, -1));
+    return static_cast<std::fstream*>(lua_touserdata(L, -1));
 }
 
-static int FileIsOpen(lua_State *L) {
-    std::fstream *file = CheckFile(L, 1);
+static int FileIsOpen(lua_State* L) {
+    std::fstream* file = CheckFile(L, 1);
     lua_pushboolean(L, file->is_open());
     return 1;
 }
 
-static int FileClose(lua_State *L) {
-    std::fstream *file = CheckFile(L, 1);
+static int FileClose(lua_State* L) {
+    std::fstream* file = CheckFile(L, 1);
     file->close();
     return 0;
 }
 
-static int FileReadLine(lua_State *L) {
-    std::fstream *file = CheckFile(L, 1);
+static int FileReadLine(lua_State* L) {
+    std::fstream* file = CheckFile(L, 1);
 
     std::string line;
     std::getline(*file, line);
@@ -109,8 +109,8 @@ static int FileReadLine(lua_State *L) {
     return 1;
 }
 
-static int FileReadAll(lua_State *L) {
-    std::fstream *file = CheckFile(L, 1);
+static int FileReadAll(lua_State* L) {
+    std::fstream* file = CheckFile(L, 1);
 
     file->seekg(0, std::ios::end);
     std::streampos fileSize = file->tellg();
@@ -124,8 +124,8 @@ static int FileReadAll(lua_State *L) {
     return 1;
 }
 
-static int FileReadBytes(lua_State *L) {
-    std::fstream *file = CheckFile(L, 1);
+static int FileReadBytes(lua_State* L) {
+    std::fstream* file = CheckFile(L, 1);
     unsigned int count = luaL_checkinteger(L, 2);
 
     std::vector<char> buffer(count);
@@ -136,36 +136,36 @@ static int FileReadBytes(lua_State *L) {
     return 1;
 }
 
-static int FileWrite(lua_State *L) {
-    std::fstream *file = CheckFile(L, 1);
-    const char *data = luaL_checkstring(L, 2);
+static int FileWrite(lua_State* L) {
+    std::fstream* file = CheckFile(L, 1);
+    const char* data = luaL_checkstring(L, 2);
 
     file->write(data, strlen(data));
     return 0;
 }
 
-static int FileEOF(lua_State *L) {
-    std::fstream *file = CheckFile(L, 1);
+static int FileEOF(lua_State* L) {
+    std::fstream* file = CheckFile(L, 1);
     lua_pushboolean(L, file->eof());
     return 1;
 }
 
 static const struct luaL_Reg filesystem_file_class[] = {
-        {"is_open", FileIsOpen},
-        {"close", FileClose},
-        {"read_line", FileReadLine},
-        {"read_all", FileReadAll},
-        {"read", FileReadBytes},
-        {"write", FileWrite},
-        {"eof", FileEOF},
-        {nullptr, nullptr}
+    {"is_open", FileIsOpen},
+    {"close", FileClose},
+    {"read_line", FileReadLine},
+    {"read_all", FileReadAll},
+    {"read", FileReadBytes},
+    {"write", FileWrite},
+    {"eof", FileEOF},
+    {nullptr, nullptr}
 };
 
-static int FSFileCreate(lua_State *L) {
-    const char *path = TryGetPath(L, 1);
+static int FSFileCreate(lua_State* L) {
+    const char* path = TryGetPath(L, 1);
     unsigned int mode = luaL_checkinteger(L, 2);
 
-    std::fstream *file = new std::fstream(path, mode);
+    std::fstream* file = new std::fstream(path, mode);
 
     if (!file->is_open()) {
         delete file;
@@ -176,42 +176,42 @@ static int FSFileCreate(lua_State *L) {
     return 1;
 }
 
-static int FSFileSize(lua_State *L) {
+static int FSFileSize(lua_State* L) {
     lua_pushinteger(L, fs::file_size(TryGetPath(L, 1)));
     return 1;
 }
 
-static int FSExists(lua_State *L) {
+static int FSExists(lua_State* L) {
     lua_pushboolean(L, fs::exists(TryGetPath(L, 1)));
     return 1;
 }
 
-static int FSRename(lua_State *L) {
+static int FSRename(lua_State* L) {
     fs::rename(TryGetPath(L, 1), TryGetPath(L, 2));
     return 0;
 }
 
-static int FSCreateDirectory(lua_State *L) {
+static int FSCreateDirectory(lua_State* L) {
     fs::create_directory(TryGetPath(L, 1));
     return 0;
 }
 
-static int FSRemove(lua_State *L) {
+static int FSRemove(lua_State* L) {
     fs::remove(TryGetPath(L, 1));
     return 0;
 }
 
-static int FSList(lua_State *L) {
+static int FSList(lua_State* L) {
     std::vector<std::string> files;
 
-    const char *path = TryGetPath(L, 1);
+    const char* path = TryGetPath(L, 1);
 
     if (lua_isboolean(L, 2) && lua_toboolean(L, 2)) {
-        for (const auto &entry: fs::recursive_directory_iterator(path)) {
+        for (const auto& entry : fs::recursive_directory_iterator(path)) {
             files.push_back(entry.path().string());
         }
     } else {
-        for (const auto &entry: fs::directory_iterator(path)) {
+        for (const auto& entry : fs::directory_iterator(path)) {
             files.push_back(entry.path().string());
         }
     }
@@ -227,28 +227,28 @@ static int FSList(lua_State *L) {
 }
 
 static const struct luaL_Reg filesystem_class[] = {
-        {"_file",            FSFileCreate},
-        {"file_size",        FSFileSize},
-        {"exists",           FSExists},
-        {"rename",           FSRename},
-        {"create_directory", FSCreateDirectory},
-        {"remove",           FSRemove},
-        {"list",             FSList},
-        {nullptr,            nullptr}
+    {"_file", FSFileCreate},
+    {"file_size", FSFileSize},
+    {"exists", FSExists},
+    {"rename", FSRename},
+    {"create_directory", FSCreateDirectory},
+    {"remove", FSRemove},
+    {"list", FSList},
+    {nullptr, nullptr}
 };
 
-void LuaFileSystemLibrary::Load(lua_State *L) {
+void LuaFileSystemLibrary::Load(lua_State* L) {
     lua_new_class(L, "fs", filesystem_class);
     lua_new_class(L, "fs.path", filesystem_path_class);
     lua_new_class(L, "fs.file", filesystem_file_class);
 }
 
-void LuaFileSystemLibrary::Unload(lua_State *L) {
+void LuaFileSystemLibrary::Unload(lua_State* L) {
     lua_pushnil(L);
     lua_setglobal(L, "fs");
 }
 
-const std::string &LuaFileSystemLibrary::GetLuaSource() {
+const std::string& LuaFileSystemLibrary::GetLuaSource() {
     static std::string sources = R"""(
 ---@meta
 local bit = require("bit")

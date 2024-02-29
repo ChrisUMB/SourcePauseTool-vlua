@@ -5,44 +5,38 @@ LuaEventsLibrary lua_events_library;
 
 LuaEventsLibrary::LuaEventsLibrary() : LuaLibrary("events") {}
 
-void LuaEventsLibrary::InvokeEvent(const std::string& event_name, const std::function<void(lua_State*)>& lambda)
-{
-	for (const auto& L : states)
-	{
-		lambda(L);
-		lua_getglobal(L, "events");
-		lua_getfield(L, -1, event_name.c_str());
+void LuaEventsLibrary::InvokeEvent(const std::string& event_name, const std::function<void(lua_State*)>& lambda) {
+    for (const auto& L : states) {
+        lambda(L);
+        lua_getglobal(L, "events");
+        lua_getfield(L, -1, event_name.c_str());
 
-		if (!lua_istable(L, -1))
-		{
-			lua_pop(L, 2);
-			Warning("event doesn't exist: %s\n", event_name.c_str());
-			return;
-		}
+        if (!lua_istable(L, -1)) {
+            lua_pop(L, 2);
+            Warning("event doesn't exist: %s\n", event_name.c_str());
+            return;
+        }
 
-		lua_remove(L, -2);
-		lua_getfield(L, -1, "call");
-		lua_pushvalue(L, -2);
-		lua_remove(L, -3);
-		lua_pushvalue(L, -3);
-		if (lua_pcall(L, 2, 0, 0))
-		{
-			Warning("%s\n", lua_tostring(L, -1));
-		}
+        lua_remove(L, -2);
+        lua_getfield(L, -1, "call");
+        lua_pushvalue(L, -2);
+        lua_remove(L, -3);
+        lua_pushvalue(L, -3);
+        if (lua_pcall(L, 2, 0, 0)) {
+            Warning("%s\n", lua_tostring(L, -1));
+        }
 
-		lua_pop(L, 1);
-	}
+        lua_pop(L, 1);
+    }
 }
 
-void LuaEventsLibrary::Load(lua_State* L)
-{
-	states.push_back(L);
+void LuaEventsLibrary::Load(lua_State* L) {
+    states.push_back(L);
 }
 
-void LuaEventsLibrary::Unload(lua_State* L)
-{
-	LuaLibrary::Unload(L);
-	states.erase(std::remove(states.begin(), states.end(), L), states.end());
+void LuaEventsLibrary::Unload(lua_State* L) {
+    LuaLibrary::Unload(L);
+    states.erase(std::remove(states.begin(), states.end(), L), states.end());
 }
 
 #define EVENT_TYPE_LUA(name) \
@@ -51,9 +45,8 @@ void LuaEventsLibrary::Unload(lua_State* L)
     "    ---@field listen fun(self, callback:fun(event:" #name "_event, cancel:fun())):fun()\n" \
     "    ---@field next fun(self, callback:fun(event:" #name "_event)):fun()"
 
-const std::string& LuaEventsLibrary::GetLuaSource()
-{
-	static std::string sources = R"(
+const std::string& LuaEventsLibrary::GetLuaSource() {
+    static std::string sources = R"(
 ---@meta
 ---@class event
 
@@ -257,5 +250,5 @@ end
 
 )";
 
-	return sources;
+    return sources;
 }

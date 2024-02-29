@@ -7,9 +7,8 @@ LuaInputLibrary::LuaInputLibrary() : LuaLibrary("input") {}
 
 void LuaInputLibrary::Load(lua_State* L) {}
 
-const std::string& LuaInputLibrary::GetLuaSource()
-{
-	static std::string sources = R"""(---@meta
+const std::string& LuaInputLibrary::GetLuaSource() {
+    static std::string sources = R"""(---@meta
 ---@class input_key
 ---@field cmd string The name of the command for the input
 local input_key = {}
@@ -102,5 +101,5 @@ function input.create(name)
 end
 )""";
 
-	return sources;
+    return sources;
 }
