@@ -25,13 +25,13 @@ public:
 
     void ResetLuaState();
 
-    void InitLuaState(lua_State* L);
+    void InitLuaState(lua_State* L) const;
 
     void RegisterLibrary(LuaLibrary* library, bool write_docs = true);
 
-    void LoadLibraries(lua_State* L);
+    void LoadLibraries(lua_State* L) const;
 
-    void UnloadLibraries(lua_State* L);
+    void UnloadLibraries(lua_State* L) const;
 
     //    void Execute(const std::string &code);
 

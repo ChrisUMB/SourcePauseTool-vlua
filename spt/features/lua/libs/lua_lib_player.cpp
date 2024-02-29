@@ -181,9 +181,19 @@ static int PlayerTrace(lua_State* L) {
     QAngle eyeAngles;
     EngineGetViewAngles(reinterpret_cast<float*>(&eyeAngles));
 
-    Vector eyePosition = spt_generic.GetCameraOrigin();
-    //    Vector eyePosition;
-    //    calculateSGPosition(eyePosition, eyeAngles);
+    const auto cl_player = spt_entprops.GetPlayer(false);
+
+    if (cl_player == nullptr) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    //TODO: Patterns or something.
+    const float eye_pos_x = *(static_cast<float*>(cl_player) + 1334);
+    const float eye_pos_y = *(static_cast<float*>(cl_player) + 1335);
+    const float eye_pos_z = *(static_cast<float*>(cl_player) + 1336);
+
+    const Vector eyePosition(eye_pos_x, eye_pos_y, eye_pos_z);
 
     Vector forward;
     AngleVectors(eyeAngles, &forward);

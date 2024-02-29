@@ -1,6 +1,9 @@
 #include "stdafx.hpp"
 #include "../lua_util.hpp"
 #include "lua_lib_console.hpp"
+
+#include <ranges>
+
 #include "sdk/sdk2013/public/Color.h"
 #include "interfaces.hpp"
 
@@ -101,7 +104,6 @@ static int ConsoleVarFind(lua_State* L) {
 }
 
 static int ConsoleVarCreate(lua_State* L) {
-    // const int flags = luaL_checkinteger(L, 3);
     const char* name = luaL_checkstring(L, 1);
     ConVar* cvar = g_pCVar->FindVar(name);
 
@@ -109,8 +111,8 @@ static int ConsoleVarCreate(lua_State* L) {
         name = strdup(name);
         const char* default_value = strdup(luaL_checkstring(L, 2));
         const char* help = strdup(luaL_checkstring(L, 3));
-        const auto convar = new ConVar(name, default_value, FCVAR_UNREGISTERED, help);
-        g_pCVar->RegisterConCommand(convar);
+        cvar = new ConVar(name, default_value, FCVAR_UNREGISTERED, help);
+        g_pCVar->RegisterConCommand(cvar);
     }
 
     auto** convar_ptr = static_cast<ConVar**>(lua_newuserdata(L, sizeof(ConVar*)));
@@ -119,6 +121,84 @@ static int ConsoleVarCreate(lua_State* L) {
     luaL_getmetatable(L, "convar");
     lua_setmetatable(L, -2);
     return 1;
+}
+
+LuaCommandCallback::LuaCommandCallback(lua_State* L, int lua_function_ref) {
+    this->L = L;
+    this->lua_function_ref = lua_function_ref;
+}
+
+void LuaCommandCallback::CommandCallback(const CCommand& command) {
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_function_ref);
+
+    int arg_count = command.ArgC();
+    for (int i = 1; i < arg_count; ++i) {
+        lua_pushstring(L, command.Arg(i));
+    }
+
+    if (lua_pcall(L, arg_count - 1, 0, 0)) {
+        Warning("%s\n", lua_tostring(L, -1));
+    }
+}
+
+LuaCommandCallback::~LuaCommandCallback() {
+    luaL_unref(L, LUA_REGISTRYINDEX, lua_function_ref);
+}
+
+static std::map<std::string, LuaConCommand*> lua_con_commands;
+
+/*
+ * Issues:
+ * 1. Command arguments do not seem to work properly.
+ * 2. The code is fucking ugly.
+ * 3. There might be a followthrough where function_ref is not initialized.
+ */
+static int ConsoleCmdCreate(lua_State* L) {
+    const char* name = luaL_checkstring(L, 1);
+
+    if (const auto old = g_pCVar->FindCommand(name); old != nullptr) {
+        g_pCVar->UnregisterConCommand(old);
+        if (const auto it = lua_con_commands.find(name); it != lua_con_commands.end()) {
+            delete it->second;
+            lua_con_commands.erase(it);
+        }
+    }
+
+    luaL_checkany(L, 2);
+    int type = lua_type(L, 2);
+
+    int function_ref;
+    char* help_text = nullptr;
+
+    if (type == LUA_TSTRING) {
+        size_t length;
+        const char* help_text_temp = luaL_checklstring(L, 2, &length);
+        help_text = new char[length + 1];
+        strcpy(help_text, help_text_temp);
+    } else if (type == LUA_TFUNCTION) {
+        function_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    } else {
+        luaL_error(L, "Invalid type for second argument");
+        return 0;
+    }
+
+    if (help_text != nullptr) {
+        type = lua_type(L, 3);
+        if (type != LUA_TFUNCTION) {
+            luaL_error(L, "Invalid type for third argument");
+            return 0;
+        }
+
+        function_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    auto* callback = new LuaCommandCallback(L, function_ref);
+    const char* name_duped = strdup(name);
+    auto* command = new ConCommand(name_duped, callback, help_text);
+    g_pCVar->RegisterConCommand(command);
+
+    lua_con_commands[name_duped] = new LuaConCommand(command, callback, help_text);
+    return 0;
 }
 
 static const luaL_Reg console_class[] = {
@@ -130,6 +210,7 @@ static const luaL_Reg console_class[] = {
     {"exec", ConsoleExec},
     {"var_find", ConsoleVarFind},
     {"var_create", ConsoleVarCreate},
+    {"cmd_create", ConsoleCmdCreate},
     {nullptr, nullptr}
 };
 
@@ -197,6 +278,34 @@ static const luaL_Reg convar_class[] = {
     {nullptr, nullptr}
 };
 
+static int ConcmdExec(lua_State* L) {
+    const auto name = luaL_checkstring(L, 1);
+
+    ConCommand* cmd = g_pCVar->FindCommand(name);
+
+    if (cmd == nullptr) {
+        return luaL_error(L, "ConCommand not found with name %s", name);
+    }
+
+    const int argc = lua_gettop(L);
+    const auto argv = new char const*[argc];
+
+    for (int i = 0; i <= argc; ++i) {
+        argv[i] = luaL_checkstring(L, i);
+    }
+
+    const CCommand command(argc, argv);
+    cmd->Dispatch(command);
+
+    delete[] argv;
+    return 0;
+}
+
+static const luaL_Reg concmd_class[] = {
+    {"exec", ConcmdExec},
+    {nullptr, nullptr}
+};
+
 LuaConsoleLibrary::LuaConsoleLibrary() : LuaLibrary("console") {}
 
 void LuaConsoleLibrary::Load(lua_State* L) {
@@ -214,16 +323,23 @@ void LuaConsoleLibrary::Load(lua_State* L) {
     luaL_register(L, nullptr, convar_class);
     lua_pop(L, 1);
 
-    /*    luaL_newmetatable(L, "concmd");
-        lua_pushstring(L, "__index");
-        lua_pushvalue(L, -2);
-        lua_settable(L, -3);
+    luaL_newmetatable(L, "concmd");
+    lua_pushstring(L, "__index");
+    lua_pushvalue(L, -2);
+    lua_settable(L, -3);
 
-        luaL_register(L, nullptr, concmd_class);
-        lua_pop(L, 1);*/
+    luaL_register(L, nullptr, concmd_class);
+    lua_pop(L, 1);
 }
 
-void LuaConsoleLibrary::Unload(lua_State* L) {}
+void LuaConsoleLibrary::Unload(lua_State* L) {
+    for (const auto cmd : lua_con_commands | std::views::values) {
+        g_pCVar->UnregisterConCommand(cmd->concmd);
+        delete cmd;
+    }
+
+    lua_con_commands.clear();
+}
 
 const std::string& LuaConsoleLibrary::GetLuaSource() {
     static std::string sources = R"""(---@meta
@@ -278,7 +394,16 @@ end
 ---@param name string Name of the ConVar to create
 ---@param default_value string Default value of the ConVar
 ---@param help_text string Help text of the ConVar
+---@return convar ConVar object.
 function console.var_create(name, default_value, help_text)
+end
+
+---@param name string Name of ConCommand to create.
+---@param help_text string Help text of ConCommand.
+---@param callback function Callback function.
+---@return concmd ConCommand object.
+---@overload fun(name:string, callback:function):concmd
+function console.cmd_create(name, help_text, callback)
 end
 
 ---@class convar

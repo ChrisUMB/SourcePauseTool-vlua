@@ -6,7 +6,7 @@ class LuaHudLibrary : public LuaLibrary {
 public:
     explicit LuaHudLibrary();
 
-    void Init();
+    static void Init();
 
     void Load(lua_State* L) override;
 

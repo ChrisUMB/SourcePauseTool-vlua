@@ -114,9 +114,9 @@ void LuaFeature::LoadFeature() {
                 lua_newtable(L);
 
                 void** demoplayer = spt_demostuff.pDemoplayer;
-                int* demo_file = ((int*)*demoplayer) + 1;
-                demoheader_t demo_header =
-                    *(demoheader_t*)(demo_file + 65);
+                int* demo_file = static_cast<int*>(*demoplayer) + 1;
+                const demoheader_t demo_header =
+                    *reinterpret_cast<demoheader_t*>(demo_file + 65);
 
                 lua_pushstring(L, filename);
                 lua_setfield(L, -2, "file_name");
@@ -174,7 +174,7 @@ void LuaFeature::LoadFeature() {
 void LuaFeature::UnloadFeature() {}
 
 void LuaFeature::InitDirectory() {
-    auto game_dir = std::string(interfaces::engine->GetGameDirectory());
+    const auto game_dir = std::string(interfaces::engine->GetGameDirectory());
 
     if (!fs::exists(game_dir + "\\lua")) {
         fs::create_directory(game_dir + "\\lua");
@@ -220,13 +220,13 @@ void LuaFeature::ResetLuaState() {
     global_state = nullptr;
 }
 
-void LuaFeature::InitLuaState(lua_State* L) {
+void LuaFeature::InitLuaState(lua_State* L) const {
     if (!L) {
         return;
     }
 
-    auto game_dir = std::string(interfaces::engine->GetGameDirectory());
-    auto lib_dir_string = game_dir + "\\lua\\libraries\\";
+    const auto game_dir = std::string(interfaces::engine->GetGameDirectory());
+    const auto lib_dir_string = game_dir + R"(\lua\libraries\)";
     const char* lib_dir = lib_dir_string.c_str();
 
     //this needs to use the game directory and not just assume portal
@@ -245,7 +245,7 @@ void LuaFeature::InitLuaState(lua_State* L) {
 
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "path");
-    std::string current_path = lua_tostring(L, -1);
+    const std::string current_path = lua_tostring(L, -1);
     auto new_path = current_path + ";" + lib_dir + "\\?.lua;" + lib_dir + "?.luac;";
 
     for (const auto& entry : std::filesystem::directory_iterator(lib_dir)) {
@@ -279,7 +279,7 @@ void LuaFeature::RegisterLibrary(LuaLibrary* library, bool write_docs) {
     ResetLuaState();
 }
 
-void LuaFeature::LoadLibraries(lua_State* L) {
+void LuaFeature::LoadLibraries(lua_State* L) const {
     for (const auto& item : this->libraries) {
         int top_start = lua_gettop(L);
 
@@ -310,7 +310,7 @@ void LuaFeature::LoadLibraries(lua_State* L) {
     }
 }
 
-void LuaFeature::UnloadLibraries(lua_State* L) {
+void LuaFeature::UnloadLibraries(lua_State* L) const {
     for (const auto& item : this->libraries) {
         item->Unload(L);
     }
@@ -484,7 +484,7 @@ int LuaFeature::HOOKED_NET_RunFrame(double time) {
         });
     }
 
-    spt_lua.ORIG_NET_RunFrame(time);
+    return spt_lua.ORIG_NET_RunFrame(time);
 }
 
 ServerState GetServerState() {
